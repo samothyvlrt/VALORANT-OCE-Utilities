@@ -1,0 +1,8 @@
+.env
+node_modules/
+data/bot.db
+data/bot.db-wal
+data/bot.db-shm
+.vercel
+.DS_Store
+*.zip

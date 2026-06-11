@@ -1,0 +1,21 @@
+{
+  "name": "valorant-link-bot",
+  "version": "1.0.0",
+  "description": "Valorant account linking Discord bot with card-change verification",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0",
+    "axios": "^1.7.2",
+    "better-sqlite3": "^11.0.0",
+    "discord.js": "^14.15.2",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
