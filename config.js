@@ -6,6 +6,10 @@ const config = {
     clientId: process.env.CLIENT_ID,
     devGuildId: process.env.DEV_GUILD_ID || null,
     guildId: process.env.GUILD_ID || null,
+    allowedGuildIds: [
+      process.env.GUILD_ID,
+      process.env.DEV_GUILD_ID,
+    ].filter(Boolean),
     adminRoleIds: process.env.ADMIN_ROLE_IDS
       ? process.env.ADMIN_ROLE_IDS.split(',').map((id) => id.trim()).filter(Boolean)
       : [],

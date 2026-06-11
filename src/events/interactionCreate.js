@@ -12,7 +12,7 @@ module.exports = {
   async execute(interaction) {
 
     // ── Server lock ──────────────────────────────────────────────
-    if (config.discord.guildId && interaction.guildId !== config.discord.guildId) return;
+    if (config.discord.allowedGuildIds.length && !config.discord.allowedGuildIds.includes(interaction.guildId)) return;
 
     // ── Slash commands ───────────────────────────────────────────
     if (interaction.isChatInputCommand()) {
