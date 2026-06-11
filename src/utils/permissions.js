@@ -16,4 +16,14 @@ function isAdmin(member) {
   return config.discord.adminRoleIds.some((id) => member.roles.cache.has(id));
 }
 
-module.exports = { isAdmin };
+/**
+ * Returns true if the GuildMember is restricted from linking.
+ * @param {import('discord.js').GuildMember} member
+ */
+function isRestricted(member) {
+  if (!member) return false;
+  if (!config.discord.restrictedRoleId) return false;
+  return member.roles.cache.has(config.discord.restrictedRoleId);
+}
+
+module.exports = { isAdmin, isRestricted };

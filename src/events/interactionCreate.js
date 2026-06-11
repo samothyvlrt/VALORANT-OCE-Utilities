@@ -6,6 +6,7 @@ const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
 const { getRank } = require('../modules/riot-api');
 const { startChallenge, VerificationError } = require('../modules/verification');
 const { RiotApiError } = require('../modules/riot-api');
+const { isRestricted } = require('../utils/permissions');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -41,6 +42,13 @@ module.exports = {
 
       // Link button — show Riot ID modal
       if (customId === 'link_btn') {
+        if (isRestricted(interaction.member)) {
+          return interaction.reply({
+            embeds: [embed.error('Linking Restricted', 'You are not permitted to link a Valorant account. Please contact a moderator if you believe this is a mistake.')],
+            ephemeral: true,
+          });
+        }
+
         const modal = new ModalBuilder()
           .setCustomId('link_modal')
           .setTitle('Link your Valorant Account');
@@ -138,6 +146,13 @@ module.exports = {
     if (interaction.isModalSubmit()) {
       if (interaction.customId === 'link_modal') {
         await interaction.deferReply({ ephemeral: true });
+
+        if (isRestricted(interaction.member)) {
+          return interaction.editReply({
+            embeds: [embed.error('Linking Restricted', 'You are not permitted to link a Valorant account. Please contact a moderator if you believe this is a mistake.')],
+          });
+        }
+
         const riotId = interaction.fields.getTextInputValue('riot_id');
 
         try {

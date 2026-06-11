@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const { startChallenge, VerificationError } = require('../../modules/verification');
 const { RiotApiError } = require('../../modules/riot-api');
+const { isRestricted } = require('../../utils/permissions');
 const config = require('../../../config');
 
 module.exports = {
@@ -31,6 +32,12 @@ module.exports = {
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
+
+    if (isRestricted(interaction.member)) {
+      return interaction.editReply({
+        embeds: [embed.error('Linking Restricted', 'You are not permitted to link a Valorant account. Please contact a moderator if you believe this is a mistake.')],
+      });
+    }
 
     const riotId = interaction.options.getString('riot_id');
     const region = interaction.options.getString('region') || config.riot.defaultRegion;
