@@ -5,6 +5,7 @@ const config = {
     token: process.env.DISCORD_TOKEN,
     clientId: process.env.CLIENT_ID,
     devGuildId: process.env.DEV_GUILD_ID || null,
+    guildId: process.env.GUILD_ID || null,
     adminRoleIds: process.env.ADMIN_ROLE_IDS
       ? process.env.ADMIN_ROLE_IDS.split(',').map((id) => id.trim()).filter(Boolean)
       : [],
@@ -42,6 +43,19 @@ const config = {
     error: 0xE74C3C,
     info: 0x3498DB,
     neutral: 0x2B2D31,
+  },
+
+  rankRoles: {
+    unranked:  process.env.ROLE_UNRANKED   || null,
+    iron:      process.env.ROLE_IRON       || null,
+    bronze:    process.env.ROLE_BRONZE     || null,
+    silver:    process.env.ROLE_SILVER     || null,
+    gold:      process.env.ROLE_GOLD       || null,
+    platinum:  process.env.ROLE_PLATINUM   || null,
+    diamond:   process.env.ROLE_DIAMOND    || null,
+    ascendant: process.env.ROLE_ASCENDANT  || null,
+    immortal:  process.env.ROLE_IMMORTAL   || null,
+    radiant:   process.env.ROLE_RADIANT    || null,
   },
 
   ranks: {

@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
-const { getRank } = require('../../modules/riot-api');
+const { getRank, getPlayerStats } = require('../../modules/riot-api');
 const config = require('../../../config');
 
-const RANK_CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const RANK_CACHE_TTL_MS  = 2 * 60 * 1000; // 2 minutes
+const STATS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-// Convert HenrikDev season codes like "e9a3" → "Episode 9 Act 3"
 function formatSeason(season) {
   if (!season) return null;
   const match = season.match(/^e(\d+)a(\d+)$/i);
@@ -45,25 +45,35 @@ module.exports = {
       });
     }
 
-    // Use cached rank if fresh, otherwise fetch and update cache
+    // ── Rank cache ──────────────────────────────────────────────────────────
     let rank = null;
-    const cacheAge = link.rank_cached_at ? Date.now() - link.rank_cached_at : Infinity;
-    if (cacheAge < RANK_CACHE_TTL_MS && link.cached_rank) {
-      try { rank = JSON.parse(link.cached_rank); } catch { /* ignore corrupt cache */ }
+    const rankAge = link.rank_cached_at ? Date.now() - link.rank_cached_at : Infinity;
+    if (rankAge < RANK_CACHE_TTL_MS && link.cached_rank) {
+      try { rank = JSON.parse(link.cached_rank); } catch { /* corrupt cache */ }
     }
     if (!rank) {
       rank = await getRank(link.riot_name, link.riot_tag, link.region).catch(() => null);
       if (rank) db.updateRankCache(link.discord_id, rank);
     }
 
-    // ── Current rank string ─────────────────────────────────────────────────
+    // ── Stats cache ─────────────────────────────────────────────────────────
+    let stats = null;
+    const statsAge = link.stats_cached_at ? Date.now() - link.stats_cached_at : Infinity;
+    if (statsAge < STATS_CACHE_TTL_MS && link.cached_stats) {
+      try { stats = JSON.parse(link.cached_stats); } catch { /* corrupt cache */ }
+    }
+    if (!stats) {
+      stats = await getPlayerStats(link.riot_puuid, link.region).catch(() => null);
+      if (stats) db.updateStatsCache(link.discord_id, stats);
+    }
+
+    // ── Rank strings ────────────────────────────────────────────────────────
     let rankValue = 'Unranked / unavailable';
     if (rank && rank.tier > 0) {
       rankValue = `**${rank.tierName}** — ${rank.rr} RR`;
       if (rank.leaderboardRank) rankValue += ` (#${rank.leaderboardRank})`;
     }
 
-    // ── Peak rank string ────────────────────────────────────────────────────
     let peakValue = '—';
     if (rank?.peakTierName) {
       peakValue = `**${rank.peakTierName}**`;
@@ -71,28 +81,39 @@ module.exports = {
       if (season) peakValue += ` (${season})`;
     }
 
+    // ── Stats strings ───────────────────────────────────────────────────────
+    const kdValue  = stats ? `**${stats.kd}**` : '—';
+    const wrValue  = stats ? `**${stats.winRate}%** (${stats.wins}/${stats.totalMatches})` : '—';
+
+    let agentsValue = '—';
+    if (stats?.topAgents?.length) {
+      agentsValue = stats.topAgents
+        .map((a, i) => `${i + 1}. **${a.name}** — ${a.winRate}% WR (${a.games}g)`)
+        .join('\n');
+    }
+
+    // ── Build embed ─────────────────────────────────────────────────────────
     const e = new EmbedBuilder()
       .setColor(config.colors.primary)
       .setTitle(`${link.riot_name}#${link.riot_tag}`)
-      .setFooter({ text: 'VALORANT OCE Utilities' })
+      .setFooter({ text: 'VALORANT OCE Utilities · Last 20 matches' })
       .setTimestamp()
       .addFields(
-        { name: 'Discord',      value: `<@${link.discord_id}>`,                          inline: true },
-        { name: 'Region',       value: link.region.toUpperCase(),                         inline: true },
-        { name: '​',       value: '​',                                          inline: true },
-        { name: 'Current Rank', value: rankValue,                                         inline: true },
-        { name: 'Peak Rank',    value: peakValue,                                         inline: true },
-        { name: '​',       value: '​',                                          inline: true },
-        { name: 'Linked',       value: `<t:${Math.floor(link.linked_at   / 1000)}:R>`,   inline: true },
-        { name: 'Last Updated', value: `<t:${Math.floor(link.last_updated / 1000)}:R>`,  inline: true },
+        { name: 'Discord',       value: `<@${link.discord_id}>`,                         inline: true },
+        { name: 'Region',        value: link.region.toUpperCase(),                        inline: true },
+        { name: '​',        value: '​',                                         inline: true },
+        { name: 'Current Rank',  value: rankValue,                                        inline: true },
+        { name: 'Peak Rank',     value: peakValue,                                        inline: true },
+        { name: '​',        value: '​',                                         inline: true },
+        { name: 'K/D',           value: kdValue,                                          inline: true },
+        { name: 'Win Rate',      value: wrValue,                                          inline: true },
+        { name: '​',        value: '​',                                         inline: true },
+        { name: 'Top Agents',    value: agentsValue,                                      inline: false },
+        { name: 'Linked',        value: `<t:${Math.floor(link.linked_at    / 1000)}:R>`, inline: true },
+        { name: 'Last Updated',  value: `<t:${Math.floor(link.last_updated / 1000)}:R>`, inline: true },
       );
 
-    // Current rank icon → thumbnail (top right)
-    if (rank?.smallIcon) {
-      e.setThumbnail(rank.smallIcon);
-    }
-
-    // Peak rank icon → author area (top left, small icon)
+    if (rank?.smallIcon)    e.setThumbnail(rank.smallIcon);
     if (rank?.peakSmallIcon && rank?.peakTierName) {
       e.setAuthor({
         name:    `Peak: ${rank.peakTierName}${formatSeason(rank.peakSeason) ? ` · ${formatSeason(rank.peakSeason)}` : ''}`,

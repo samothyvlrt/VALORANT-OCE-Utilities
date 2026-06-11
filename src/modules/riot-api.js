@@ -196,6 +196,72 @@ async function getRank(name, tag, region = config.riot.defaultRegion) {
 }
 
 // ─────────────────────────────────────────────
+// Player Stats (last 20 matches)
+// ─────────────────────────────────────────────
+
+/**
+ * Fetch aggregate stats for a player from their last 20 competitive/unrated matches.
+ * Returns { kd, kills, deaths, winRate, wins, totalMatches, topAgents } or null on error.
+ * @param {string} puuid
+ * @param {string} region
+ */
+async function getPlayerStats(puuid, region) {
+  try {
+    const res = await henrik.get(
+      `/valorant/v3/by-puuid/matches/${region}/${puuid}?size=20`,
+    );
+    const matches = res.data?.data;
+    if (!matches || !matches.length) return null;
+
+    let kills = 0, deaths = 0, wins = 0, totalMatches = 0;
+    const agentMap = {};
+
+    for (const match of matches) {
+      const allPlayers = match.players?.all_players ?? [];
+      const player = allPlayers.find((p) => p.puuid === puuid);
+      if (!player) continue;
+
+      totalMatches++;
+      kills  += player.stats?.kills  ?? 0;
+      deaths += player.stats?.deaths ?? 0;
+
+      const playerTeam = (player.team ?? '').toLowerCase(); // "red" or "blue"
+      const won = match.teams?.[playerTeam]?.has_won ?? false;
+      if (won) wins++;
+
+      const agent = player.character ?? 'Unknown';
+      if (!agentMap[agent]) agentMap[agent] = { games: 0, wins: 0 };
+      agentMap[agent].games++;
+      if (won) agentMap[agent].wins++;
+    }
+
+    if (!totalMatches) return null;
+
+    const topAgents = Object.entries(agentMap)
+      .sort((a, b) => b[1].games - a[1].games)
+      .slice(0, 3)
+      .map(([name, s]) => ({
+        name,
+        games: s.games,
+        winRate: Math.round((s.wins / s.games) * 100),
+      }));
+
+    return {
+      kills,
+      deaths,
+      kd:           deaths > 0 ? (kills / deaths).toFixed(2) : kills.toFixed(2),
+      winRate:      Math.round((wins / totalMatches) * 100),
+      wins,
+      totalMatches,
+      topAgents,
+    };
+  } catch (err) {
+    console.error('[riot-api] getPlayerStats error:', err.response?.status, err.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // Exports
 // ─────────────────────────────────────────────
 
@@ -204,5 +270,6 @@ module.exports = {
   getAccount,
   getLatestMatchTimestamp,
   getRank,
+  getPlayerStats,
   RiotApiError,
 };

@@ -3,6 +3,9 @@ const db    = require('../modules/database');
 const redis = require('../modules/redis');
 const embed = require('../utils/embed');
 const { finaliseIfReady, VerificationError } = require('../modules/verification');
+const { getRank } = require('../modules/riot-api');
+const { assignRankRole } = require('../utils/roles');
+const config = require('../../config');
 
 module.exports = {
   name: Events.ClientReady,
@@ -32,8 +35,24 @@ module.exports = {
           const result = await finaliseIfReady(pending.discord_id);
           if (!result) continue; // not ready yet
 
-          // Success — DM the user
+          // Success — assign rank role, then DM the user
           console.log(`[verify] Finalised link: ${pending.discord_id} → ${result.riotName}#${result.riotTag}`);
+
+          // Assign rank role
+          try {
+            if (config.discord.guildId) {
+              const guild  = await client.guilds.fetch(config.discord.guildId);
+              const member = await guild.members.fetch(pending.discord_id);
+              const rank   = await getRank(result.riotName, result.riotTag, result.region).catch(() => null);
+              if (rank) {
+                db.updateRankCache(pending.discord_id, rank);
+                await assignRankRole(member, rank.tier);
+              }
+            }
+          } catch (roleErr) {
+            console.error(`[verify] Role assignment error for ${pending.discord_id}:`, roleErr);
+          }
+
           try {
             const user = await client.users.fetch(pending.discord_id);
             const dm   = await user.createDM();

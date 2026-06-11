@@ -64,6 +64,8 @@ db.exec(`
 try { db.exec(`ALTER TABLE pending_verifications ADD COLUMN state TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN cached_rank TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN rank_cached_at INTEGER`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN cached_stats TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN stats_cached_at INTEGER`); } catch { /* already exists */ }
 
 // ─────────────────────────────────────────────
 // Linked accounts
@@ -132,6 +134,17 @@ function updateRankCache(discordId, rank) {
   db.prepare(`
     UPDATE linked_accounts SET cached_rank = ?, rank_cached_at = ? WHERE discord_id = ?
   `).run(JSON.stringify(rank), Date.now(), discordId);
+}
+
+/**
+ * Store a fresh stats object in the cache for a linked account.
+ * @param {string} discordId
+ * @param {object} stats  — the object returned by getPlayerStats()
+ */
+function updateStatsCache(discordId, stats) {
+  db.prepare(`
+    UPDATE linked_accounts SET cached_stats = ?, stats_cached_at = ? WHERE discord_id = ?
+  `).run(JSON.stringify(stats), Date.now(), discordId);
 }
 
 /**
@@ -279,6 +292,7 @@ function countLinks() {
 module.exports = {
   // Linked accounts
   getLinkByDiscord,
+  updateStatsCache,
   getLinkByPuuid,
   upsertLink,
   removeLink,

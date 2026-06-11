@@ -10,7 +10,7 @@
  *   bulk-reset <role>       — force re-verify for every member of a role
  */
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
 const { adminForceLink, VerificationError } = require('../../modules/verification');
@@ -41,21 +41,6 @@ module.exports = {
         )
 
         // ── remove ───────────────────────────────────────────────
-        .addSubcommand((sub) =>
-          sub
-            .setName('remove')
-            .setDescription("Force-remove a member's linked Riot account.")
-            .addUserOption((opt) =>
-              opt.setName('user').setDescription('Discord member').setRequired(true),
-            )
-            .addStringOption((opt) =>
-              opt.setName('reason').setDescription('Audit reason (optional)').setRequired(false),
-            )
-            .addBooleanOption((opt) =>
-              opt.setName('silent').setDescription('If true, the user will NOT be sent a DM (default: false)').setRequired(false),
-            ),
-        )
-
         // ── set ──────────────────────────────────────────────────
         .addSubcommand((sub) =>
           sub
@@ -129,6 +114,25 @@ module.exports = {
             .addBooleanOption((opt) =>
               opt.setName('silent').setDescription('If true, affected users will NOT be sent a DM (default: false)').setRequired(false),
             ),
+        )
+
+        // ── panel ────────────────────────────────────────────────
+        .addSubcommand((sub) =>
+          sub
+            .setName('panel')
+            .setDescription('Post the account link panel embed in this channel.')
+            .addStringOption((opt) =>
+              opt
+                .setName('title')
+                .setDescription('Custom embed title (default: "Link your Valorant Account")')
+                .setRequired(false),
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName('description')
+                .setDescription('Custom embed description text (optional)')
+                .setRequired(false),
+            ),
         ),
     ),
 
@@ -144,12 +148,12 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     switch (sub) {
-      case 'get':       return handleGet(interaction);
-      case 'remove':    return handleRemove(interaction);
-      case 'set':       return handleSet(interaction);
-      case 'reset':     return handleReset(interaction);
-      case 'list':      return handleList(interaction);
+      case 'get':        return handleGet(interaction);
+      case 'set':        return handleSet(interaction);
+      case 'reset':      return handleReset(interaction);
+      case 'list':       return handleList(interaction);
       case 'bulk-reset': return handleBulkReset(interaction);
+      case 'panel':      return handlePanel(interaction);
       default:
         return interaction.reply({ embeds: [embed.error('Unknown subcommand', sub)], ephemeral: true });
     }
@@ -199,62 +203,6 @@ async function handleGet(interaction) {
     );
 
   await interaction.editReply({ embeds: [e] });
-}
-
-// ─────────────────────────────────────────────
-// remove
-// ─────────────────────────────────────────────
-async function handleRemove(interaction) {
-  await interaction.deferReply({ ephemeral: true });
-  const target = interaction.options.getUser('user');
-  const reason = interaction.options.getString('reason') || 'No reason provided';
-  const silent = interaction.options.getBoolean('silent') ?? false;
-  const link   = db.getLinkByDiscord(target.id);
-
-  if (!link) {
-    return interaction.editReply({
-      embeds: [embed.warning('No Link', `<@${target.id}> has no linked Riot account.`)],
-    });
-  }
-
-  db.removeLink(target.id);
-  db.audit({
-    action: 'ADMIN_LINK_REMOVE',
-    targetDiscordId: target.id,
-    targetRiotId: `${link.riot_name}#${link.riot_tag}`,
-    performedBy: interaction.user.id,
-    guildId: interaction.guildId,
-    details: { reason, silent },
-  });
-
-  if (!silent) {
-    try {
-      const dm = await target.createDM();
-      await dm.send({
-        embeds: [
-          embed.warning(
-            'Riot Account Link Removed',
-            [
-              `Your linked Riot account (**${link.riot_name}#${link.riot_tag}**) has been removed by a moderator.`,
-              ``,
-              `**Reason:** ${reason}`,
-              ``,
-              `You can run \`/link\` to link a new account.`,
-            ].join('\n'),
-          ),
-        ],
-      });
-    } catch { /* DMs closed — silently continue */ }
-  }
-
-  await interaction.editReply({
-    embeds: [
-      embed.success(
-        'Link Removed',
-        `Removed link for <@${target.id}> (**${link.riot_name}#${link.riot_tag}**).\nReason: ${reason}`,
-      ),
-    ],
-  });
 }
 
 // ─────────────────────────────────────────────
@@ -489,4 +437,47 @@ async function handleBulkReset(interaction) {
       ),
     ],
   });
+}
+
+// ─────────────────────────────────────────────
+// panel
+// ─────────────────────────────────────────────
+async function handlePanel(interaction) {
+  const title       = interaction.options.getString('title')       || 'Link your Valorant Account';
+  const description = interaction.options.getString('description') ||
+    [
+      'Connect your Riot account to unlock rank roles and access your profile stats.',
+      '',
+      '> 🔗 **Link** — Link or re-link your Valorant account',
+      '> 🔄 **Update Rank** — Refresh your rank role to your current rank',
+      '> ❌ **Unlink** — Remove your linked account',
+    ].join('\n');
+
+  const panelEmbed = new EmbedBuilder()
+    .setColor(config.colors.primary)
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: 'VALORANT OCE Utilities' });
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('link_btn')
+      .setLabel('Link')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🔗'),
+    new ButtonBuilder()
+      .setCustomId('update_rank_btn')
+      .setLabel('Update Rank')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🔄'),
+    new ButtonBuilder()
+      .setCustomId('unlink_btn')
+      .setLabel('Unlink')
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('❌'),
+  );
+
+  await interaction.channel.send({ embeds: [panelEmbed], components: [row] });
+
+  await interaction.reply({ content: '✅ Panel posted.', ephemeral: true });
 }
