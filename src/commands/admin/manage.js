@@ -190,7 +190,7 @@ async function handleGet(interaction) {
   const e = new EmbedBuilder()
     .setColor(config.colors.info)
     .setTitle(`Link info — ${link.riot_name}#${link.riot_tag}`)
-    .setFooter({ text: 'VALORANT OCE Utilities' })
+    .setFooter({ text: 'Valorant OCE Utilities' })
     .setTimestamp()
     .addFields(
       { name: 'Discord',      value: `<@${link.discord_id}> (${link.discord_id})`, inline: false },
@@ -457,7 +457,7 @@ async function handlePanel(interaction) {
     .setColor(config.colors.primary)
     .setTitle(title)
     .setDescription(description)
-    .setFooter({ text: 'VALORANT OCE Utilities' });
+    .setFooter({ text: 'Valorant OCE Utilities' });
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()

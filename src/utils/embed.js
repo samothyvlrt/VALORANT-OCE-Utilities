@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const config = require('../../config');
 
-const FOOTER = { text: 'VALORANT OCE Utilities', iconURL: null };
+const FOOTER = { text: 'Valorant OCE Utilities', iconURL: null };
 
 function base(color) {
   return new EmbedBuilder().setColor(color).setFooter(FOOTER).setTimestamp();

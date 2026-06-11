@@ -161,7 +161,7 @@ function page(type, title, message) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALORANT OCE Utilities</title>
+  <title>Valorant OCE Utilities</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -203,7 +203,7 @@ function page(type, title, message) {
     <div class="icon">${icon}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    <p class="footer">VALORANT OCE Utilities</p>
+    <p class="footer">Valorant OCE Utilities</p>
   </div>
 </body>
 </html>`;

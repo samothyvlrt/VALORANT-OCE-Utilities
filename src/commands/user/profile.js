@@ -96,7 +96,7 @@ module.exports = {
     const e = new EmbedBuilder()
       .setColor(config.colors.primary)
       .setTitle(`${link.riot_name}#${link.riot_tag}`)
-      .setFooter({ text: 'VALORANT OCE Utilities · Last 20 matches' })
+      .setFooter({ text: 'Valorant OCE Utilities · Last 20 matches' })
       .setTimestamp()
       .addFields(
         { name: 'Discord',       value: `<@${link.discord_id}>`,                         inline: true },
