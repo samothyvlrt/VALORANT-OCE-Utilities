@@ -450,7 +450,7 @@ async function handlePanel(interaction) {
       '',
       '> 🔗 **Link** — Link or re-link your Valorant account',
       '> 🔄 **Update Rank** — Refresh your rank role to your current rank',
-      '> ❌ **Unlink** — Remove your linked account',
+      '> 🔓 **Unlink** — Remove your linked account',
     ].join('\n');
 
   const panelEmbed = new EmbedBuilder()
@@ -474,7 +474,7 @@ async function handlePanel(interaction) {
       .setCustomId('unlink_btn')
       .setLabel('Unlink')
       .setStyle(ButtonStyle.Danger)
-      .setEmoji('❌'),
+      .setEmoji('🔓'),
   );
 
   await interaction.channel.send({ embeds: [panelEmbed], components: [row] });
