@@ -1,4 +1,4 @@
-const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
@@ -78,7 +78,18 @@ module.exports = {
           });
         }
 
+        // ── Stage 1: show checking state ───────────────────────────────────
+        const stageEmbed = (desc) => new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setDescription(desc)
+          .setFooter({ text: 'Valorant OCE Utilities' });
+
+        await interaction.editReply({
+          embeds: [stageEmbed('🔍 **Checking your account…**\nVerifying your Discord connection')],
+        });
+
         // ── Check Discord connections for account swap ─────────────────────
+        let verifiedAccount = null;
         const tokens = db.getTokens(interaction.user.id);
         if (tokens?.discord_access_token) {
           try {
@@ -117,7 +128,6 @@ module.exports = {
               const riotConn = connections.find((c) => c.type === 'riotgames');
 
               if (!riotConn) {
-                // No Riot account connected at all
                 return interaction.editReply({
                   embeds: [embed.warning('Riot Account Disconnected',
                     `You no longer have a Riot account connected in Discord.\n\n` +
@@ -126,7 +136,6 @@ module.exports = {
                 });
               }
 
-              // Look up the PUUID of the currently connected Riot account
               const [connName, connTag] = riotConn.name.split('#');
               if (connName && connTag) {
                 const currentAccount = await getAccount(connName, connTag, link.region).catch(() => null);
@@ -139,19 +148,27 @@ module.exports = {
                   });
                 }
 
-                // If the name/tag changed but PUUID matches, silently update the stored name
+                // Name/tag changed but same PUUID — silently update
                 if (currentAccount && (currentAccount.name !== link.riot_name || currentAccount.tag !== link.riot_tag)) {
                   db.updateLinkRiotId(interaction.user.id, currentAccount.name, currentAccount.tag);
                 }
+
+                verifiedAccount = riotConn.name;
               }
             }
           } catch (err) {
             console.error('[update_rank_btn] connection check error:', err);
-            // Gracefully continue — don't block rank update if check fails
+            // Gracefully continue
           }
         }
-        // ──────────────────────────────────────────────────────────────────
 
+        // ── Stage 2: connection verified, now fetching rank ────────────────
+        const accountLabel = verifiedAccount ?? `${link.riot_name}#${link.riot_tag}`;
+        await interaction.editReply({
+          embeds: [stageEmbed(`📡 **Fetching your rank…**\n${accountLabel} ✓`)],
+        });
+
+        // ──────────────────────────────────────────────────────────────────
         const rank = await getRank(link.riot_name, link.riot_tag, link.region).catch(() => null);
 
         if (!rank) {
@@ -172,10 +189,16 @@ module.exports = {
           console.error('[update_rank_btn] role assignment error:', err);
         }
 
+        // ── Final: success with verified badge ─────────────────────────────
         const rankStr = rank.tier > 0 ? `**${rank.tierName}** — ${rank.rr} RR` : 'Unranked';
-        return interaction.editReply({
-          embeds: [embed.success('Rank Updated', `Your rank role has been updated.\nCurrent rank: ${rankStr}`)],
-        });
+        const successEmbed = embed.success('Rank Updated', `Your rank role has been updated.\nCurrent rank: ${rankStr}`);
+        if (verifiedAccount) {
+          successEmbed.addFields(
+            { name: 'Account', value: `${accountLabel} ✓`, inline: true },
+            { name: 'Verified', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+          );
+        }
+        return interaction.editReply({ embeds: [successEmbed] });
       }
 
       // Unlink button
