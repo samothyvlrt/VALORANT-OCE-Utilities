@@ -116,6 +116,19 @@ module.exports = {
       }
 
       console.log(`[validation] Scan complete — ${invalidated} invalidated, ${renamed} renamed, ${errors} errors`);
+
+      const passed = links.length - invalidated - renamed - errors;
+      logAdminAction(client, {
+        action:  'Account Scan Complete',
+        fields:  {
+          '✅ Passed':      `${passed}`,
+          '✏️ Renamed':     `${renamed}`,
+          '❌ Invalidated': `${invalidated}`,
+          '⚠️ Errors':      `${errors}`,
+          'Total Scanned':  `${links.length}`,
+        },
+        guildId: config.discord.guildId,
+      });
     }
 
     async function invalidateLink(client, link, reason) {
