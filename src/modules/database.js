@@ -324,6 +324,15 @@ function getTokens(discordId) {
   `).get(discordId);
 }
 
+/**
+ * Get all linked accounts that have stored OAuth tokens (eligible for background validation).
+ */
+function getLinksWithTokens() {
+  return db.prepare(`
+    SELECT * FROM linked_accounts WHERE discord_access_token IS NOT NULL
+  `).all();
+}
+
 function getSetting(key) {
   return db.prepare('SELECT value FROM bot_settings WHERE key = ?').get(key)?.value ?? null;
 }
@@ -361,6 +370,7 @@ module.exports = {
   // Tokens
   updateTokens,
   getTokens,
+  getLinksWithTokens,
   // Settings
   getSetting,
   setSetting,
