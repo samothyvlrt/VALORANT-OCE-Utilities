@@ -29,7 +29,6 @@ module.exports = {
     // ── Background account validation every 6 hours ───────────────────────
     async function runAccountValidation() {
       const links = db.getLinksWithTokens();
-      if (!links.length) return;
       console.log(`[validation] Starting account scan — ${links.length} account(s) to check`);
 
       let invalidated = 0, renamed = 0, errors = 0;

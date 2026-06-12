@@ -22,13 +22,17 @@ async function logAdminAction(client, { action, moderator, target, fields = {}, 
     const channel = await client.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
+    const moderatorValue = moderator
+      ? `<@${moderator.id}> (${moderator.tag ?? moderator.username})`
+      : 'System (automated)';
+
     const e = new EmbedBuilder()
       .setColor(config.colors.neutral)
       .setTitle(`🛡️ ${action}`)
       .setFooter({ text: 'Valorant OCE Utilities · Staff Log' })
       .setTimestamp()
       .addFields(
-        { name: 'Moderator', value: `<@${moderator.id}> (${moderator.tag ?? moderator.username})`, inline: true },
+        { name: 'Moderator', value: moderatorValue, inline: true },
         ...(target ? [{ name: 'Target', value: target, inline: true }] : []),
         ...Object.entries(fields).map(([name, value]) => ({ name, value: String(value), inline: true })),
       );
