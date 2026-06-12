@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Valorant OCE Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d0d;
+      color: #b0b8c1;
+      padding: 48px 24px;
+      line-height: 1.7;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .header {
+      border-bottom: 1px solid #FF465544;
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+    .logo {
+      font-size: 13px;
+      color: #FF4655;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #e8eaed;
+      margin-bottom: 8px;
+    }
+    .updated {
+      font-size: 13px;
+      color: #55606a;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e8eaed;
+      margin: 36px 0 12px;
+    }
+    p { margin-bottom: 14px; font-size: 15px; }
+    ul {
+      margin: 0 0 14px 20px;
+      font-size: 15px;
+    }
+    ul li { margin-bottom: 6px; }
+    strong { color: #e8eaed; }
+    a { color: #FF4655; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid #1f1f1f;
+      font-size: 13px;
+      color: #55606a;
+    }
+    .pill {
+      display: inline-block;
+      background: #FF465518;
+      border: 1px solid #FF465544;
+      color: #FF4655;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Valorant OCE Utilities</div>
+      <h1>Privacy Policy</h1>
+      <div class="updated">Last updated: June 2026</div>
+    </div>
+
+    <p>This Privacy Policy describes how Valorant OCE Utilities (the "Bot") collects, uses, and stores information when you use its services within the Valorant OCE Discord server.</p>
+    <p>By linking your Riot account through the Bot, you agree to the collection and use of your information as described in this policy.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>When you link your Riot account, we collect and store the following:</p>
+    <ul>
+      <li><strong>Discord User ID</strong> — your unique Discord identifier</li>
+      <li><strong>Riot Account Information</strong> — your Riot ID (name and tag), PUUID (Riot's unique account identifier), and region</li>
+      <li><strong>Rank Data</strong> — your current and peak Valorant rank, cached periodically to reduce API calls</li>
+      <li><strong>Match Statistics</strong> — aggregated stats (K/D, win rate, top agents) derived from your recent match history, cached for performance</li>
+      <li><strong>Link History</strong> — a record of when your account was linked and any previous accounts linked to your Discord</li>
+      <li><strong>Audit Logs</strong> — administrative actions performed on your account (e.g. resets) including the moderator, reason, and timestamp</li>
+    </ul>
+
+    <h2>2. How We Use Your Information</h2>
+    <p>Your data is used solely to provide the Bot's features:</p>
+    <ul>
+      <li>Verifying ownership of your Riot account via Discord OAuth2</li>
+      <li>Assigning rank roles in the Valorant OCE Discord server</li>
+      <li>Displaying your profile stats via <code>/profile</code></li>
+      <li>Enabling server leaderboards and statistics</li>
+      <li>Maintaining moderation records for server integrity</li>
+    </ul>
+    <p>We do not sell, share, or use your data for advertising or any commercial purpose.</p>
+
+    <h2>3. Data Storage & Security</h2>
+    <p>Your data is stored in a secured SQLite database hosted on our bot server. Rank and stats data is cached temporarily and refreshed periodically. We take reasonable measures to protect your data from unauthorised access.</p>
+
+    <h2>4. Third-Party Services</h2>
+    <p>The Bot interacts with the following third-party services to function:</p>
+    <ul>
+      <li><strong>Discord API</strong> — for authentication, role assignment, and messaging. Governed by <a href="https://discord.com/privacy" target="_blank">Discord's Privacy Policy</a>.</li>
+      <li><strong>Riot Games API / RSO</strong> — to verify and retrieve Riot account data. Governed by <a href="https://www.riotgames.com/en/privacy-notice" target="_blank">Riot Games' Privacy Notice</a>.</li>
+      <li><strong>HenrikDev Unofficial Valorant API</strong> — used to retrieve rank and match data. This is an unofficial API wrapper.</li>
+    </ul>
+
+    <h2>5. Data Retention</h2>
+    <p>Your linked account data is retained for as long as you remain linked. You may delete your data at any time by running <code>/unlink</code>, which removes your Riot account association from our database. Audit log entries may be retained for a reasonable period for moderation purposes.</p>
+
+    <h2>6. Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li>View your stored data via <code>/profile</code> and <code>/admin link get</code> (admins)</li>
+      <li>Remove your linked account data at any time via <code>/unlink</code></li>
+      <li>Request manual data removal by contacting a server moderator</li>
+    </ul>
+
+    <h2>7. Children's Privacy</h2>
+    <p>This service is not directed at individuals under the age of 13. By using the Bot, you confirm that you meet Discord's minimum age requirements in your country.</p>
+
+    <h2>8. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Continued use of the Bot following any changes constitutes acceptance of the updated policy.</p>
+
+    <h2>9. Contact</h2>
+    <p>If you have questions about this Privacy Policy or wish to request data deletion, please contact the Valorant OCE server moderation team via the server's ticketing system or a moderator directly.</p>
+
+    <div class="footer">
+      Valorant OCE Utilities is an unofficial community tool and is not affiliated with or endorsed by Riot Games. &nbsp;·&nbsp;
+      <a href="/terms">Terms of Service</a>
+    </div>
+  </div>
+</body>
+</html>
