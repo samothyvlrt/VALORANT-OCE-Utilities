@@ -16,6 +16,8 @@ const db = require('../../modules/database');
 const { adminForceLink, VerificationError } = require('../../modules/verification');
 const { RiotApiError } = require('../../modules/riot-api');
 const { isAdmin } = require('../../utils/permissions');
+const { logAdminAction } = require('../../utils/activity-log');
+const { tierToRoleKey } = require('../../utils/roles');
 const config = require('../../../config');
 
 const ITEMS_PER_PAGE = 20;
@@ -134,6 +136,28 @@ module.exports = {
                 .setRequired(false),
             ),
         ),
+    )
+
+    // ── log subcommand group ─────────────────────────────────────
+    .addSubcommandGroup((grp) =>
+      grp
+        .setName('log')
+        .setDescription('Staff activity log settings.')
+        .addSubcommand((sub) =>
+          sub
+            .setName('setup')
+            .setDescription('Set the channel for staff activity logs.')
+            .addChannelOption((opt) =>
+              opt.setName('channel').setDescription('Channel to post logs in').setRequired(true),
+            ),
+        ),
+    )
+
+    // ── stats ────────────────────────────────────────────────────
+    .addSubcommand((sub) =>
+      sub
+        .setName('stats')
+        .setDescription('Show server stats — member count, links, and rank distribution.'),
     ),
 
   // ─────────────────────────────────────────────
@@ -145,18 +169,33 @@ module.exports = {
       });
     }
 
-    const sub = interaction.options.getSubcommand();
+    const group = interaction.options.getSubcommandGroup(false);
+    const sub   = interaction.options.getSubcommand();
 
-    switch (sub) {
-      case 'get':        return handleGet(interaction);
-      case 'set':        return handleSet(interaction);
-      case 'reset':      return handleReset(interaction);
-      case 'list':       return handleList(interaction);
-      case 'bulk-reset': return handleBulkReset(interaction);
-      case 'panel':      return handlePanel(interaction);
-      default:
-        return interaction.reply({ embeds: [embed.error('Unknown subcommand', sub)], ephemeral: true });
+    if (group === 'link') {
+      switch (sub) {
+        case 'get':        return handleGet(interaction);
+        case 'set':        return handleSet(interaction);
+        case 'reset':      return handleReset(interaction);
+        case 'list':       return handleList(interaction);
+        case 'bulk-reset': return handleBulkReset(interaction);
+        case 'panel':      return handlePanel(interaction);
+      }
     }
+
+    if (group === 'log') {
+      switch (sub) {
+        case 'setup': return handleLogSetup(interaction);
+      }
+    }
+
+    if (!group) {
+      switch (sub) {
+        case 'stats': return handleStats(interaction);
+      }
+    }
+
+    return interaction.reply({ embeds: [embed.error('Unknown subcommand', sub)], ephemeral: true });
   },
 };
 
@@ -236,6 +275,14 @@ async function handleSet(interaction) {
       } catch { /* DMs closed — silently continue */ }
     }
 
+    logAdminAction(interaction.client, {
+      action:    'Link Set',
+      moderator: interaction.user,
+      target:    `<@${target.id}>`,
+      fields:    { 'Riot ID': `${result.riotName}#${result.riotTag}`, Region: result.region.toUpperCase(), Silent: silent ? 'Yes' : 'No' },
+      guildId:   interaction.guildId,
+    });
+
     await interaction.editReply({
       embeds: [
         embed.success(
@@ -299,6 +346,14 @@ async function handleReset(interaction) {
       });
     } catch { /* DMs may be closed — silently continue */ }
   }
+
+  logAdminAction(interaction.client, {
+    action:    'Link Reset',
+    moderator: interaction.user,
+    target:    `<@${target.id}>`,
+    fields:    { 'Riot ID': `${link.riot_name}#${link.riot_tag}`, Reason: reason, Silent: silent ? 'Yes' : 'No' },
+    guildId:   interaction.guildId,
+  });
 
   await interaction.editReply({
     embeds: [
@@ -422,6 +477,13 @@ async function handleBulkReset(interaction) {
     }
   }
 
+  logAdminAction(interaction.client, {
+    action:    'Bulk Reset',
+    moderator: interaction.user,
+    fields:    { Role: `@${role.name}`, Reset: removed, Reason: reason, Silent: silent ? 'Yes' : 'No' },
+    guildId:   interaction.guildId,
+  });
+
   await interaction.editReply({
     embeds: [
       embed.success(
@@ -437,6 +499,73 @@ async function handleBulkReset(interaction) {
       ),
     ],
   });
+}
+
+// ─────────────────────────────────────────────
+// log setup
+// ─────────────────────────────────────────────
+async function handleLogSetup(interaction) {
+  const channel = interaction.options.getChannel('channel');
+  db.setSetting('log_channel_id', channel.id);
+
+  logAdminAction(interaction.client, {
+    action:    'Log Channel Set',
+    moderator: interaction.user,
+    fields:    { Channel: `<#${channel.id}>` },
+    guildId:   interaction.guildId,
+  });
+
+  return interaction.reply({
+    embeds: [embed.success('Log Channel Set', `Staff activity logs will now be posted in <#${channel.id}>.\nRe-run this command to change the channel at any time.`)],
+    ephemeral: true,
+  });
+}
+
+// ─────────────────────────────────────────────
+// stats
+// ─────────────────────────────────────────────
+async function handleStats(interaction) {
+  await interaction.deferReply({ ephemeral: false });
+
+  const totalMembers = interaction.guild.memberCount;
+  const totalLinked  = db.countLinks();
+  const linkRate     = totalMembers > 0 ? ((totalLinked / totalMembers) * 100).toFixed(1) : '0.0';
+
+  // Build rank distribution from cached_rank in the database
+  const rankOrder = ['radiant', 'immortal', 'ascendant', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron', 'unranked'];
+  const rankEmoji = { radiant: '🟡', immortal: '🔴', ascendant: '🟢', diamond: '🔵', platinum: '🩵', gold: '🟠', silver: '⚪', bronze: '🟤', iron: '⬛', unranked: '❓' };
+  const counts = Object.fromEntries(rankOrder.map((k) => [k, 0]));
+  let uncached = 0;
+
+  const links = db.getAllLinks();
+  for (const link of links) {
+    if (!link.cached_rank) { uncached++; continue; }
+    try {
+      const rank = JSON.parse(link.cached_rank);
+      const key  = tierToRoleKey(rank.tier ?? 0);
+      counts[key]++;
+    } catch { uncached++; }
+  }
+
+  const distLines = rankOrder
+    .filter((k) => counts[k] > 0)
+    .map((k) => `${rankEmoji[k]} **${k.charAt(0).toUpperCase() + k.slice(1)}** — ${counts[k]}`);
+
+  if (uncached > 0) distLines.push(`❔ **Not yet cached** — ${uncached}`);
+
+  const e = new EmbedBuilder()
+    .setColor(config.colors.primary)
+    .setTitle('📊 Server Stats')
+    .setFooter({ text: 'Valorant OCE Utilities · Rank data based on last cached fetch' })
+    .setTimestamp()
+    .addFields(
+      { name: 'Total Members',    value: totalMembers.toLocaleString(), inline: true },
+      { name: 'Linked Accounts',  value: `${totalLinked.toLocaleString()} (${linkRate}%)`, inline: true },
+      { name: '​',           value: '​', inline: true },
+      { name: 'Rank Distribution', value: distLines.length ? distLines.join('\n') : 'No cached rank data yet', inline: false },
+    );
+
+  await interaction.editReply({ embeds: [e] });
 }
 
 // ─────────────────────────────────────────────

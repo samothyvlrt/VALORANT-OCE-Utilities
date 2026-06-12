@@ -61,6 +61,13 @@ db.exec(`
 `);
 
 // Migrate existing databases — add columns if they don't exist yet
+db.exec(`
+  CREATE TABLE IF NOT EXISTS bot_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`);
+
 try { db.exec(`ALTER TABLE pending_verifications ADD COLUMN state TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN cached_rank TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN rank_cached_at INTEGER`); } catch { /* already exists */ }
@@ -289,6 +296,21 @@ function countLinks() {
   return db.prepare('SELECT COUNT(*) AS cnt FROM linked_accounts').get().cnt;
 }
 
+// ─────────────────────────────────────────────
+// Bot settings (persistent key/value store)
+// ─────────────────────────────────────────────
+
+function getSetting(key) {
+  return db.prepare('SELECT value FROM bot_settings WHERE key = ?').get(key)?.value ?? null;
+}
+
+function setSetting(key, value) {
+  db.prepare(`
+    INSERT INTO bot_settings (key, value) VALUES (?, ?)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+  `).run(key, value);
+}
+
 module.exports = {
   // Linked accounts
   getLinkByDiscord,
@@ -312,6 +334,9 @@ module.exports = {
   getLinkHistory,
   // Stats
   countLinks,
+  // Settings
+  getSetting,
+  setSetting,
   // Raw db handle (for advanced queries in admin commands)
   db,
 };
