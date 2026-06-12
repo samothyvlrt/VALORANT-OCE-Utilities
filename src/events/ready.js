@@ -39,6 +39,15 @@ module.exports = {
           // Success — assign rank role, then DM the user
           console.log(`[verify] Finalised link: ${pending.discord_id} → ${result.riotName}#${result.riotTag}`);
 
+          // Save OAuth tokens for future connection checks
+          if (result.accessToken) {
+            db.updateTokens(pending.discord_id, {
+              accessToken:  result.accessToken,
+              refreshToken: result.refreshToken,
+              expiresAt:    result.tokenExpiresAt,
+            });
+          }
+
           // Log to staff channel
           const linkedUser = await client.users.fetch(pending.discord_id).catch(() => null);
           if (linkedUser) {

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valorant OCE Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #FF4655;
+      --red-dim: #FF465520;
+      --red-border: #FF465540;
+      --bg: #0d0d0d;
+      --surface: #111214;
+      --border: #1e2025;
+      --text: #c8d0d8;
+      --text-muted: #4a5260;
+      --text-bright: #e8eaed;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--red);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      flex-shrink: 0;
+    }
+
+    .nav-logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--text-bright);
+      background: var(--border);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, #FF465514 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 800;
+      color: var(--text-bright);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      max-width: 700px;
+    }
+
+    h1 span {
+      color: var(--red);
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 44px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 26px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .btn:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 60px 24px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 48px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--red-border);
+    }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── COMMUNITY ── */
+    .community {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 24px;
+      text-align: center;
+    }
+
+    .community-inner {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .community h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 12px;
+    }
+
+    .community p {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .server-pills {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .server-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-bright);
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .server-pill:hover {
+      border-color: var(--red-border);
+      color: var(--red);
+    }
+
+    .server-pill-icon {
+      font-size: 18px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-bright);
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+      .hero { padding: 60px 20px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-icon"></div>
+      <span class="nav-logo-text">Valorant OCE Utilities</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+      <a class="nav-link" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Discord</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Oceanic Valorant Community
+    </div>
+    <h1>The utility bot for<br><span>Valorant OCE</span></h1>
+    <p class="hero-sub">
+      Link your Riot account, get your rank role, and track your stats — all inside Discord.
+      Built for the OCE community, by the OCE community.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">
+        Join the Server
+      </a>
+      <a class="btn btn-secondary" href="https://oce.gg" target="_blank" rel="noopener">
+        Visit OCE.GG
+      </a>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <p class="section-label">What it does</p>
+    <h2 class="section-title">Everything in one bot</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🔗</div>
+        <div class="card-title">Account Linking</div>
+        <div class="card-desc">Securely verify your Riot account via Discord OAuth. One click, done.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏅</div>
+        <div class="card-title">Rank Roles</div>
+        <div class="card-desc">Automatically assigns and updates your rank role from Iron through Radiant.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Profile Stats</div>
+        <div class="card-desc">View your K/D, win rate, and top agents from your last 20 matches with <code style="background:#ffffff10;padding:1px 5px;border-radius:3px;font-size:12px;color:#FF4655">/profile</code>.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <div class="card-title">Staff Controls</div>
+        <div class="card-desc">Full admin toolkit — set links, bulk resets, activity logs, and rank distribution stats.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section class="community">
+    <div class="community-inner">
+      <h2>Join <span id="member-count">51,000+</span> OCE players</h2>
+      <p>The largest Oceanic Valorant community. Find teammates, discuss meta, and compete — all in one place.</p>
+      <div class="server-pills">
+        <a class="server-pill" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">
+          <span class="server-pill-icon">💬</span>
+          discord.gg/VALORANTOCE
+        </a>
+        <a class="server-pill" href="https://oce.gg" target="_blank" rel="noopener">
+          <span class="server-pill-icon">🌐</span>
+          oce.gg
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Valorant OCE Utilities · Not affiliated with Riot Games</span>
+    <div class="footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
+  </footer>
+
+  <script>
+    fetch('https://discord.com/api/v10/invites/VALORANTOCE?with_counts=true')
+      .then(r => r.json())
+      .then(data => {
+        if (data.approximate_member_count) {
+          const count = data.approximate_member_count;
+          const formatted = count.toLocaleString();
+          document.getElementById('member-count').textContent = formatted;
+        }
+      })
+      .catch(() => {}); // silently keep fallback text on error
+  </script>
+</body>
+</html>

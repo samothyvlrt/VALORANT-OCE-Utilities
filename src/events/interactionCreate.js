@@ -3,9 +3,8 @@ const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
 const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
-const { getRank } = require('../modules/riot-api');
+const { getRank, getAccount, RiotApiError } = require('../modules/riot-api');
 const { startChallenge, VerificationError } = require('../modules/verification');
-const { RiotApiError } = require('../modules/riot-api');
 const { isRestricted } = require('../utils/permissions');
 const { logAdminAction } = require('../utils/activity-log');
 
@@ -78,6 +77,80 @@ module.exports = {
             embeds: [embed.warning('Not Linked', "You haven't linked a Riot account yet. Use the **Link** button to get started.")],
           });
         }
+
+        // ── Check Discord connections for account swap ─────────────────────
+        const tokens = db.getTokens(interaction.user.id);
+        if (tokens?.discord_access_token) {
+          try {
+            let accessToken = tokens.discord_access_token;
+
+            // Refresh if expired
+            if (tokens.discord_token_expires_at && Date.now() > tokens.discord_token_expires_at) {
+              const refreshRes = await fetch('https://discord.com/api/oauth2/token', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                  client_id:     config.discord.clientId,
+                  client_secret: config.oauth.clientSecret,
+                  grant_type:    'refresh_token',
+                  refresh_token: tokens.discord_refresh_token,
+                }),
+              });
+              const refreshData = await refreshRes.json();
+              if (refreshData.access_token) {
+                accessToken = refreshData.access_token;
+                db.updateTokens(interaction.user.id, {
+                  accessToken:  refreshData.access_token,
+                  refreshToken: refreshData.refresh_token,
+                  expiresAt:    Date.now() + ((refreshData.expires_in ?? 604800) * 1000),
+                });
+              }
+            }
+
+            // Fetch current Discord connections
+            const connRes     = await fetch('https://discord.com/api/users/@me/connections', {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const connections = await connRes.json();
+
+            if (Array.isArray(connections)) {
+              const riotConn = connections.find((c) => c.type === 'riotgames');
+
+              if (!riotConn) {
+                // No Riot account connected at all
+                return interaction.editReply({
+                  embeds: [embed.warning('Riot Account Disconnected',
+                    `You no longer have a Riot account connected in Discord.\n\n` +
+                    `Go to **Discord Settings → Connections → Riot Games**, reconnect your account, then use the **Link** button to re-link.`,
+                  )],
+                });
+              }
+
+              // Look up the PUUID of the currently connected Riot account
+              const [connName, connTag] = riotConn.name.split('#');
+              if (connName && connTag) {
+                const currentAccount = await getAccount(connName, connTag, link.region).catch(() => null);
+                if (currentAccount && currentAccount.puuid !== link.riot_puuid) {
+                  return interaction.editReply({
+                    embeds: [embed.warning('Different Account Detected',
+                      `Your Discord connections now show **${riotConn.name}**, but your bot link is still for **${link.riot_name}#${link.riot_tag}**.\n\n` +
+                      `Use the **Link** button to re-link with your new account.`,
+                    )],
+                  });
+                }
+
+                // If the name/tag changed but PUUID matches, silently update the stored name
+                if (currentAccount && (currentAccount.name !== link.riot_name || currentAccount.tag !== link.riot_tag)) {
+                  db.updateLinkRiotId(interaction.user.id, currentAccount.name, currentAccount.tag);
+                }
+              }
+            }
+          } catch (err) {
+            console.error('[update_rank_btn] connection check error:', err);
+            // Gracefully continue — don't block rank update if check fails
+          }
+        }
+        // ──────────────────────────────────────────────────────────────────
 
         const rank = await getRank(link.riot_name, link.riot_tag, link.region).catch(() => null);
 

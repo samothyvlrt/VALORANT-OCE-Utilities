@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
   }
 
   // ── Exchange authorization code for access token ──────────────────────────
-  let accessToken;
+  let accessToken, refreshToken, tokenExpiresAt;
   try {
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -66,6 +66,8 @@ module.exports = async (req, res) => {
       return res.status(400).send(page('error', 'Authorization failed', 'Discord authorization could not be completed. Please try again.'));
     }
     accessToken = tokenData.access_token;
+    refreshToken = tokenData.refresh_token;
+    tokenExpiresAt = Date.now() + ((tokenData.expires_in ?? 604800) * 1000);
   } catch (err) {
     console.error('[callback] Token exchange error:', err.message);
     return res.status(500).send(page('error', 'Server error', 'Failed to complete authorization. Please try again.'));
@@ -130,12 +132,15 @@ module.exports = async (req, res) => {
 
   // ── Success ───────────────────────────────────────────────────────────────
   await redis.set(`verified:${pending.discordId}`, {
-    success:  true,
-    discordId: pending.discordId,
-    puuid:    pending.puuid,
-    riotName: pending.riotName,
-    riotTag:  pending.riotTag,
-    region:   pending.region,
+    success:        true,
+    discordId:      pending.discordId,
+    puuid:          pending.puuid,
+    riotName:       pending.riotName,
+    riotTag:        pending.riotTag,
+    region:         pending.region,
+    accessToken:    accessToken    ?? null,
+    refreshToken:   refreshToken   ?? null,
+    tokenExpiresAt: tokenExpiresAt ?? null,
   }, { ex: 300 }).catch(() => {});
 
   return res.send(page('success',

@@ -73,6 +73,9 @@ try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN cached_rank TEXT`); } catc
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN rank_cached_at INTEGER`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN cached_stats TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN stats_cached_at INTEGER`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_access_token TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_refresh_token TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_token_expires_at INTEGER`); } catch { /* already exists */ }
 
 // ─────────────────────────────────────────────
 // Linked accounts
@@ -300,6 +303,27 @@ function countLinks() {
 // Bot settings (persistent key/value store)
 // ─────────────────────────────────────────────
 
+/**
+ * Save Discord OAuth tokens for a linked account.
+ */
+function updateTokens(discordId, { accessToken, refreshToken, expiresAt }) {
+  db.prepare(`
+    UPDATE linked_accounts
+    SET discord_access_token = ?, discord_refresh_token = ?, discord_token_expires_at = ?
+    WHERE discord_id = ?
+  `).run(accessToken, refreshToken, expiresAt, discordId);
+}
+
+/**
+ * Get stored Discord OAuth tokens for a linked account.
+ */
+function getTokens(discordId) {
+  return db.prepare(`
+    SELECT discord_access_token, discord_refresh_token, discord_token_expires_at
+    FROM linked_accounts WHERE discord_id = ?
+  `).get(discordId);
+}
+
 function getSetting(key) {
   return db.prepare('SELECT value FROM bot_settings WHERE key = ?').get(key)?.value ?? null;
 }
@@ -334,6 +358,9 @@ module.exports = {
   getLinkHistory,
   // Stats
   countLinks,
+  // Tokens
+  updateTokens,
+  getTokens,
   // Settings
   getSetting,
   setSetting,
