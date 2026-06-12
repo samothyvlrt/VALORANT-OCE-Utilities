@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "deploy": "node deploy-commands.js",
+    "ship": "bash scripts/deploy.sh",
     "dev": "node --watch index.js"
   },
   "dependencies": {
