@@ -28,6 +28,7 @@ module.exports = {
 
     // ── Background account validation every 6 hours ───────────────────────
     async function runAccountValidation() {
+      try {
       const links = db.getLinksWithTokens();
       console.log(`[validation] Starting account scan — ${links.length} account(s) to check`);
 
@@ -117,7 +118,7 @@ module.exports = {
       console.log(`[validation] Scan complete — ${invalidated} invalidated, ${renamed} renamed, ${errors} errors`);
 
       const passed = links.length - invalidated - renamed - errors;
-      logAdminAction(client, {
+      await logAdminAction(client, {
         action:  'Account Scan Complete',
         fields:  {
           '✅ Passed':      `${passed}`,
@@ -128,6 +129,10 @@ module.exports = {
         },
         guildId: config.discord.guildId,
       });
+
+      } catch (err) {
+        console.error('[validation] Fatal error during scan:', err);
+      }
     }
 
     async function invalidateLink(client, link, reason) {
