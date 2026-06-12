@@ -7,6 +7,7 @@ const { getRank } = require('../modules/riot-api');
 const { startChallenge, VerificationError } = require('../modules/verification');
 const { RiotApiError } = require('../modules/riot-api');
 const { isRestricted } = require('../utils/permissions');
+const { logAdminAction } = require('../utils/activity-log');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -133,6 +134,13 @@ module.exports = {
         } catch (err) {
           console.error('[unlink_btn] role removal error:', err);
         }
+
+        logAdminAction(interaction.client, {
+          action:    'Account Unlinked',
+          moderator: interaction.user,
+          fields:    { 'Riot ID': `${link.riot_name}#${link.riot_tag}`, Method: 'Panel button' },
+          guildId:   interaction.guildId,
+        });
 
         return interaction.editReply({
           embeds: [embed.success('Unlinked', `**${link.riot_name}#${link.riot_tag}** has been unlinked from your Discord account.`)],

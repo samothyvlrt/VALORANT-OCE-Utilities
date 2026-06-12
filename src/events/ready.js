@@ -5,6 +5,7 @@ const embed = require('../utils/embed');
 const { finaliseIfReady, VerificationError } = require('../modules/verification');
 const { getRank } = require('../modules/riot-api');
 const { assignRankRole } = require('../utils/roles');
+const { logAdminAction } = require('../utils/activity-log');
 const config = require('../../config');
 
 module.exports = {
@@ -37,6 +38,17 @@ module.exports = {
 
           // Success — assign rank role, then DM the user
           console.log(`[verify] Finalised link: ${pending.discord_id} → ${result.riotName}#${result.riotTag}`);
+
+          // Log to staff channel
+          const linkedUser = await client.users.fetch(pending.discord_id).catch(() => null);
+          if (linkedUser) {
+            logAdminAction(client, {
+              action:    'Account Linked',
+              moderator: linkedUser,
+              fields:    { 'Riot ID': `${result.riotName}#${result.riotTag}`, Region: result.region.toUpperCase(), Method: 'OAuth' },
+              guildId:   config.discord.guildId,
+            });
+          }
 
           // Assign rank role
           try {
