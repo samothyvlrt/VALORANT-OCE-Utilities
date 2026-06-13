@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../../modules/database');
-const { getMatchHistory, getLastMatch, parseRiotId, getAccount, RiotApiError } = require('../../modules/riot-api');
+const { getMatchHistory, parseRiotId, getAccount, RiotApiError } = require('../../modules/riot-api');
 const config = require('../../../config');
 
 // ─────────────────────────────────────────────
@@ -81,6 +81,21 @@ function formatPlayerRow(p, totalRounds, highlightPuuid) {
 }
 
 // ─────────────────────────────────────────────
+// Match validity check
+// ─────────────────────────────────────────────
+
+/**
+ * Returns true if a match has enough data to display.
+ * Filters out Deathmatch, Swift Play, and any mode where
+ * the API returns no player/map data.
+ */
+function isValidMatch(match) {
+  const players = match?.players?.all_players ?? [];
+  const map     = match?.metadata?.map;
+  return players.length > 0 && map && map !== 'Unknown';
+}
+
+// ─────────────────────────────────────────────
 // Error embed for API failures
 // ─────────────────────────────────────────────
 
@@ -120,13 +135,15 @@ async function executeCurrent(interaction) {
 
   const { puuid, region, displayName } = target;
 
-  let match;
+  // Fetch a few matches so we can skip past Deathmatch/Swift Play entries
+  let matches;
   try {
-    match = await getLastMatch(puuid, region);
+    matches = await getMatchHistory(puuid, region, 5);
   } catch {
     return interaction.editReply({ embeds: [apiErrorEmbed()] });
   }
 
+  const match = (matches ?? []).find(isValidMatch);
   if (!match) return interaction.editReply({ embeds: [notFoundEmbed(displayName)] });
 
   const meta       = match.metadata ?? {};
@@ -218,12 +235,14 @@ async function executeHistory(interaction) {
 
   let matches;
   try {
-    // size=10 is a single API call — no extra cost over size=1
-    matches = await getMatchHistory(puuid, region, 10);
+    // Fetch extra to account for Deathmatch/Swift Play entries with no data
+    matches = await getMatchHistory(puuid, region, 15);
   } catch {
     return interaction.editReply({ embeds: [apiErrorEmbed()] });
   }
 
+  // Filter out game modes the API returns no player data for, cap at 10
+  matches = (matches ?? []).filter(isValidMatch).slice(0, 10);
   if (!matches.length) return interaction.editReply({ embeds: [notFoundEmbed(displayName)] });
 
   const lines = matches.map((match, i) => {
