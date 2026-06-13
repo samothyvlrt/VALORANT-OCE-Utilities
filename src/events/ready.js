@@ -6,6 +6,7 @@ const { finaliseIfReady, VerificationError } = require('../modules/verification'
 const { getRank, getAccount } = require('../modules/riot-api');
 const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
 const { logAdminAction } = require('../utils/activity-log');
+const { generateStats } = require('../utils/generate-stats');
 const config = require('../../config');
 
 module.exports = {
@@ -195,6 +196,10 @@ module.exports = {
     // Run once on startup (after a short delay), then every 6 hours
     setTimeout(() => runAccountValidation(), 60 * 1000);
     setInterval(() => runAccountValidation(), 6 * 60 * 60 * 1000);
+
+    // ── Publish rank-distribution stats to Redis (for web chart) ─────────────
+    generateStats();
+    setInterval(() => generateStats(), 6 * 60 * 60 * 1000);
 
     // ── Poll Redis every 15s for completed OAuth verifications ──────────────
     setInterval(async () => {

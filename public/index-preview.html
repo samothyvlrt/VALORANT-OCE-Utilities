@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valorant OCE Utilities — Design Preview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:          #FF4655;
+      --red-dim:      rgba(255, 70, 85, 0.10);
+      --red-border:   rgba(255, 70, 85, 0.30);
+      --shadow-red:   rgba(255, 70, 85, 0.50);
+
+      --bg:           #0a0a0c;
+      --surface:      #111214;
+      --surface-2:    #16191e;
+      --surface-3:    #1c2029;
+
+      --green:        #3DD68C;
+
+      --text-muted:   #3a4252;
+      --text:         #5e6e88;
+      --text-mid:     #8a9ab8;
+      --text-bright:  #c4cfde;
+      --white:        #edf2fa;
+
+      --border:       rgba(255, 255, 255, 0.06);
+      --border-mid:   rgba(255, 255, 255, 0.11);
+      --border-red:   rgba(255, 70, 85, 0.30);
+
+      --radius-sm:    4px;
+      --radius:       8px;
+      --radius-lg:    12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      /* Dot-grid — neo-brutalist/industrial texture */
+      background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+
+    /* ══════════════════════════════════════
+       PREVIEW BAR (remove before shipping)
+    ══════════════════════════════════════ */
+    .preview-bar {
+      background: var(--red);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 7px;
+    }
+
+    /* ══════════════════════════════════════
+       NAV
+    ══════════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(10, 10, 12, 0.90);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    /* Valorant-style diamond icon */
+    .nav-logo-icon {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .nav-logo-text {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-logo-text span { color: var(--red); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--white);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* Primary nav CTA — hard brutalist shadow */
+    .nav-cta {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #fff;
+      background: var(--red);
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      box-shadow: 3px 3px 0 0 var(--shadow-red);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    .nav-cta:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--shadow-red);
+    }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    .hero {
+      flex: none;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 80px;
+      padding: 96px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Faint red radial glow */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -160px; left: -60px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle at 30% 35%, rgba(255,70,85,0.055) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-text {
+      position: relative;
+      z-index: 1;
+      max-width: 540px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--red);
+      border: 1px solid var(--border-red);
+      background: var(--red-dim);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 26px;
+    }
+
+    .eyebrow-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.30; }
+    }
+
+    h1 {
+      font-size: clamp(40px, 5vw, 62px);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.04;
+      letter-spacing: -0.035em;
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--red);
+      text-decoration: underline;
+      text-decoration-color: rgba(255,70,85,0.35);
+      text-underline-offset: 6px;
+      text-decoration-thickness: 3px;
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      line-height: 1.72;
+      color: var(--text);
+      margin-bottom: 44px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 26px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      color: #fff;
+      background: var(--red);
+      border: 2px solid var(--red);
+      box-shadow: 4px 4px 0 0 var(--shadow-red);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    .btn-primary:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--shadow-red);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 26px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      color: var(--text-bright);
+      background: transparent;
+      border: 2px solid var(--border-mid);
+      box-shadow: 4px 4px 0 0 rgba(255,255,255,0.04);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .btn-secondary:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 rgba(255,255,255,0.07);
+      border-color: var(--border-red);
+      color: var(--red);
+    }
+
+    /* ══════════════════════════════════════
+       BOT PROFILE CARD
+    ══════════════════════════════════════ */
+    .bot-card-wrap {
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    /* Offset ghost border — classic neo-brutalist device */
+    .bot-card-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--border-red);
+      border-radius: var(--radius-lg);
+      transform: translate(8px, 8px);
+      pointer-events: none;
+    }
+
+    .bot-card {
+      width: 320px;
+      background: var(--surface);
+      border: 2px solid var(--border-mid);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 8px 8px 0 0 var(--shadow-red);
+    }
+
+    /* Banner — uses real bot banner */
+    .bot-banner {
+      height: 105px;
+      min-height: 105px;
+      background-image: url("https://cdn.discordapp.com/banners/1367857894397186058/d07aeec9fc6dcc23bef57498bd9cb79c.png?size=600");
+      background-color: rgb(220, 163, 158);
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* Card body */
+    .bot-card-body {
+      padding: 0 18px 20px;
+    }
+
+    .bot-avatar-wrap {
+      margin-top: -34px;
+      margin-bottom: 12px;
+      position: relative;
+      width: fit-content;
+    }
+
+    .bot-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 4px solid var(--surface);
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+
+    .bot-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .status-dot {
+      position: absolute;
+      bottom: 1px; right: 1px;
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 8px rgba(61,214,140,0.55);
+    }
+
+    .bot-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .bot-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.015em;
+    }
+
+    .bot-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #5865F2;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .bot-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .bot-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 13px;
+    }
+
+    .bot-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .bot-about {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .bot-about a {
+      color: var(--red);
+      text-decoration: none;
+    }
+
+    .bot-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .bot-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-mid);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ══════════════════════════════════════
+       STATS STRIP
+    ══════════════════════════════════════ */
+    .stats-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .stat-item {
+      background: var(--bg);
+      background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 22px 22px;
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.035em;
+      line-height: 1;
+    }
+
+    .stat-num span { color: var(--red); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════════════
+       FEATURES
+    ══════════════════════════════════════ */
+    .features {
+      padding: 88px 80px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-header { margin-bottom: 52px; }
+
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: clamp(26px, 3.5vw, 38px);
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+    }
+
+    .section-title span { color: var(--red); }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 2px solid var(--border-mid);
+      border-radius: var(--radius);
+      padding: 28px 22px;
+      box-shadow: 4px 4px 0 0 rgba(255,255,255,0.025);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+      position: relative;
+    }
+
+    /* Left accent bar on hover */
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 16px; left: -2px;
+      width: 3px; height: 28px;
+      background: var(--red);
+      border-radius: 0 2px 2px 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 7px 7px 0 0 var(--shadow-red);
+      border-color: var(--border-red);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 42px; height: 42px;
+      background: var(--surface-2);
+      border: 2px solid var(--border-mid);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 18px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .feature-card:hover .feature-icon {
+      border-color: var(--border-red);
+      background: var(--red-dim);
+    }
+
+    .feature-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.72;
+    }
+
+    /* ══════════════════════════════════════
+       COMMUNITY
+    ══════════════════════════════════════ */
+    .community {
+      border-top: 1px solid var(--border);
+      padding: 88px 80px;
+    }
+
+    .community-inner { max-width: 580px; }
+
+    .community h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.03em;
+      line-height: 1.06;
+      margin-bottom: 14px;
+    }
+
+    .community h2 em {
+      font-style: normal;
+      color: var(--red);
+    }
+
+    .community p {
+      font-size: 16px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 34px;
+      max-width: 440px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--surface);
+      border: 2px solid var(--border-mid);
+      border-radius: var(--radius-sm);
+      padding: 13px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-bright);
+      text-decoration: none;
+      box-shadow: 4px 4px 0 0 rgba(255,255,255,0.03);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .pill:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--shadow-red);
+      border-color: var(--border-red);
+      color: var(--red);
+    }
+
+    /* ══════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════ */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 24px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-sep {
+      width: 1px; height: 14px;
+      background: var(--border-mid);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--red); }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════ */
+    @media (max-width: 1000px) {
+      .hero { grid-template-columns: 1fr; padding: 64px 24px; gap: 52px; }
+      .hero::before { display: none; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .stat-item { padding: 24px 28px; }
+      .features { padding: 64px 24px; }
+      .cards-grid { grid-template-columns: 1fr 1fr; }
+      .community { padding: 64px 24px; }
+      nav { padding: 16px 24px; }
+      footer { padding: 20px 24px; flex-direction: column; gap: 16px; }
+    }
+
+    @media (max-width: 560px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PREVIEW BAR — remove before shipping -->
+  <div class="preview-bar">⚠ Design Preview · Not Live</div>
+
+  <!-- ══ NAV ══ -->
+  <nav>
+    <a class="nav-logo" href="/">
+      <svg class="nav-logo-icon" width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M13 1L25 13L13 25L1 13Z" fill="rgba(255,70,85,0.12)" stroke="#FF4655" stroke-width="1.5"/>
+        <path d="M13 7L19 13L13 19L7 13Z" fill="rgba(255,70,85,0.28)"/>
+      </svg>
+      <span class="nav-logo-text">Valorant <span>OCE</span> Utilities</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+      <a class="nav-link" href="/changelog">Changelog</a>
+      <a class="nav-cta" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Join Discord ↗</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+
+    <div class="hero-text">
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Oceanic Valorant Community
+      </div>
+
+      <h1>The utility bot<br>for <em>Valorant OCE</em></h1>
+
+      <p class="hero-sub">
+        Link your Riot account, earn rank roles automatically, and track
+        your stats — all inside Discord. Built for the OCE community,
+        by the OCE community.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn-primary" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">
+          Join the Server ↗
+        </a>
+        <a class="btn-secondary" href="https://oce.gg" target="_blank" rel="noopener">
+          Visit OCE.GG
+        </a>
+      </div>
+    </div>
+
+    <!-- Bot profile card with real assets -->
+    <div class="bot-card-wrap">
+      <div class="bot-card">
+
+        <!-- Real bot banner -->
+        <div class="bot-banner"></div>
+
+        <div class="bot-card-body">
+
+          <!-- Real bot avatar -->
+          <div class="bot-avatar-wrap">
+            <div class="bot-avatar">
+              <img
+                src="https://cdn.discordapp.com/avatars/1367857894397186058/343315bcc2033fd24ba904285c3505af.webp?size=160"
+                alt="Valorant OCE Utilities avatar"
+              >
+            </div>
+            <span class="status-dot"></span>
+          </div>
+
+          <div class="bot-name-row">
+            <span class="bot-name">Valorant OCE</span>
+            <span class="bot-badge">App</span>
+          </div>
+          <p class="bot-status">Online · Serving 51,000+ members</p>
+
+          <div class="bot-divider"></div>
+
+          <p class="bot-section-label">About</p>
+          <p class="bot-about">
+            Supporting <a href="https://discord.gg/valorantoce" target="_blank" rel="noopener">discord.gg/valorantoce</a> riot account verification.
+          </p>
+
+          <div class="bot-tags">
+            <span class="bot-tag">/link</span>
+            <span class="bot-tag">/rank</span>
+            <span class="bot-tag">/profile</span>
+            <span class="bot-tag">/leaderboard</span>
+            <span class="bot-tag">/match</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ STATS STRIP ══ -->
+  <div class="stats-strip">
+    <div class="stat-item">
+      <span class="stat-num">51<span>k+</span></span>
+      <span class="stat-label">Server Members</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">24<span>/7</span></span>
+      <span class="stat-label">Uptime</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">Iron<span>→</span></span>
+      <span class="stat-label">Rank Tracking</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">OCE<span>.</span></span>
+      <span class="stat-label">Region Focus</span>
+    </div>
+  </div>
+
+  <!-- ══ FEATURES ══ -->
+  <section class="features">
+    <div class="section-header">
+      <p class="section-eyebrow">What it does</p>
+      <h2 class="section-title">Everything in <span>one bot</span></h2>
+    </div>
+
+    <div class="cards-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title">Account Linking</div>
+        <p class="feature-desc">Securely verify your Riot account via Discord OAuth. One click, done.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏅</div>
+        <div class="feature-title">Rank Roles</div>
+        <p class="feature-desc">Automatically assigns and updates your rank role from Iron through Radiant.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Profile Stats</div>
+        <p class="feature-desc">K/D, win rate, top agents from your last 20 matches via <code style="font-size:11px;background:rgba(255,70,85,0.1);color:#FF4655;padding:1px 5px;border-radius:3px;">/profile</code>.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Staff Controls</div>
+        <p class="feature-desc">Admin toolkit — set links, bulk resets, activity logs, and rank distribution.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ COMMUNITY ══ -->
+  <section class="community">
+    <div class="community-inner">
+      <h2>Join <em id="member-count">51,000+</em> OCE players</h2>
+      <p>The largest Oceanic Valorant community. Find teammates, discuss meta, and compete — all in one place.</p>
+      <div class="pill-row">
+        <a class="pill" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+          discord.gg/VALORANTOCE
+        </a>
+        <a class="pill" href="https://oce.gg" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          oce.gg
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-left">
+      <span>© 2026 Valorant OCE Utilities</span>
+      <span class="footer-sep"></span>
+      <span>Not affiliated with Riot Games</span>
+    </div>
+    <div class="footer-links">
+      <a href="/changelog">Changelog</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </footer>
+
+  <script>
+    fetch('https://discord.com/api/v10/invites/VALORANTOCE?with_counts=true')
+      .then(r => r.json())
+      .then(d => {
+        if (d.approximate_member_count) {
+          document.getElementById('member-count').textContent =
+            d.approximate_member_count.toLocaleString() + '+';
+        }
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>
