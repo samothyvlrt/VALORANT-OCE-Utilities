@@ -92,7 +92,9 @@
       <li><strong>Discord User ID</strong> — your unique Discord identifier</li>
       <li><strong>Riot Account Information</strong> — your Riot ID (name and tag), PUUID (Riot's unique account identifier), and region</li>
       <li><strong>Rank Data</strong> — your current and peak Valorant rank, cached periodically to reduce API calls</li>
+      <li><strong>Rank History</strong> — a timestamped record of your rank changes over time, used to display progression charts in <code>/profile</code></li>
       <li><strong>Match Statistics</strong> — aggregated stats (K/D, win rate, top agents) derived from your recent match history, cached for performance</li>
+      <li><strong>Discord OAuth Tokens</strong> — temporary access and refresh tokens issued by Discord during the verification process, used solely to re-verify your Riot account connection during periodic background scans. Tokens are stored securely and never used for any other purpose.</li>
       <li><strong>Link History</strong> — a record of when your account was linked and any previous accounts linked to your Discord</li>
       <li><strong>Audit Logs</strong> — administrative actions performed on your account (e.g. resets) including the moderator, reason, and timestamp</li>
     </ul>
@@ -102,8 +104,10 @@
     <ul>
       <li>Verifying ownership of your Riot account via Discord OAuth2</li>
       <li>Assigning rank roles in the Valorant OCE Discord server</li>
-      <li>Displaying your profile stats via <code>/profile</code></li>
-      <li>Enabling server leaderboards and statistics</li>
+      <li>Displaying your profile stats and rank progression via <code>/profile</code></li>
+      <li>Enabling server leaderboards — your Riot ID and rank are visible to all server members via <code>/leaderboard</code></li>
+      <li>Generating the public rank distribution chart on the website, which displays anonymised aggregate data only</li>
+      <li>Periodically re-verifying your Riot account connection to maintain link integrity</li>
       <li>Maintaining moderation records for server integrity</li>
     </ul>
     <p>We do not sell, share, or use your data for advertising or any commercial purpose.</p>
@@ -120,7 +124,7 @@
     </ul>
 
     <h2>5. Data Retention</h2>
-    <p>Your linked account data is retained for as long as you remain linked. You may delete your data at any time by running <code>/unlink</code>, which removes your Riot account association from our database. Audit log entries may be retained for a reasonable period for moderation purposes.</p>
+    <p>Your linked account data is retained for as long as you remain linked. You may delete your data at any time by running <code>/unlink</code>, which removes your Riot account association, rank history, and cached statistics from our database. Discord OAuth tokens are refreshed automatically and expire in accordance with Discord's token policies. Audit log entries may be retained for a reasonable period for moderation purposes.</p>
 
     <h2>6. Your Rights</h2>
     <p>You have the right to:</p>

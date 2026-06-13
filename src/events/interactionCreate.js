@@ -213,7 +213,7 @@ module.exports = {
         const totalPages = Math.ceil(entries.length / PAGE_SIZE);
         const clampedPage = Math.max(0, Math.min(page, totalPages - 1));
 
-        const e   = buildLeaderboardPage(entries, clampedPage, totalPages, entries.length);
+        const e   = buildLeaderboardPage(entries, clampedPage, totalPages, entries.length, interaction.user.id);
         const row = buildRow(clampedPage, totalPages);
 
         return interaction.editReply({

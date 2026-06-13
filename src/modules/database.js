@@ -2,7 +2,8 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, '../../data/bot.db');
+const DB_DIR  = process.env.DATA_DIR || path.join(__dirname, '../../data');
+const DB_PATH = path.join(DB_DIR, 'bot.db');
 
 // Ensure data directory exists
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
@@ -130,10 +131,11 @@ function upsertLink({ discordId, puuid, riotName, riotTag, region }) {
 }
 
 /**
- * Remove a link by Discord ID. Returns true if a row was deleted.
+ * Remove a link by Discord ID. Also cleans up rank history. Returns true if a row was deleted.
  * @param {string} discordId
  */
 function removeLink(discordId) {
+  db.prepare('DELETE FROM rank_history WHERE discord_id = ?').run(discordId);
   const result = db.prepare('DELETE FROM linked_accounts WHERE discord_id = ?').run(discordId);
   return result.changes > 0;
 }

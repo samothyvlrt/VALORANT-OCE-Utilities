@@ -76,7 +76,11 @@ function getSortedEntries() {
 /**
  * Build the leaderboard embed for a given page.
  */
-function buildLeaderboardPage(entries, page, totalPages, totalMembers) {
+/**
+ * Build the leaderboard embed for a given page.
+ * @param {string|null} viewerDiscordId — if provided, appends the viewer's own position when they're off the current page
+ */
+function buildLeaderboardPage(entries, page, totalPages, totalMembers, viewerDiscordId = null) {
   const start       = page * PAGE_SIZE;
   const pageEntries = entries.slice(start, start + PAGE_SIZE);
   const topTier     = pageEntries[0]?.tier ?? 0;
@@ -88,18 +92,36 @@ function buildLeaderboardPage(entries, page, totalPages, totalMembers) {
 
     let line = `\`${pos}.\` ${emoji} **${entry.riotName}** — ${entry.tierName}`;
     if (entry.tier > 0) line += ` · ${entry.rr} RR`;
-    // Immortal+ (tier >= 24): show leaderboard rank if available
     if (entry.tier >= 24 && entry.leaderboardRank) line += ` · **#${entry.leaderboardRank}**`;
 
     return line;
   });
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(tierColor(topTier))
     .setTitle('🏆 Server Leaderboard')
     .setDescription(lines.join('\n') || 'No entries on this page.')
     .setFooter({ text: `Valorant OCE Utilities · Page ${page + 1}/${totalPages} · ${totalMembers} linked members` })
     .setTimestamp();
+
+  // Sticky viewer position — only shown when the viewer isn't on this page
+  if (viewerDiscordId) {
+    const viewerIdx = entries.findIndex((e) => e.discordId === viewerDiscordId);
+    if (viewerIdx !== -1) {
+      const isOnPage = viewerIdx >= start && viewerIdx < start + PAGE_SIZE;
+      if (!isOnPage) {
+        const entry = entries[viewerIdx];
+        const pos   = (viewerIdx + 1).toString().padStart(2, '0');
+        const emoji = tierEmoji(entry.tier);
+        let line = `\`${pos}.\` ${emoji} **${entry.riotName}** — ${entry.tierName}`;
+        if (entry.tier > 0) line += ` · ${entry.rr} RR`;
+        if (entry.tier >= 24 && entry.leaderboardRank) line += ` · **#${entry.leaderboardRank}**`;
+        embed.addFields({ name: '— Your Position —', value: line, inline: false });
+      }
+    }
+  }
+
+  return embed;
 }
 
 /**
@@ -158,7 +180,7 @@ module.exports = {
     const totalPages = Math.ceil(entries.length / PAGE_SIZE);
     const reqPage    = Math.max(0, Math.min((interaction.options.getInteger('page') ?? 1) - 1, totalPages - 1));
 
-    const e   = buildLeaderboardPage(entries, reqPage, totalPages, entries.length);
+    const e   = buildLeaderboardPage(entries, reqPage, totalPages, entries.length, interaction.user.id);
     const row = buildRow(reqPage, totalPages);
 
     await interaction.editReply({
