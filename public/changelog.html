@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog · Valorant OCE Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:        #FF4655;
+      --red-dim:    #FF465520;
+      --red-border: #FF465540;
+      --bg:         #0d0d0d;
+      --surface:    #111214;
+      --border:     #1e2025;
+      --text:       #c8d0d8;
+      --text-muted: #4a5260;
+      --text-bright:#e8eaed;
+
+      /* Tag palette */
+      --tag-commands: #FF4655;
+      --tag-ux:       #5865F2;
+      --tag-security: #FEE75C;
+      --tag-admin:    #EB459E;
+      --tag-infra:    #57F287;
+      --tag-data:     #3AB8B3;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px;
+      background: var(--red);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      flex-shrink: 0;
+    }
+    .nav-logo-text {
+      font-size: 15px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.01em;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-link {
+      font-size: 14px; color: var(--text-muted); text-decoration: none;
+      padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--text-bright); background: var(--border); }
+    .nav-link.active { color: var(--text-bright); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 60px 24px 0;
+      text-align: center;
+    }
+    .section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--red); margin-bottom: 12px;
+    }
+    .page-header h1 {
+      font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+      color: var(--text-bright); letter-spacing: -0.02em; margin-bottom: 12px;
+    }
+    .page-header p {
+      font-size: 16px; color: var(--text-muted); max-width: 480px;
+      margin: 0 auto 40px; line-height: 1.6;
+    }
+
+    /* ── TAG FILTERS ── */
+    .filters {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      padding: 0 24px 48px;
+    }
+    .filter-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .filter-btn:hover { color: var(--text-bright); border-color: #3a3f4a; }
+    .filter-btn.active { background: var(--border); color: var(--text-bright); border-color: #3a3f4a; }
+    .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      width: 100%;
+    }
+
+    .date-group { margin-bottom: 48px; }
+
+    .date-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .date-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .entry:hover { border-color: #2e333d; }
+    .entry.hidden { display: none; }
+
+    .entry-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .entry-title {
+      font-size: 15px; font-weight: 700; color: var(--text-bright);
+    }
+    .entry-tags {
+      display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 999px;
+      opacity: 0.9;
+    }
+    .tag-commands { background: #FF465520; color: var(--tag-commands); border: 1px solid #FF465540; }
+    .tag-ux       { background: #5865F220; color: var(--tag-ux);       border: 1px solid #5865F240; }
+    .tag-security { background: #FEE75C20; color: var(--tag-security); border: 1px solid #FEE75C40; }
+    .tag-admin    { background: #EB459E20; color: var(--tag-admin);    border: 1px solid #EB459E40; }
+    .tag-infra    { background: #57F28720; color: var(--tag-infra);    border: 1px solid #57F28740; }
+    .tag-data     { background: #3AB8B320; color: var(--tag-data);     border: 1px solid #3AB8B340; }
+
+    .entry-desc {
+      font-size: 14px; color: var(--text-muted); line-height: 1.65;
+    }
+    .entry-desc ul {
+      list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .entry-desc ul li::before { content: '→ '; color: var(--red); font-weight: 700; }
+    .entry-desc ul li { padding-left: 16px; position: relative; }
+    .entry-desc ul li::before { position: absolute; left: 0; }
+
+    /* empty state */
+    .no-results {
+      text-align: center; padding: 60px 24px;
+      color: var(--text-muted); font-size: 15px; display: none;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 28px 40px; margin-top: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-bright); }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+      .entry-top { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-icon"></div>
+      <span class="nav-logo-text">Valorant OCE Utilities</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+      <a class="nav-link" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Discord</a>
+      <a class="nav-link active" href="/changelog">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <p class="section-label">What's new</p>
+    <h1>Changelog</h1>
+    <p>Every update to Valorant OCE Utilities, in chronological order.</p>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">
+      All updates
+    </button>
+    <button class="filter-btn" data-filter="commands">
+      <span class="filter-dot" style="background:var(--tag-commands)"></span>Commands
+    </button>
+    <button class="filter-btn" data-filter="ux">
+      <span class="filter-dot" style="background:var(--tag-ux)"></span>UX
+    </button>
+    <button class="filter-btn" data-filter="security">
+      <span class="filter-dot" style="background:var(--tag-security)"></span>Security
+    </button>
+    <button class="filter-btn" data-filter="admin">
+      <span class="filter-dot" style="background:var(--tag-admin)"></span>Admin
+    </button>
+    <button class="filter-btn" data-filter="infra">
+      <span class="filter-dot" style="background:var(--tag-infra)"></span>Infra
+    </button>
+    <button class="filter-btn" data-filter="data">
+      <span class="filter-dot" style="background:var(--tag-data)"></span>Data
+    </button>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline">
+    <div class="no-results" id="no-results">No updates match that filter.</div>
+
+    <!-- ── 12 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">12 June 2026</div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">/match — Last match &amp; match history</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Two new subcommands for match data, with a single API call each.
+          <ul>
+            <li><strong>/match current</strong> — detailed last match view with full team &amp; enemy breakdown, agent, K/D/A, ACS, and HS%.</li>
+            <li><strong>/match history</strong> — your last 10 matches at a glance with per-match result, agent, K/D/A, ACS, and an overall W/L record.</li>
+            <li>Supports an optional <code>user</code> mention or direct <code>riot_id</code> argument for looking up any player.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="commands">
+        <div class="entry-top">
+          <span class="entry-title">/leaderboard — Server rank leaderboard</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Paginated leaderboard of all linked server members, sorted by rank tier then RR.
+          <ul>
+            <li>10 members per page with Previous / Next buttons.</li>
+            <li>Embed colour automatically reflects the highest rank on the current page.</li>
+            <li>Immortal+ members display their live leaderboard position (#N) where available.</li>
+            <li><strong>Fix:</strong> removed an expensive full guild member fetch that was causing the command to time out on large servers.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="security">
+        <div class="entry-top">
+          <span class="entry-title">Background account validation — 6-hour scans</span>
+          <div class="entry-tags">
+            <span class="tag tag-security">Security</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Every 6 hours the bot re-checks every linked account against the user's current Discord connections.
+          <ul>
+            <li>Auto-invalidates the link and removes rank roles if the Riot connection has been removed or swapped to a different account.</li>
+            <li>Silently updates stored name/tag if the PUUID matches but the display name changed.</li>
+            <li>Posts a scan summary to the staff log channel with pass / renamed / invalidated / error counts.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="security ux">
+        <div class="entry-top">
+          <span class="entry-title">Account swap detection on Update Rank</span>
+          <div class="entry-tags">
+            <span class="tag tag-security">Security</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          When a user hits the Update Rank button, the bot now verifies their current Discord connections in real time before fetching rank.
+          <ul>
+            <li>Warns the user if their Riot connection has been removed or points to a different account.</li>
+            <li>Shows a live &ldquo;Checking your account…&rdquo; → &ldquo;Fetching your rank…&rdquo; animation during the check.</li>
+            <li>Adds a verified badge to the success embed when the connection is confirmed.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="security admin">
+        <div class="entry-top">
+          <span class="entry-title">Admin commands hidden from non-administrators</span>
+          <div class="entry-tags">
+            <span class="tag tag-security">Security</span>
+            <span class="tag tag-admin">Admin</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          <code>/admin</code> and its subcommands are now hidden at the Discord level from anyone without the Administrator permission — they won't appear in the command list at all.
+          <ul>
+            <li>Server admins can grant access to specific roles via <strong>Server Settings → Integrations → [Bot]</strong> without any redeploy.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="admin ux">
+        <div class="entry-top">
+          <span class="entry-title">/export moved to /admin export</span>
+          <div class="entry-tags">
+            <span class="tag tag-admin">Admin</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          The standalone <code>/export</code> command has been folded into <code>/admin export</code>, keeping admin tooling consolidated under a single command group.
+        </div>
+      </div>
+
+      <div class="entry" data-tags="data security">
+        <div class="entry-top">
+          <span class="entry-title">OAuth token storage for connection re-checking</span>
+          <div class="entry-tags">
+            <span class="tag tag-data">Data</span>
+            <span class="tag tag-security">Security</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Discord OAuth access and refresh tokens are now stored at link time, enabling the bot to re-query a user's Discord connections on demand without asking them to re-authorise.
+          <ul>
+            <li>Tokens are refreshed automatically when they expire.</li>
+            <li>Used by both the Update Rank flow and the background 6-hour validation scan.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">Unified deploy script — npm run ship</span>
+          <div class="entry-tags">
+            <span class="tag tag-infra">Infra</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          A single <code>npm run ship</code> command now pushes to GitHub, JRMA (bot server), and Vercel in sequence — no more manual three-step deploys.
+        </div>
+      </div>
+
+      <div class="entry" data-tags="infra ux">
+        <div class="entry-top">
+          <span class="entry-title">Public landing page with live member count</span>
+          <div class="entry-tags">
+            <span class="tag tag-infra">Infra</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Launched valorant-oce-utilities.vercel.app with a Valorant-themed landing page.
+          <ul>
+            <li>Member count updates live on page load using the Discord invite API — no rounding.</li>
+            <li>Privacy Policy and Terms of Service pages added.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div><!-- /date-group -->
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Valorant OCE Utilities · Not affiliated with Riot Games</span>
+    <div class="footer-links">
+      <a href="/changelog">Changelog</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
+  </footer>
+
+  <script>
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const entries    = document.querySelectorAll('.entry');
+    const noResults  = document.getElementById('no-results');
+    let   active     = 'all';
+
+    function applyFilter(filter) {
+      active = filter;
+      let visible = 0;
+
+      filterBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+
+      entries.forEach(entry => {
+        const tags   = (entry.dataset.tags || '').split(' ');
+        const show   = filter === 'all' || tags.includes(filter);
+        entry.classList.toggle('hidden', !show);
+        if (show) visible++;
+      });
+
+      // Show/hide empty date groups
+      document.querySelectorAll('.date-group').forEach(group => {
+        const anyVisible = [...group.querySelectorAll('.entry')].some(e => !e.classList.contains('hidden'));
+        group.style.display = anyVisible ? '' : 'none';
+      });
+
+      noResults.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
+    });
+  </script>
+</body>
+</html>

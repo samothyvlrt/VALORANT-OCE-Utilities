@@ -181,7 +181,7 @@ async function getRank(name, tag, region = config.riot.defaultRegion) {
       tier:            isRanked ? (current.currenttier ?? 0) : 0,
       tierName:        isRanked ? (current.currenttierpatched ?? 'Unranked') : 'Unranked',
       rr:              isRanked ? (current.ranking_in_tier ?? 0) : 0,
-      leaderboardRank: null,
+      leaderboardRank: current.leaderboard_rank ?? null,
       rrChangeLast:    isRanked ? (current.mmr_change_to_last_game ?? null) : null,
       smallIcon:       isRanked ? (current.images?.small ?? null) : null,
       peakTier:        peak?.tier ?? 0,
@@ -262,6 +262,42 @@ async function getPlayerStats(puuid, region) {
 }
 
 // ─────────────────────────────────────────────
+// Last match
+// ─────────────────────────────────────────────
+
+/**
+ * Fetch recent matches for a player by PUUID.
+ * Returns an array of HenrikDev v3 match objects (up to `size`), or [] if none.
+ * Throws RiotApiError on API failures.
+ * @param {string} puuid
+ * @param {string} region
+ * @param {number} size   — number of matches to fetch (max 10 per HenrikDev free tier)
+ */
+async function getMatchHistory(puuid, region, size = 1) {
+  try {
+    const res = await henrik.get(
+      `/valorant/v3/by-puuid/matches/${region}/${puuid}?size=${size}`,
+    );
+    return res.data?.data ?? [];
+  } catch (err) {
+    if (err instanceof RiotApiError) throw err;
+    mapHenrikError(err);
+  }
+}
+
+/**
+ * Fetch the most recent match object for a player by PUUID.
+ * Returns the full HenrikDev v3 match object, or null if no matches found.
+ * Throws RiotApiError on API failures.
+ * @param {string} puuid
+ * @param {string} region
+ */
+async function getLastMatch(puuid, region) {
+  const matches = await getMatchHistory(puuid, region, 1);
+  return matches[0] ?? null;
+}
+
+// ─────────────────────────────────────────────
 // Exports
 // ─────────────────────────────────────────────
 
@@ -271,5 +307,7 @@ module.exports = {
   getLatestMatchTimestamp,
   getRank,
   getPlayerStats,
+  getMatchHistory,
+  getLastMatch,
   RiotApiError,
 };

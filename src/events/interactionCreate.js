@@ -1,4 +1,5 @@
 const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
+const { getSortedEntries, buildLeaderboardPage, buildRow, PAGE_SIZE } = require('../commands/user/leaderboard');
 const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
@@ -199,6 +200,26 @@ module.exports = {
           );
         }
         return interaction.editReply({ embeds: [successEmbed] });
+      }
+
+      // Leaderboard pagination
+      if (customId.startsWith('leaderboard_page_')) {
+        const page = parseInt(customId.slice('leaderboard_page_'.length), 10);
+        if (isNaN(page) || page < 0) return;
+
+        await interaction.deferUpdate();
+
+        const entries    = getSortedEntries();
+        const totalPages = Math.ceil(entries.length / PAGE_SIZE);
+        const clampedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+        const e   = buildLeaderboardPage(entries, clampedPage, totalPages, entries.length);
+        const row = buildRow(clampedPage, totalPages);
+
+        return interaction.editReply({
+          embeds:     [e],
+          components: totalPages > 1 ? [row] : [],
+        });
       }
 
       // Unlink button
