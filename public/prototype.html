@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prototype · Valorant OCE Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #FF4655; --bg: #0a0a0c; --surface: #111214; --surface2: #1a1c1f;
+      --border: #1e2025; --text: #c8d0d8; --text-muted: #4a5260; --text-bright: #e8eaed;
+      --discord-bg: #313338; --discord-border: #3f4147;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 22px 22px; color: var(--text); min-height: 100vh; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 40px; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon { width: 30px; height: 30px; background: var(--red); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    .nav-logo-text { font-size: 15px; font-weight: 700; color: var(--text-bright); }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-link { font-size: 14px; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 6px; }
+    .nav-link:hover { color: var(--text-bright); background: var(--border); }
+    .page-header { padding: 64px 24px 48px; text-align: center; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; font-family: 'Courier New', monospace; }
+    .page-header h1 { font-size: clamp(28px, 4vw, 48px); font-weight: 900; color: var(--text-bright); letter-spacing: -0.03em; margin-bottom: 16px; }
+    .page-header p { font-size: 16px; color: var(--text-muted); max-width: 560px; margin: 0 auto; line-height: 1.7; }
+    .section { max-width: 960px; margin: 0 auto; padding: 64px 24px; border-top: 1px solid var(--border); }
+    .section-header { margin-bottom: 40px; }
+    .section-num { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); font-family: 'Courier New', monospace; margin-bottom: 10px; }
+    .section-header h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 800; color: var(--text-bright); letter-spacing: -0.02em; margin-bottom: 10px; }
+    .section-header p { font-size: 15px; color: var(--text-muted); line-height: 1.65; max-width: 600px; }
+    .flow { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .flow::before { content: ''; position: absolute; left: 19px; top: 40px; bottom: 40px; width: 2px; background: var(--border); }
+    .flow-step { display: flex; gap: 20px; align-items: flex-start; padding: 20px 0; position: relative; }
+    .step-num { width: 40px; height: 40px; background: var(--red); color: #fff; font-size: 14px; font-weight: 800; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; box-shadow: 3px 3px 0 0 rgba(255,70,85,0.3); }
+    .step-content { padding-top: 8px; }
+    .step-content h3 { font-size: 15px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+    .step-content p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .step-content code { background: #1e2025; padding: 1px 5px; border-radius: 3px; font-size: 85%; }
+    .discord-window { background: var(--discord-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--discord-border); margin-top: 32px; }
+    .discord-titlebar { background: #1e1f22; padding: 10px 16px; font-size: 12px; font-weight: 600; color: #949ba4; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #000; }
+    .discord-titlebar-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .discord-body { padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+    .discord-msg { display: flex; gap: 12px; padding: 6px 8px; border-radius: 4px; }
+    .discord-msg:hover { background: rgba(255,255,255,0.02); }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+    .avatar-bot { background: var(--red); }
+    .avatar-user { background: #5865f2; font-size: 12px; }
+    .msg-body { flex: 1; }
+    .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+    .msg-author { font-size: 15px; font-weight: 600; color: var(--text-bright); }
+    .bot-badge { font-size: 10px; font-weight: 700; background: #5865f2; color: #fff; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .msg-time { font-size: 11px; color: #72767d; }
+    .msg-text { font-size: 14px; color: #dbdee1; line-height: 1.5; }
+    .embed { background: #2b2d31; border-radius: 4px; border-left: 4px solid var(--red); padding: 12px 16px; margin-top: 4px; max-width: 520px; }
+    .embed.green { border-left-color: #57f287; }
+    .embed.blue { border-left-color: #5865f2; }
+    .embed-title { font-size: 15px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px; }
+    .embed-desc { font-size: 14px; color: #dbdee1; line-height: 1.55; margin-bottom: 10px; }
+    .embed-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .embed-field-label { font-size: 12px; font-weight: 700; color: var(--text-bright); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .embed-field-value { font-size: 13px; color: #dbdee1; }
+    .embed-footer { font-size: 12px; color: #72767d; margin-top: 8px; padding-top: 8px; border-top: 1px solid #3f4147; }
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .discord-btn { font-size: 14px; font-weight: 500; padding: 6px 16px; border-radius: 3px; cursor: default; display: inline-block; }
+    .discord-btn.primary { background: #5865f2; color: #fff; }
+    .discord-btn.secondary { background: #4e5058; color: #fff; }
+    .discord-btn.disabled { background: #4e5058; color: #72767d; opacity: 0.5; }
+    .ephemeral-note { font-size: 12px; color: #72767d; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+    .ephemeral-dot { width: 6px; height: 6px; border-radius: 50%; background: #fee75c; }
+    .cmd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .cmd-card { background: var(--surface); border: 2px solid var(--border); padding: 20px; position: relative; }
+    .cmd-card::after { content: ''; position: absolute; top: 4px; left: 4px; right: -4px; bottom: -4px; border: 2px solid rgba(255,70,85,0.2); z-index: -1; }
+    .cmd-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); font-family: 'Courier New', monospace; margin-bottom: 6px; }
+    .cmd-card h3 { font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px; }
+    .cmd-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .cmd-visibility { display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 700; padding: 3px 8px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; }
+    .cmd-visibility.public { background: #57f28720; color: #57f287; border: 1px solid #57f28740; }
+    .cmd-visibility.private { background: #fee75c20; color: #fee75c; border: 1px solid #fee75c40; }
+    .rank-preview { background: var(--surface); border: 2px solid var(--border); padding: 24px; margin-top: 32px; }
+    .rank-preview-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; font-family: 'Courier New', monospace; }
+    .rank-bars { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+    .rank-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 4px; }
+    .rank-labels { display: flex; gap: 3px; margin-top: 6px; }
+    .rank-label { flex: 1; font-size: 8px; color: var(--text-muted); text-align: center; font-family: 'Courier New', monospace; }
+    .rso-flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-top: 32px; }
+    .rso-node { background: var(--surface); border: 2px solid var(--border); padding: 14px 18px; text-align: center; min-width: 140px; }
+    .rso-node-icon { font-size: 22px; margin-bottom: 6px; }
+    .rso-node-label { font-size: 12px; font-weight: 700; color: var(--text-bright); }
+    .rso-node-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .rso-arrow { font-size: 18px; color: var(--red); padding: 0 8px; font-weight: 700; }
+    .rso-node.highlight { border-color: var(--red); box-shadow: 4px 4px 0 0 rgba(255,70,85,0.3); }
+    footer { padding: 28px 40px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--text-muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-bright); }
+    @media (max-width: 640px) { nav { padding: 16px 20px; } .section { padding: 48px 20px; } .rso-flow { flex-direction: column; align-items: flex-start; } .rso-arrow { transform: rotate(90deg); padding: 4px 0; } .embed-fields { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <div class="nav-logo-icon"></div>
+    <span class="nav-logo-text">Valorant OCE Utilities</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+    <a class="nav-link" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Discord</a>
+    <a class="nav-link" href="/changelog">Changelog</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <p class="section-label">Product prototype</p>
+  <h1>How it works</h1>
+  <p>Visual flows and Discord interface mockups for Valorant OCE Utilities — a Riot account verification and rank-tracking bot serving the OCE community.</p>
+</div>
+
+<!-- 01 VERIFICATION -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">01 — Account Verification</span>
+    <h2>RSO-powered account linking</h2>
+    <p>Players link their Riot account to their Discord identity using Discord's OAuth connections. The bot verifies ownership via RSO — no passwords, no third-party credentials.</p>
+  </div>
+
+  <div class="rso-flow">
+    <div class="rso-node"><div class="rso-node-icon">💬</div><div class="rso-node-label">Player</div><div class="rso-node-sub">Runs /link in Discord</div></div>
+    <div class="rso-arrow">→</div>
+    <div class="rso-node highlight"><div class="rso-node-icon">🤖</div><div class="rso-node-label">Bot</div><div class="rso-node-sub">Validates Riot ID via API</div></div>
+    <div class="rso-arrow">→</div>
+    <div class="rso-node"><div class="rso-node-icon">🔐</div><div class="rso-node-label">Discord OAuth</div><div class="rso-node-sub">Player authorises</div></div>
+    <div class="rso-arrow">→</div>
+    <div class="rso-node highlight"><div class="rso-node-icon">✅</div><div class="rso-node-label">Bot</div><div class="rso-node-sub">Verifies PUUID match</div></div>
+    <div class="rso-arrow">→</div>
+    <div class="rso-node"><div class="rso-node-icon">🏅</div><div class="rso-node-label">Role Assigned</div><div class="rso-node-sub">Rank role applied</div></div>
+  </div>
+
+  <div class="flow" style="margin-top:40px">
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>Admin sets up the verification panel</h3><p>An admin runs <code>/admin link panel</code> to post a persistent "Link Account" button in a channel. Members interact with this to begin verification.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>Player runs /link with their Riot ID</h3><p>The bot looks up the account via the Riot API and generates a unique OAuth state token. A verification link is sent privately to the player's DMs.</p></div></div>
+    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>Player authorises via Discord OAuth</h3><p>The player clicks the link, which redirects to Discord's OAuth screen. The bot reads their connected Riot Games account from Discord's connections API.</p></div></div>
+    <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>PUUID verified — rank fetched — role assigned</h3><p>The bot confirms the PUUID of the connected account matches the Riot ID provided, then fetches competitive rank and assigns the correct rank role in the server.</p></div></div>
+    <div class="flow-step"><div class="step-num">05</div><div class="step-content"><h3>Ongoing re-validation every 6 hours</h3><p>The bot re-checks every linked account's Discord connections automatically. If a Riot connection is removed or swapped, the link and rank role are revoked and the player is notified.</p></div></div>
+  </div>
+
+  <div class="discord-window" style="margin-top:40px">
+    <div class="discord-titlebar">
+      <div class="discord-titlebar-dot" style="background:#ed4245"></div>
+      <div class="discord-titlebar-dot" style="background:#fee75c"></div>
+      <div class="discord-titlebar-dot" style="background:#57f287"></div>
+      <span style="margin-left:8px"># 🔗 verify</span>
+    </div>
+    <div class="discord-body">
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 09:00</span></div>
+          <div class="embed blue">
+            <div class="embed-title">🔗 Link your Valorant account</div>
+            <div class="embed-desc">Connect your Riot account to receive your rank role and access member-only features.<br><br>Click the button below to get started.</div>
+            <div class="btn-row"><span class="discord-btn primary">Link Account</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="discord-msg" style="margin-top:8px">
+        <div class="avatar avatar-user">st</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">st</span><span class="msg-time">Today at 14:22</span></div>
+          <div class="msg-text">used <strong>/link</strong> riot_id: Aceship#OCE</div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 14:22</span></div>
+          <div class="embed">
+            <div class="embed-title">🔗 Verify Account Ownership</div>
+            <div class="embed-desc">Account found: <strong>Aceship#OCE</strong> (AP) · Level <strong>247</strong><br><br>To prove you own this account:<br><br>&gt; 1. Make sure <strong>Aceship#OCE</strong> is connected in <strong>Discord Settings → Connections → Riot Games</strong><br>&gt; 2. Click the verification link sent to your <strong>DMs</strong><br>&gt; 3. Hit <strong>Authorize</strong> — you'll be verified instantly<br><br>⏰ Link expires in 30 minutes</div>
+          </div>
+          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
+        </div>
+      </div>
+      <div class="discord-msg" style="margin-top:8px">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 14:23</span></div>
+          <div class="embed green">
+            <div class="embed-title">✅ Account Linked!</div>
+            <div class="embed-desc"><strong>Aceship#OCE</strong> (AP) has been linked to your Discord account.<br><br>Use <code>/profile</code> to view your stats, or <code>/unlink</code> to remove it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 PLAYER COMMANDS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">02 — Player Commands</span>
+    <h2>Rank, match data &amp; leaderboard</h2>
+    <p>Once linked, members can view their rank, match history, and how they stack up against the rest of the server.</p>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd-card"><div class="cmd-label">/profile</div><h3>Player Profile</h3><p>Shows current rank, peak rank, K/D, win rate, and top agents from the last 20 matches. Supports looking up any linked member.</p><span class="cmd-visibility private">Ephemeral</span></div>
+    <div class="cmd-card"><div class="cmd-label">/match latest</div><h3>Latest Match</h3><p>Full breakdown of the most recently completed match — agent, K/D/A, ACS, HS%, and a team-by-team score table.</p><span class="cmd-visibility private">Ephemeral</span></div>
+    <div class="cmd-card"><div class="cmd-label">/match history</div><h3>Match History</h3><p>Last 10 matches at a glance with per-match result, agent, K/D/A, ACS, and an overall W/L record for the set.</p><span class="cmd-visibility public">Public</span></div>
+    <div class="cmd-card"><div class="cmd-label">/leaderboard</div><h3>Server Leaderboard</h3><p>Paginated ranked list of all verified server members sorted by competitive tier and RR. Immortal+ members show their live leaderboard position.</p><span class="cmd-visibility public">Public</span></div>
+  </div>
+
+  <div class="discord-window" style="margin-top:40px">
+    <div class="discord-titlebar">
+      <div class="discord-titlebar-dot" style="background:#ed4245"></div>
+      <div class="discord-titlebar-dot" style="background:#fee75c"></div>
+      <div class="discord-titlebar-dot" style="background:#57f287"></div>
+      <span style="margin-left:8px"># 🤖 bot-commands</span>
+    </div>
+    <div class="discord-body">
+      <div class="discord-msg">
+        <div class="avatar avatar-user">st</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">st</span><span class="msg-time">Today at 15:51</span></div>
+          <div class="msg-text">used <strong>/profile</strong></div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 15:51</span></div>
+          <div class="embed">
+            <div class="embed-title">Aceship#OCE</div>
+            <div class="embed-fields">
+              <div><div class="embed-field-label">Discord</div><div class="embed-field-value">@st</div></div>
+              <div><div class="embed-field-label">Region</div><div class="embed-field-value">AP</div></div>
+              <div><div class="embed-field-label">Current Rank</div><div class="embed-field-value"><strong>Diamond 2</strong> — 64 RR</div></div>
+              <div><div class="embed-field-label">Peak Rank</div><div class="embed-field-value"><strong>Immortal 1</strong> (Ep 8 Act 3)</div></div>
+              <div><div class="embed-field-label">K/D</div><div class="embed-field-value"><strong>1.42</strong></div></div>
+              <div><div class="embed-field-label">Win Rate</div><div class="embed-field-value"><strong>54%</strong> (108/200)</div></div>
+            </div>
+            <div><div class="embed-field-label">Top Agents</div><div class="embed-field-value" style="margin-top:4px">1. <strong>Jett</strong> — 61% WR (38g)<br>2. <strong>Reyna</strong> — 57% WR (21g)<br>3. <strong>Omen</strong> — 52% WR (17g)</div></div>
+            <div class="embed-footer">Valorant OCE Utilities · Last 20 matches</div>
+          </div>
+          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
+        </div>
+      </div>
+      <div class="discord-msg" style="margin-top:8px">
+        <div class="avatar avatar-user">st</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">st</span><span class="msg-time">Today at 15:53</span></div>
+          <div class="msg-text">used <strong>/match latest</strong></div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 15:53</span></div>
+          <div class="embed green">
+            <div class="embed-title">Aceship#OCE — Latest Match</div>
+            <div class="embed-desc">🗺️ <strong>Ascent</strong> · Competitive · 2 hours ago<br><br>🏆 <strong>Victory</strong> &nbsp; 13 — 9<br><br>🎭 <strong>Jett</strong> · 26/14/4 · 312 ACS · K/D 1.86 · 28% HS</div>
+            <div><div class="embed-field-label" style="margin-bottom:6px">Your Team (BLUE)</div><div class="embed-field-value" style="font-family:'Courier New',monospace;font-size:12px;line-height:1.8"><code>Jett       26/14/4  312 ACS ◀</code><br><code>Omen       18/16/8  220 ACS</code><br><code>Killjoy    11/12/14 180 ACS</code><br><code>Sage        9/13/11 142 ACS</code><br><code>Sova        8/11/9  135 ACS</code></div></div>
+            <div style="margin-top:10px"><div class="embed-field-label" style="margin-bottom:6px">Enemy Team (RED)</div><div class="embed-field-value" style="font-family:'Courier New',monospace;font-size:12px;line-height:1.8"><code>Neon       20/18/5  258 ACS</code><br><code>Viper      16/15/7  198 ACS</code><br><code>Reyna      14/19/3  185 ACS</code><br><code>Fade       10/17/12 155 ACS</code><br><code>Brimstone   7/14/9  118 ACS</code></div></div>
+            <div class="embed-footer">Valorant OCE Utilities · Latest Match</div>
+          </div>
+          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
+        </div>
+      </div>
+      <div class="discord-msg" style="margin-top:8px">
+        <div class="avatar avatar-user">st</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">st</span><span class="msg-time">Today at 15:54</span></div>
+          <div class="msg-text">used <strong>/leaderboard</strong></div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 15:54</span></div>
+          <div class="embed" style="border-left-color:#BF3136">
+            <div class="embed-title">🏆 Server Leaderboard</div>
+            <div class="embed-desc" style="font-family:'Courier New',monospace;font-size:13px;line-height:1.8"><code>01.</code> 🔴 <strong>FragKing#OCE</strong> — Immortal 3 · 87 RR · <strong>#142</strong><br><code>02.</code> 💜 <strong>Aceship#OCE</strong> — Diamond 2 · 64 RR<br><code>03.</code> 💜 <strong>VoidWalker#AP</strong> — Diamond 1 · 31 RR<br><code>04.</code> 🩵 <strong>IceBreaker#OCE</strong> — Platinum 3 · 94 RR<br><code>05.</code> 🩵 <strong>SkyRush#AP</strong> — Platinum 2 · 55 RR</div>
+            <div class="btn-row"><span class="discord-btn secondary disabled">◀ Previous</span><span class="discord-btn secondary">Next ▶</span></div>
+            <div class="embed-footer">Valorant OCE Utilities · Page 1/5 · 47 linked members</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 RANK DISTRIBUTION -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">03 — Web Dashboard</span>
+    <h2>Live rank distribution</h2>
+    <p>The public dashboard at <a href="https://valorant-oce-utilities.vercel.app" style="color:var(--red);text-decoration:none">valorant-oce-utilities.vercel.app</a> displays a real-time breakdown of the server's rank distribution across all verified members — updated automatically every 6 hours.</p>
+  </div>
+  <div class="rank-preview">
+    <div class="rank-preview-title">Server rank distribution — Iron → Radiant</div>
+    <div class="rank-bars" id="rank-bars"></div>
+    <div class="rank-labels" id="rank-labels"></div>
+  </div>
+  <div class="flow" style="margin-top:40px">
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>Bot generates stats on startup and every 6 hours</h3><p>The bot reads the <code>cached_rank</code> field for all linked members and computes a per-tier distribution. Results are written to Upstash Redis under the key <code>stats:rank-distribution</code>.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>Vercel serverless endpoint serves the data</h3><p>A serverless function at <code>/api/stats</code> reads the Redis key and returns JSON — the web page fetches this on load with no direct database access required.</p></div></div>
+    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>25 bars rendered — Iron 1 through Radiant</h3><p>Each bar is coloured by rank group with percentage labels and hover tooltips showing exact member counts. The chart includes total linked, ranked, and unranked member counts.</p></div></div>
+  </div>
+</div>
+
+<!-- 04 ADMIN -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">04 — Moderation &amp; Admin</span>
+    <h2>Staff tools for server management</h2>
+    <p>Administrators have a full suite of moderation tools for managing linked accounts, enforcing verification integrity, and auditing activity.</p>
+  </div>
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>/admin link get — look up any member's link</h3><p>View a member's linked Riot account, rank, region, link date, and full audit history of changes to their link.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>/admin link remove — revoke a link</h3><p>Manually remove a member's verified link and rank role. All actions are written to the audit log with moderator attribution.</p></div></div>
+    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>/admin link bulk-reset — season resets</h3><p>Force re-verification for all members of a given role — used at the start of each Valorant act to refresh rank data across the server.</p></div></div>
+    <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>Duplicate link attempt logging</h3><p>When a user attempts to claim a Riot account already linked to another Discord member, the attempt is logged to the staff channel with the claimant, the Riot ID, and the current owner.</p></div></div>
+    <div class="flow-step"><div class="step-num">05</div><div class="step-content"><h3>Background account validation</h3><p>Every 6 hours the bot re-checks all linked accounts via Discord's connections API. Account swaps and disconnections are detected automatically with a full scan summary posted to the staff log channel.</p></div></div>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Valorant OCE Utilities · Not affiliated with Riot Games</span>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/changelog">Changelog</a>
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/terms">Terms of Service</a>
+  </div>
+</footer>
+
+<script>
+  const tiers = [
+    {l:'I1',c:'#594134',h:15},{l:'I2',c:'#594134',h:22},{l:'I3',c:'#594134',h:18},
+    {l:'B1',c:'#9E6230',h:28},{l:'B2',c:'#9E6230',h:35},{l:'B3',c:'#9E6230',h:30},
+    {l:'S1',c:'#8BA7B7',h:45},{l:'S2',c:'#8BA7B7',h:55},{l:'S3',c:'#8BA7B7',h:50},
+    {l:'G1',c:'#D4AF51',h:60},{l:'G2',c:'#D4AF51',h:70},{l:'G3',c:'#D4AF51',h:65},
+    {l:'P1',c:'#3AB8B3',h:75},{l:'P2',c:'#3AB8B3',h:80},{l:'P3',c:'#3AB8B3',h:72},
+    {l:'D1',c:'#6B56C4',h:55},{l:'D2',c:'#6B56C4',h:45},{l:'D3',c:'#6B56C4',h:38},
+    {l:'A1',c:'#19A97B',h:25},{l:'A2',c:'#19A97B',h:20},{l:'A3',c:'#19A97B',h:15},
+    {l:'Im1',c:'#BF3136',h:10},{l:'Im2',c:'#BF3136',h:7},{l:'Im3',c:'#BF3136',h:4},
+    {l:'R',c:'#FFD63A',h:2},
+  ];
+  const barsEl = document.getElementById('rank-bars');
+  const lblsEl = document.getElementById('rank-labels');
+  tiers.forEach(t => {
+    const b = document.createElement('div'); b.className = 'rank-bar';
+    b.style.cssText = `height:${t.h}%;background:${t.c};`;
+    barsEl.appendChild(b);
+    const l = document.createElement('div'); l.className = 'rank-label';
+    l.textContent = t.l; lblsEl.appendChild(l);
+  });
+</script>
+</body>
+</html>

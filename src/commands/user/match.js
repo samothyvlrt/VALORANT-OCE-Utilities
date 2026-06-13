@@ -122,6 +122,7 @@ function notFoundEmbed(displayName) {
 // ─────────────────────────────────────────────
 
 async function executeCurrent(interaction) {
+  await interaction.deferReply();
   let target;
   try {
     target = await resolveTarget(interaction);
@@ -197,7 +198,7 @@ async function executeCurrent(interaction) {
     embeds: [
       new EmbedBuilder()
         .setColor(embedColor)
-        .setTitle(`${displayName} — Last Match`)
+        .setTitle(`${displayName} — Latest Match`)
         .setDescription([
           `🗺️ **${mapName}** · ${modeName}${timeStr}`,
           ``,
@@ -209,7 +210,7 @@ async function executeCurrent(interaction) {
           { name: `Your Team (${playerTeam.toUpperCase()})`,  value: myTeamLines || '—', inline: false },
           { name: `Enemy Team (${enemyTeam.toUpperCase()})`,  value: enemyLines  || '—', inline: false },
         )
-        .setFooter({ text: 'Valorant OCE Utilities · Last Match' })
+        .setFooter({ text: 'Valorant OCE Utilities · Latest Match' })
         .setTimestamp(),
     ],
   });
@@ -220,6 +221,7 @@ async function executeCurrent(interaction) {
 // ─────────────────────────────────────────────
 
 async function executeHistory(interaction) {
+  await interaction.deferReply();
   let target;
   try {
     target = await resolveTarget(interaction);
@@ -318,8 +320,8 @@ module.exports = {
     .addSubcommand((sub) =>
       sharedOptions(
         sub
-          .setName('current')
-          .setDescription('Detailed view of your last match with full team breakdown.'),
+          .setName('latest')
+          .setDescription('Detailed view of your latest match with full team breakdown.'),
       ),
     )
     .addSubcommand((sub) =>
@@ -331,9 +333,8 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
     const sub = interaction.options.getSubcommand();
-    if (sub === 'current') return executeCurrent(interaction);
+    if (sub === 'latest') return executeCurrent(interaction);
     if (sub === 'history') return executeHistory(interaction);
   },
 };

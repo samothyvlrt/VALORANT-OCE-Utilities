@@ -3,6 +3,7 @@ const embed = require('../../utils/embed');
 const { startChallenge, VerificationError } = require('../../modules/verification');
 const { RiotApiError } = require('../../modules/riot-api');
 const { isRestricted } = require('../../utils/permissions');
+const { logAdminAction } = require('../../utils/activity-log');
 const config = require('../../../config');
 
 module.exports = {
@@ -110,6 +111,18 @@ module.exports = {
 
     } catch (err) {
       if (err instanceof VerificationError || err instanceof RiotApiError) {
+        // Log to staff channel when someone tries to claim an account already linked to another user
+        if (err.code === 'RIOT_ALREADY_LINKED') {
+          logAdminAction(interaction.client, {
+            action:  'Duplicate Link Attempt',
+            fields:  {
+              'Claimant':       `<@${err.claimantDiscordId}>`,
+              'Riot ID':        err.riotId,
+              'Currently Owned By': `<@${err.ownerDiscordId}>`,
+            },
+            guildId: config.discord.guildId,
+          });
+        }
         return interaction.editReply({ embeds: [embed.error('Link Failed', err.message)] });
       }
       console.error('[link]', err);

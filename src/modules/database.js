@@ -77,6 +77,21 @@ try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_access_token TEXT`
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_refresh_token TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_token_expires_at INTEGER`); } catch { /* already exists */ }
 
+// Rank history table — one row per rank change, written whenever updateRankCache fires
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rank_history (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      discord_id  TEXT    NOT NULL,
+      tier        INTEGER NOT NULL,
+      tier_name   TEXT    NOT NULL,
+      rr          INTEGER NOT NULL,
+      recorded_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_rank_history_discord ON rank_history (discord_id, recorded_at);
+  `);
+} catch { /* already exists */ }
+
 // ─────────────────────────────────────────────
 // Linked accounts
 // ─────────────────────────────────────────────
@@ -137,6 +152,7 @@ function updateLinkRiotId(discordId, riotName, riotTag) {
 
 /**
  * Store a fresh rank object in the cache for a linked account.
+ * Also appends to rank_history if the rank has changed since the last snapshot.
  * @param {string} discordId
  * @param {object} rank  — the object returned by getRank()
  */
@@ -144,6 +160,38 @@ function updateRankCache(discordId, rank) {
   db.prepare(`
     UPDATE linked_accounts SET cached_rank = ?, rank_cached_at = ? WHERE discord_id = ?
   `).run(JSON.stringify(rank), Date.now(), discordId);
+  if (rank && rank.tier > 0) {
+    insertRankHistory(discordId, rank.tier, rank.tierName ?? 'Unknown', rank.rr ?? 0);
+  }
+}
+
+/**
+ * Append a rank history snapshot for a player.
+ * Deduplicates: only inserts if tier or RR differs from the last recorded entry.
+ * @param {string} discordId
+ * @param {number} tier
+ * @param {string} tierName
+ * @param {number} rr
+ */
+function insertRankHistory(discordId, tier, tierName, rr) {
+  const last = db.prepare(
+    'SELECT tier, rr FROM rank_history WHERE discord_id = ? ORDER BY recorded_at DESC LIMIT 1',
+  ).get(discordId);
+  if (last && last.tier === tier && last.rr === rr) return; // unchanged — skip
+  db.prepare(
+    'INSERT INTO rank_history (discord_id, tier, tier_name, rr, recorded_at) VALUES (?, ?, ?, ?, ?)',
+  ).run(discordId, tier, tierName, rr, Date.now());
+}
+
+/**
+ * Get rank history for a player, oldest first.
+ * @param {string} discordId
+ * @param {number} limit
+ */
+function getRankHistory(discordId, limit = 20) {
+  return db.prepare(
+    'SELECT tier, tier_name, rr, recorded_at FROM rank_history WHERE discord_id = ? ORDER BY recorded_at ASC LIMIT ?',
+  ).all(discordId, limit);
 }
 
 /**
@@ -353,6 +401,8 @@ module.exports = {
   removeLink,
   updateLinkRiotId,
   updateRankCache,
+  insertRankHistory,
+  getRankHistory,
   getAllLinks,
   getLinksByDiscordIds,
   // Pending verifications

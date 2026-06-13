@@ -244,6 +244,54 @@
     <div class="date-group">
       <div class="date-label">13 June 2026</div>
 
+      <div class="entry" data-tags="data">
+        <div class="entry-top">
+          <span class="entry-title">Rank trend sparkline in /profile</span>
+          <div class="entry-tags">
+            <span class="tag tag-data">Data</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          <code>/profile</code> now shows a rank progression chart built from historical snapshots stored locally in the bot's SQLite database.
+          <ul>
+            <li>Every rank refresh writes a new snapshot to a <code>rank_history</code> table — deduplication ensures only actual rank changes are recorded, not noisy re-checks.</li>
+            <li>The chart renders as a Unicode block-character sparkline (<code>▁▂▃▄▅▆▇█</code>) with the earliest and latest rank and the time span shown below it.</li>
+            <li>History builds up passively from today — no backfill required.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">/match current renamed to /match latest — now public</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          The <code>/match current</code> subcommand has been renamed to <code>/match latest</code> and is now a public (non-ephemeral) response so players can share their most recent game in chat.
+          <ul>
+            <li><code>/match history</code> remains public as before.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="ux">
+        <div class="entry-top">
+          <span class="entry-title">Prototype page — visual flows for Riot API review</span>
+          <div class="entry-tags">
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Added <a href="/prototype" style="color:var(--red)">/prototype</a> — a public page with visual flows and Discord embed mockups of the bot's core features, built to support the Riot API and RSO application.
+          <ul>
+            <li>Covers the full account verification flow, all four player commands, the live rank distribution chart, and staff moderation tools.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="entry" data-tags="infra">
         <div class="entry-top">
           <span class="entry-title">JRMA deployment recovery via Docker push</span>

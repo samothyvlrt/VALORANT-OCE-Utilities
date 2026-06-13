@@ -7,6 +7,34 @@ const config = require('../../../config');
 const RANK_CACHE_TTL_MS  = 2 * 60 * 1000; // 2 minutes
 const STATS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Build a Unicode block-character sparkline from rank history.
+ * Returns a string like "▁▃▅▆▇▇█  Iron 2 → Diamond 3 (30 days)" or null if too few points.
+ */
+function buildSparkline(history) {
+  if (!history || history.length < 2) return null;
+
+  const CHARS  = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+  const values = history.map((h) => h.tier * 100 + h.rr);
+  const min    = Math.min(...values);
+  const max    = Math.max(...values);
+  const range  = max - min || 1;
+  const bars   = values.map((v) =>
+    CHARS[Math.round(((v - min) / range) * (CHARS.length - 1))],
+  );
+
+  const first  = history[0];
+  const last   = history[history.length - 1];
+  const days   = Math.round((last.recorded_at - first.recorded_at) / (86400 * 1000));
+  const span   = days >= 1 ? ` (${days}d)` : '';
+
+  const changed = first.tier_name !== last.tier_name
+    ? `${first.tier_name} → ${last.tier_name}`
+    : last.tier_name;
+
+  return `${bars.join('')}\n${changed}${span}`;
+}
+
 function formatSeason(season) {
   if (!season) return null;
   const match = season.match(/^e(\d+)a(\d+)$/i);
@@ -81,6 +109,10 @@ module.exports = {
       if (season) peakValue += ` (${season})`;
     }
 
+    // ── Rank history sparkline ──────────────────────────────────────────────
+    const history   = db.getRankHistory(link.discord_id, 20);
+    const sparkline = buildSparkline(history);
+
     // ── Stats strings ───────────────────────────────────────────────────────
     const kdValue  = stats ? `**${stats.kd}**` : '—';
     const wrValue  = stats ? `**${stats.winRate}%** (${stats.wins}/${stats.totalMatches})` : '—';
@@ -108,6 +140,7 @@ module.exports = {
         { name: 'K/D',           value: kdValue,                                          inline: true },
         { name: 'Win Rate',      value: wrValue,                                          inline: true },
         { name: '​',        value: '​',                                         inline: true },
+        ...(sparkline ? [{ name: 'Rank Trend', value: sparkline, inline: false }] : []),
         { name: 'Top Agents',    value: agentsValue,                                      inline: false },
         { name: 'Linked',        value: `<t:${Math.floor(link.linked_at    / 1000)}:R>`, inline: true },
         { name: 'Last Updated',  value: `<t:${Math.floor(link.last_updated / 1000)}:R>`, inline: true },

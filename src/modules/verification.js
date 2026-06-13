@@ -63,10 +63,15 @@ async function startChallenge(discordId, riotIdInput, regionInput) {
   // Enforce one-discord-per-riot-account (global)
   const existingByPuuid = db.getLinkByPuuid(account.puuid);
   if (existingByPuuid) {
-    throw new VerificationError(
+    const err = new VerificationError(
       `**${account.name}#${account.tag}** is already linked to another Discord account.\n` +
       `If this is your account and you've lost access to the previous Discord, please contact a moderator.`,
+      'RIOT_ALREADY_LINKED',
     );
+    err.claimantDiscordId = discordId;
+    err.ownerDiscordId    = existingByPuuid.discord_id;
+    err.riotId            = `${account.name}#${account.tag}`;
+    throw err;
   }
 
   // Generate state token and store pending in both SQLite and Redis
@@ -207,9 +212,10 @@ async function adminForceLink(targetDiscordId, riotIdInput, regionInput, adminDi
 // ─────────────────────────────────────────────
 
 class VerificationError extends Error {
-  constructor(message) {
+  constructor(message, code = null) {
     super(message);
     this.name = 'VerificationError';
+    this.code = code;
   }
 }
 
