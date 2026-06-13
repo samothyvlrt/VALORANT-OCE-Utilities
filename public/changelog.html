@@ -310,15 +310,17 @@
 
       <div class="entry" data-tags="ux">
         <div class="entry-top">
-          <span class="entry-title">Ephemeral responses for user commands</span>
+          <span class="entry-title">Ephemeral responses for private commands</span>
           <div class="entry-tags">
             <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <div class="entry-desc">
-          <code>/profile</code>, <code>/match</code>, and <code>/leaderboard</code> responses are now ephemeral — only visible to the user who ran the command, keeping channels clean.
+          Commands with personal or sensitive output are now ephemeral — only visible to the user who ran them, keeping channels clean.
           <ul>
-            <li>Public exceptions: <code>/admin link panel</code> (posts to channel by design) and <code>/admin link bulk-reset</code> (visible admin action).</li>
+            <li>Ephemeral: <code>/profile</code>, <code>/match latest</code>, <code>/link</code>.</li>
+            <li>Public (shareable): <code>/match history</code>, <code>/leaderboard</code>.</li>
+            <li>Always public: <code>/admin link panel</code> and <code>/admin link bulk-reset</code>.</li>
           </ul>
         </div>
       </div>
@@ -368,10 +370,10 @@
           </div>
         </div>
         <div class="entry-desc">
-          Deathmatch, Swift Play, and other modes the API returns no player data for were showing as "Unknown · 0/0/0 · 0 ACS" in match history and current.
+          Deathmatch, Swift Play, and other modes the API returns no player data for were showing as "Unknown · 0/0/0 · 0 ACS" in match history and latest.
           <ul>
             <li><strong>/match history</strong> now fetches 15 matches and filters to the first 10 with real data before displaying.</li>
-            <li><strong>/match current</strong> fetches the 5 most recent matches and skips past any with missing player or map data.</li>
+            <li><strong>/match latest</strong> fetches the 5 most recent matches and skips past any with missing player or map data.</li>
           </ul>
         </div>
       </div>
@@ -408,7 +410,7 @@
         <div class="entry-desc">
           Two new subcommands for match data, with a single API call each.
           <ul>
-            <li><strong>/match current</strong> — detailed last match view with full team &amp; enemy breakdown, agent, K/D/A, ACS, and HS%.</li>
+            <li><strong>/match latest</strong> — detailed last match view with full team &amp; enemy breakdown, agent, K/D/A, ACS, and HS%.</li>
             <li><strong>/match history</strong> — your last 10 matches at a glance with per-match result, agent, K/D/A, ACS, and an overall W/L record.</li>
             <li>Supports an optional <code>user</code> mention or direct <code>riot_id</code> argument for looking up any player.</li>
           </ul>
