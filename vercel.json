@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "functions": {
     "api/callback.js": { "maxDuration": 10 },
     "api/privacy.js":  { "maxDuration": 5  },

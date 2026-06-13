@@ -244,6 +244,42 @@
     <div class="date-group">
       <div class="date-label">13 June 2026</div>
 
+      <div class="entry" data-tags="ux">
+        <div class="entry-top">
+          <span class="entry-title">Site redesign — neo-brutalist aesthetic</span>
+          <div class="entry-tags">
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Full redesign of the public landing page with a neo-brutalist / neo-industrial visual language — hard offset shadows, dot-grid texture, thick borders, and uppercase monospace labels throughout.
+          <ul>
+            <li>Bot profile card now uses the real Discord avatar and banner pulled directly from CDN, with the bot bio displayed beneath the avatar.</li>
+            <li>Hard red offset box-shadows (<code>8px 8px 0 0</code>) on the bot card; ghost offset border behind it for depth.</li>
+            <li>Dot-grid background texture via radial gradient at 22 px spacing.</li>
+            <li>Stats strip reduced to three columns — removed the static "51k+ Server Members" figure in favour of the live Discord count shown in the community section.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="data">
+        <div class="entry-top">
+          <span class="entry-title">Rank distribution chart — tracker.gg-style breakdown</span>
+          <div class="entry-tags">
+            <span class="tag tag-data">Data</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          The landing page now shows a live rank distribution chart for all linked server members, from Iron 1 through Radiant.
+          <ul>
+            <li>Bot generates stats on startup and every 6 hours via <code>src/utils/generate-stats.js</code>, writing to the Redis key <code>stats:rank-distribution</code>.</li>
+            <li>New Vercel serverless endpoint <code>/api/stats</code> reads the Redis key — no direct DB access from the frontend.</li>
+            <li>25 bars rendered (Iron 1 → Radiant), each coloured by rank group, with percentage labels and hover tooltips showing exact counts.</li>
+            <li>Chart displays total linked, ranked, and unranked counts plus a human-readable "Updated X ago" timestamp.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="entry" data-tags="commands ux">
         <div class="entry-top">
           <span class="entry-title">Fix: /match filtering out invalid game modes</span>
