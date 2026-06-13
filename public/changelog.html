@@ -244,6 +244,22 @@
     <div class="date-group">
       <div class="date-label">13 June 2026</div>
 
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">JRMA deployment recovery via Docker push</span>
+          <div class="entry-tags">
+            <span class="tag tag-infra">Infra</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          JRMA's git-based build pipeline went down ("No matching nodes") preventing the bot from being updated via the normal deploy flow.
+          <ul>
+            <li>Resolved by building the Docker image locally and pushing it directly to JRMA's container registry, bypassing their broken build nodes.</li>
+            <li>Bot is back online running the latest code. Normal <code>npm run ship</code> deploys resume as usual once JRMA's nodes recover.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="entry" data-tags="ux">
         <div class="entry-top">
           <span class="entry-title">Ephemeral responses for user commands</span>
