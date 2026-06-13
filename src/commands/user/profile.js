@@ -26,7 +26,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ ephemeral: true });
 
     const target = interaction.options.getUser('user') || interaction.user;
     const link   = db.getLinkByDiscord(target.id);

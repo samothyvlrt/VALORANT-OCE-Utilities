@@ -331,7 +331,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
     const sub = interaction.options.getSubcommand();
     if (sub === 'current') return executeCurrent(interaction);
     if (sub === 'history') return executeHistory(interaction);
