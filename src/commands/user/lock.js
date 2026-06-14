@@ -76,10 +76,13 @@ module.exports = {
         ],
       });
     } catch (err) {
-      console.error('[lock] Error:', err);
-      return interaction.editReply({
-        embeds: [embed.error('Lock Failed', `\`\`\`${err.message}\`\`\``)],
-      });
+      const msg = err?.message ?? String(err) ?? 'unknown error';
+      console.error('[lock] Error:', msg, err);
+      try {
+        await interaction.editReply({ content: `🔒 Lock failed: \`${msg}\`` });
+      } catch (e2) {
+        console.error('[lock] Also failed to send error reply:', e2);
+      }
     }
   },
 };
