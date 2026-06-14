@@ -48,6 +48,14 @@ module.exports = {
       });
     }
 
+    // Check the bot has permission to manage channel overwrites
+    const botMember = interaction.guild.members.me;
+    if (!vc.permissionsFor(botMember).has('ManageChannels') && !vc.permissionsFor(botMember).has('ManageRoles')) {
+      return interaction.editReply({
+        embeds: [embed.error('Missing Permissions', 'I need **Manage Channels** and **Manage Roles** permissions to lock this channel.')],
+      });
+    }
+
     // Deny @everyone Connect
     await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
 
