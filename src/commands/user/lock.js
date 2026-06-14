@@ -28,62 +28,58 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
-    const vc = interaction.member.voice?.channel;
-
-    if (!vc) {
-      return interaction.editReply({
-        embeds: [embed.warning('Not in a Voice Channel', 'You need to be in a Comp or Squad VC to use this command.')],
-      });
-    }
-
-    if (!ALLOWED_CHANNELS.has(vc.id) && interaction.guildId !== TEST_GUILD_ID) {
-      return interaction.editReply({
-        embeds: [embed.warning('Wrong Channel', 'This command only works in Comp or Squad voice channels.')],
-      });
-    }
-
-    if (vcLock.isLocked(vc.id)) {
-      return interaction.editReply({
-        embeds: [embed.warning('Already Locked', `**${vc.name}** is already locked.`)],
-      });
-    }
-
-    // Deny @everyone Connect
     try {
+      const vc = interaction.member.voice?.channel;
+
+      if (!vc) {
+        return interaction.editReply({
+          embeds: [embed.warning('Not in a Voice Channel', 'You need to be in a Comp or Squad VC to use this command.')],
+        });
+      }
+
+      if (!ALLOWED_CHANNELS.has(vc.id) && interaction.guildId !== TEST_GUILD_ID) {
+        return interaction.editReply({
+          embeds: [embed.warning('Wrong Channel', 'This command only works in Comp or Squad voice channels.')],
+        });
+      }
+
+      if (vcLock.isLocked(vc.id)) {
+        return interaction.editReply({
+          embeds: [embed.warning('Already Locked', `**${vc.name}** is already locked.`)],
+        });
+      }
+
+      // Deny @everyone Connect
       await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
-    } catch (err) {
-      console.error('[lock] Failed to set @everyone overwrite:', err);
+
+      // Allow Connect for every member currently in the channel
+      const memberIds = [...vc.members.keys()];
+      for (const id of memberIds) {
+        await vc.permissionOverwrites.edit(id, { Connect: true });
+      }
+
+      vcLock.lock(vc.id, memberIds);
+
       return interaction.editReply({
-        embeds: [embed.error('Permission Error', `Failed to lock the channel: ${err.message}`)],
+        embeds: [
+          embed.success(
+            '🔒 Channel Locked',
+            [
+              `**${vc.name}** is now locked — no new players can join.`,
+              ``,
+              `${memberIds.length} member(s) have a 10-minute window to reconnect if they disconnect.`,
+              `After 10 minutes their reconnect access is removed.`,
+              ``,
+              `Run \`/unlock\` to open the channel again.`,
+            ].join('\n'),
+          ),
+        ],
+      });
+    } catch (err) {
+      console.error('[lock] Error:', err);
+      return interaction.editReply({
+        embeds: [embed.error('Lock Failed', `\`\`\`${err.message}\`\`\``)],
       });
     }
-
-    // Allow Connect for every member currently in the channel
-    const memberIds = [...vc.members.keys()];
-    for (const id of memberIds) {
-      try {
-        await vc.permissionOverwrites.edit(id, { Connect: true });
-      } catch (err) {
-        console.error(`[lock] Failed to set overwrite for ${id}:`, err);
-      }
-    }
-
-    vcLock.lock(vc.id, memberIds);
-
-    return interaction.editReply({
-      embeds: [
-        embed.success(
-          '🔒 Channel Locked',
-          [
-            `**${vc.name}** is now locked — no new players can join.`,
-            ``,
-            `${memberIds.length} member(s) have a 10-minute window to reconnect if they disconnect.`,
-            `After 10 minutes their reconnect access is removed.`,
-            ``,
-            `Run \`/unlock\` to open the channel again.`,
-          ].join('\n'),
-        ),
-      ],
-    });
   },
 };
