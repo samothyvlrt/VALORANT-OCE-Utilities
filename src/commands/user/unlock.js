@@ -42,7 +42,12 @@ module.exports = {
       });
     }
 
-    if (!vcLock.isLocked(vc.id)) {
+    // Check both in-memory state and actual channel overwrites (handles bot restarts
+    // or cases where /lock crashed partway through)
+    const everyoneOverwrite = vc.permissionOverwrites.cache.get(interaction.guild.roles.everyone.id);
+    const isActuallyLocked  = vcLock.isLocked(vc.id) || everyoneOverwrite?.deny.has('Connect');
+
+    if (!isActuallyLocked) {
       return interaction.editReply({
         embeds: [embed.warning('Not Locked', `**${vc.name}** is not currently locked.`)],
       });
