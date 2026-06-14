@@ -48,14 +48,6 @@ module.exports = {
       });
     }
 
-    // Check the bot has Manage Channels permission on this VC
-    const botMember = interaction.guild.members.me;
-    if (!vc.permissionsFor(botMember).has('ManageChannels')) {
-      return interaction.editReply({
-        embeds: [embed.error('Missing Permissions', 'I need the **Manage Channels** permission to lock this voice channel.')],
-      });
-    }
-
     // Deny @everyone Connect
     try {
       await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
