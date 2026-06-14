@@ -48,21 +48,32 @@ module.exports = {
       });
     }
 
-    // Check the bot has permission to manage channel overwrites
+    // Check the bot has Manage Channels permission on this VC
     const botMember = interaction.guild.members.me;
-    if (!vc.permissionsFor(botMember).has('ManageChannels') && !vc.permissionsFor(botMember).has('ManageRoles')) {
+    if (!vc.permissionsFor(botMember).has('ManageChannels')) {
       return interaction.editReply({
-        embeds: [embed.error('Missing Permissions', 'I need **Manage Channels** and **Manage Roles** permissions to lock this channel.')],
+        embeds: [embed.error('Missing Permissions', 'I need the **Manage Channels** permission to lock this voice channel.')],
       });
     }
 
     // Deny @everyone Connect
-    await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
+    try {
+      await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
+    } catch (err) {
+      console.error('[lock] Failed to set @everyone overwrite:', err);
+      return interaction.editReply({
+        embeds: [embed.error('Permission Error', `Failed to lock the channel: ${err.message}`)],
+      });
+    }
 
     // Allow Connect for every member currently in the channel
     const memberIds = [...vc.members.keys()];
     for (const id of memberIds) {
-      await vc.permissionOverwrites.edit(id, { Connect: true });
+      try {
+        await vc.permissionOverwrites.edit(id, { Connect: true });
+      } catch (err) {
+        console.error(`[lock] Failed to set overwrite for ${id}:`, err);
+      }
     }
 
     vcLock.lock(vc.id, memberIds);
