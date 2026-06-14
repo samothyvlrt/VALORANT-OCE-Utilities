@@ -2,6 +2,9 @@ const { SlashCommandBuilder } = require('discord.js');
 const embed  = require('../../utils/embed');
 const vcLock = require('../../modules/vc-lock');
 
+// Testing server — any VC is allowed
+const TEST_GUILD_ID = '1512349167358316564';
+
 // Comp 1–15 + Squad 0–10 channel IDs
 const ALLOWED_CHANNELS = new Set([
   // Comp
@@ -33,7 +36,7 @@ module.exports = {
       });
     }
 
-    if (!ALLOWED_CHANNELS.has(vc.id)) {
+    if (!ALLOWED_CHANNELS.has(vc.id) && interaction.guildId !== TEST_GUILD_ID) {
       return interaction.editReply({
         embeds: [embed.warning('Wrong Channel', 'This command only works in Comp or Squad voice channels.')],
       });
