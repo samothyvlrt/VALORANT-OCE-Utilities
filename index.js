@@ -9,7 +9,8 @@ const config = require('./config');
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers, // needed for guild.members.fetch() in admin commands
+    GatewayIntentBits.GuildMembers,    // needed for guild.members.fetch() in admin commands
+    GatewayIntentBits.GuildVoiceStates, // needed for voiceStateUpdate (vc lock/unlock)
   ],
   partials: [Partials.GuildMember],
 });
