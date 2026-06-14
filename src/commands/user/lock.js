@@ -49,13 +49,23 @@ module.exports = {
         });
       }
 
+      // Give the bot an explicit Connect: true BEFORE denying @everyone,
+      // otherwise the bot loses channel access and can't make further API calls
+      await vc.permissionOverwrites.edit(interaction.client.user.id, { Connect: true });
+
       // Deny @everyone Connect
       await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: false });
 
       // Allow Connect for every member currently in the channel
-      const memberIds = [...vc.members.keys()];
-      for (const id of memberIds) {
-        await vc.permissionOverwrites.edit(id, { Connect: true });
+      // Skip members we can't set overwrites for (role hierarchy issue)
+      const memberIds = [];
+      for (const [id] of vc.members) {
+        try {
+          await vc.permissionOverwrites.edit(id, { Connect: true });
+          memberIds.push(id);
+        } catch (err) {
+          console.warn(`[lock] Skipped overwrite for ${id}: ${err.message}`);
+        }
       }
 
       vcLock.lock(vc.id, memberIds);

@@ -53,15 +53,31 @@ module.exports = {
       });
     }
 
-    // Reset @everyone Connect (null = inherit from category/role)
-    await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: null });
+    try {
+      // Reset @everyone Connect (null = inherit from category/role)
+      await vc.permissionOverwrites.edit(interaction.guild.roles.everyone, { Connect: null });
 
-    // Remove all individual member overwrites added by the lock
-    const memberOverwrites = [...vc.permissionOverwrites.cache.values()]
-      .filter((o) => o.type === OverwriteType.Member);
+      // Remove the bot's own Connect overwrite added during lock
+      try {
+        await vc.permissionOverwrites.delete(interaction.client.user.id);
+      } catch { /* fine if it doesn't exist */ }
 
-    for (const overwrite of memberOverwrites) {
-      await vc.permissionOverwrites.delete(overwrite.id);
+      // Remove all individual member overwrites added by the lock
+      const memberOverwrites = [...vc.permissionOverwrites.cache.values()]
+        .filter((o) => o.type === OverwriteType.Member);
+
+      for (const overwrite of memberOverwrites) {
+        try {
+          await vc.permissionOverwrites.delete(overwrite.id);
+        } catch (err) {
+          console.warn(`[unlock] Skipped overwrite removal for ${overwrite.id}: ${err.message}`);
+        }
+      }
+    } catch (err) {
+      console.error('[unlock] Failed to remove @everyone overwrite:', err.message);
+      return interaction.editReply({
+        embeds: [embed.error('Unlock Failed', `Could not unlock the channel: ${err.message}`)],
+      });
     }
 
     // Cancel all reconnect timers and clear lock state
