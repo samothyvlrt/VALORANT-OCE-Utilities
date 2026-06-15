@@ -49,7 +49,7 @@ const tiers = [
   { tier: 24, name: 'Immortal 1',  rr_max: 99, count: 3  },
   { tier: 25, name: 'Immortal 2',  rr_max: 99, count: 2  },
   { tier: 26, name: 'Immortal 3',  rr_max: 99, count: 1  },
-  { tier: 27, name: 'Radiant',     rr_max: 0,  count: 1  },
+  { tier: 27, name: 'Radiant',     rr_max: 1200, count: 1  },
 ];
 
 const insertAccount = db.prepare(`

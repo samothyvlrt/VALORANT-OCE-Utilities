@@ -1,5 +1,5 @@
 const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
-const { getSortedEntries, buildLeaderboardPage, buildRow, PAGE_SIZE } = require('../commands/user/leaderboard');
+const { getSortedEntries, buildLeaderboardPage, buildLeaderboardAttachment, buildRow, PAGE_SIZE } = require('../commands/user/leaderboard');
 const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
@@ -209,15 +209,17 @@ module.exports = {
 
         await interaction.deferUpdate();
 
-        const entries    = getSortedEntries();
-        const totalPages = Math.ceil(entries.length / PAGE_SIZE);
+        const entries     = getSortedEntries();
+        const totalPages  = Math.ceil(entries.length / PAGE_SIZE);
         const clampedPage = Math.max(0, Math.min(page, totalPages - 1));
 
-        const e   = buildLeaderboardPage(entries, clampedPage, totalPages, entries.length, interaction.user.id);
-        const row = buildRow(clampedPage, totalPages);
+        const attachment = buildLeaderboardAttachment(entries, interaction.user.id);
+        const e          = buildLeaderboardPage(entries, clampedPage, totalPages, entries.length, interaction.user.id);
+        const row        = buildRow(clampedPage, totalPages);
 
         return interaction.editReply({
           embeds:     [e],
+          files:      [attachment],
           components: totalPages > 1 ? [row] : [],
         });
       }
