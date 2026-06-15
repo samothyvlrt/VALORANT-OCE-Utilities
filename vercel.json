@@ -6,6 +6,9 @@
     "api/privacy.js":  { "maxDuration": 5  },
     "api/terms.js":    { "maxDuration": 5  }
   },
+  "redirects": [
+    { "source": "/prototype", "destination": "/demo", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/privacy", "destination": "/api/privacy" },
     { "source": "/terms",   "destination": "/api/terms"   }
