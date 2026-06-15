@@ -6,6 +6,7 @@ const config = {
     clientId: process.env.CLIENT_ID,
     devGuildId: process.env.DEV_GUILD_ID || null,
     guildId: process.env.GUILD_ID || null,
+    mainGuildId: process.env.MAIN_GUILD_ID || null,
     allowedGuildIds: [
       process.env.GUILD_ID,
       process.env.DEV_GUILD_ID,

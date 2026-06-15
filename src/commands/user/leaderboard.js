@@ -33,16 +33,18 @@ function tierColor(tier) {
 }
 
 function tierEmoji(tier) {
-  if (tier >= 27) return '✨'; // Radiant
-  if (tier >= 24) return '🔴'; // Immortal
-  if (tier >= 21) return '🟢'; // Ascendant
-  if (tier >= 18) return '💜'; // Diamond
-  if (tier >= 15) return '🩵'; // Platinum
-  if (tier >= 12) return '🟡'; // Gold
-  if (tier >=  9) return '⚪'; // Silver
-  if (tier >=  6) return '🟫'; // Bronze
-  if (tier >=  3) return '⬛'; // Iron
-  return '❔';
+  if (tier >= 27) return '<:radiant:894407558519984209>';    // Radiant
+  if (tier >= 26) return '<:immortal3:894407558452899871>';  // Immortal 3
+  if (tier >= 25) return '<:immortal2:862005462580985856>';  // Immortal 2
+  if (tier >= 24) return '<:immortal1:862005437264429056>';  // Immortal 1
+  if (tier >= 21) return '<:ascendant:987673921002303538>';  // Ascendant
+  if (tier >= 18) return '<:diamond:894407558704553994>';    // Diamond
+  if (tier >= 15) return '<:platinum:894407559778295829>';   // Platinum
+  if (tier >= 12) return '<:gold:894407558910066758>';       // Gold
+  if (tier >=  9) return '<:silver:894407558427738163>';     // Silver
+  if (tier >=  6) return '<:bronze:894407558129938443>';     // Bronze
+  if (tier >=  3) return '<:iron:894407559052656671>';       // Iron
+  return '<:unranked:1067377487153209384>';
 }
 
 // ─────────────────────────────────────────────

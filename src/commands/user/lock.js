@@ -1,9 +1,10 @@
 const { SlashCommandBuilder } = require('discord.js');
+const config = require('../../../config');
 const embed  = require('../../utils/embed');
 const vcLock = require('../../modules/vc-lock');
 
-// Testing server — any VC is allowed
-const TEST_GUILD_ID = '1512349167358316564';
+// Dev/testing server — any VC is allowed (set via DEV_GUILD_ID in .env)
+const TEST_GUILD_ID = config.discord.devGuildId;
 
 // Comp 1–15 + Squad 0–10 channel IDs
 const ALLOWED_CHANNELS = new Set([
