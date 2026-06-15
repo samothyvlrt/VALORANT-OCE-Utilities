@@ -1,16 +1,18 @@
 const config = require('../../config');
 
 // Map a HenrikDev tier number to the config rankRoles key
+// Valorant API tier values: 0=Unranked, 3-5=Iron, 6-8=Bronze, 9-11=Silver,
+// 12-14=Gold, 15-17=Plat, 18-20=Diamond, 21-23=Ascendant, 24-26=Immortal, 27=Radiant
 function tierToRoleKey(tier) {
-  if (tier >= 1  && tier <= 3)  return 'iron';
-  if (tier >= 4  && tier <= 6)  return 'bronze';
-  if (tier >= 7  && tier <= 9)  return 'silver';
-  if (tier >= 10 && tier <= 12) return 'gold';
-  if (tier >= 13 && tier <= 15) return 'platinum';
-  if (tier >= 16 && tier <= 18) return 'diamond';
-  if (tier >= 19 && tier <= 21) return 'ascendant';
-  if (tier >= 22 && tier <= 24) return 'immortal';
-  if (tier === 25)              return 'radiant';
+  if (tier >= 3  && tier <= 5)  return 'iron';
+  if (tier >= 6  && tier <= 8)  return 'bronze';
+  if (tier >= 9  && tier <= 11) return 'silver';
+  if (tier >= 12 && tier <= 14) return 'gold';
+  if (tier >= 15 && tier <= 17) return 'platinum';
+  if (tier >= 18 && tier <= 20) return 'diamond';
+  if (tier >= 21 && tier <= 23) return 'ascendant';
+  if (tier >= 24 && tier <= 26) return 'immortal';
+  if (tier === 27)              return 'radiant';
   return 'unranked';
 }
 
