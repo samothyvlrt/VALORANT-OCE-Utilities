@@ -240,6 +240,85 @@
   <div class="timeline">
     <div class="no-results" id="no-results">No updates match that filter.</div>
 
+    <!-- ── 15 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">15 June 2026</div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">Rank logos on /leaderboard</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Each rank tier on the /leaderboard now displays the real Valorant rank icon instead of a Unicode emoji placeholder.
+          <ul>
+            <li>All 11 tiers covered: Unranked through Radiant, with Immortal 1 / 2 / 3 each having their own distinct icon.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">Multi-server deploy scoping</span>
+          <div class="entry-tags">
+            <span class="tag tag-infra">Infra</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          The deploy script now supports targeting multiple guilds with different command sets.
+          <ul>
+            <li><code>npm run deploy -- --main-guild</code> registers only <code>/lock</code> and <code>/unlock</code> to the main server — no other commands exposed.</li>
+            <li><code>npm run deploy -- --guild</code> continues to deploy all commands to the dev server for testing.</li>
+            <li>Test guild bypass now reads from <code>DEV_GUILD_ID</code> in <code>.env</code> rather than a hardcoded ID.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── 14 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">14 June 2026</div>
+
+      <div class="entry" data-tags="commands">
+        <div class="entry-top">
+          <span class="entry-title">/lock and /unlock — Comp &amp; Squad VC management</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          Any member inside a Comp or Squad voice channel can lock it to prevent new players joining mid-game, then unlock it when the session ends.
+          <ul>
+            <li><strong>/lock</strong> — denies <code>@everyone Connect</code> and grants an individual <code>Connect: true</code> overwrite to every member currently in the channel.</li>
+            <li><strong>/unlock</strong> — resets all overwrites and clears timers. Also works after a bot restart by inspecting the live channel state rather than relying solely on in-memory data.</li>
+            <li>10-minute reconnect window — if a member disconnects from a locked channel, their overwrite is preserved for 10 minutes. Rejoining cancels the timer; not rejoining removes their access automatically.</li>
+            <li>Restricted to the 26 designated Comp / Squad channel IDs on the main server; any VC is permitted on the dev server.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">Docker stability — native module recompile fix</span>
+          <div class="entry-tags">
+            <span class="tag tag-infra">Infra</span>
+          </div>
+        </div>
+        <div class="entry-desc">
+          The bot was crashing on JRMA with an ELF header error because macOS-compiled <code>better-sqlite3</code> binaries were being copied into the Linux container.
+          <ul>
+            <li>Added <code>.dockerignore</code> to exclude <code>node_modules</code> from the build context.</li>
+            <li>Added <code>RUN npm rebuild better-sqlite3</code> to the Dockerfile so native binaries are always compiled for the target Linux environment.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
     <!-- ── 13 June 2026 ── -->
     <div class="date-group">
       <div class="date-label">13 June 2026</div>
