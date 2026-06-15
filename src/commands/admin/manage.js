@@ -14,10 +14,10 @@ const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRow
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
 const { adminForceLink, VerificationError } = require('../../modules/verification');
-const { RiotApiError } = require('../../modules/riot-api');
+const { getRank, RiotApiError } = require('../../modules/riot-api');
 const { isAdmin } = require('../../utils/permissions');
 const { logAdminAction } = require('../../utils/activity-log');
-const { tierToRoleKey } = require('../../utils/roles');
+const { assignRankRole, tierToRoleKey } = require('../../utils/roles');
 const config = require('../../../config');
 
 const ITEMS_PER_PAGE = 20;
@@ -295,11 +295,26 @@ async function handleSet(interaction) {
       guildId:   interaction.guildId,
     });
 
+    // Immediately fetch and cache rank so leaderboard reflects the new account
+    let rankStr = 'Unranked';
+    try {
+      const rank = await getRank(result.riotName, result.riotTag, result.region);
+      if (rank) {
+        db.updateRankCache(target.id, rank);
+        rankStr = rank.tier > 0 ? `${rank.tierName} — ${rank.rr} RR` : 'Unranked';
+        try {
+          const guild  = interaction.guild ?? await interaction.client.guilds.fetch(config.discord.guildId);
+          const member = await guild.members.fetch(target.id);
+          await assignRankRole(member, rank.tier);
+        } catch { /* member may not be in guild */ }
+      }
+    } catch { /* rank fetch failed — non-fatal */ }
+
     await interaction.editReply({
       embeds: [
         embed.success(
           'Link Set',
-          `<@${target.id}> is now linked to **${result.riotName}#${result.riotTag}** (${result.region.toUpperCase()}).\n\nThis was set without an ownership challenge.`,
+          `<@${target.id}> is now linked to **${result.riotName}#${result.riotTag}** (${result.region.toUpperCase()}).\nRank: ${rankStr}\n\nThis was set without an ownership challenge.`,
         ),
       ],
     });

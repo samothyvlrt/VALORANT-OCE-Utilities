@@ -44,6 +44,16 @@ function tierEmoji(tier) {
   return '<:unranked:1067377487153209384>';
 }
 
+// Immortal RR is cumulative from I1=0: I2 starts at 100, I3 at 200.
+// ranking_in_tier is within-tier so we add the offset for I2/I3.
+// Radiant: we show ranking_in_tier as-is — if the API returns cumulative total,
+// that's correct; if it returns RR above the dynamic floor we can't accurately
+// correct for it without a floor value that fluctuates daily.
+function displayRR(tier, rr) {
+  if (tier === 25) return 100 + rr; // Immortal 2
+  if (tier === 26) return 200 + rr; // Immortal 3
+  return rr;                         // Immortal 1, Radiant, and below
+}
 
 // ─────────────────────────────────────────────
 // Shared helpers
@@ -66,7 +76,17 @@ function getSortedEntries() {
         leaderboardRank: rank?.leaderboardRank ?? null,
       };
     })
-    .sort((a, b) => b.tier - a.tier || b.rr - a.rr);
+    .sort((a, b) => {
+      // Within Immortal+ (tier 24–27), RR is cumulative so compare across sub-tiers
+      if (a.tier >= 24 && b.tier >= 24) {
+        const rrDiff = displayRR(b.tier, b.rr) - displayRR(a.tier, a.rr);
+        if (rrDiff !== 0) return rrDiff;
+        if (a.leaderboardRank && b.leaderboardRank) return a.leaderboardRank - b.leaderboardRank;
+        return b.tier - a.tier;
+      }
+      // All other tiers: tier is the primary sort, within-tier RR is secondary
+      return b.tier - a.tier || b.rr - a.rr;
+    });
 }
 
 function formatEntry(entry, pos) {
@@ -74,7 +94,8 @@ function formatEntry(entry, pos) {
   const emoji  = tierEmoji(entry.tier);
   let line = `\`${padded}.\` ${emoji} **${entry.riotName}** — ${entry.tierName}`;
 
-  if (entry.tier > 0 && entry.rr > 0) line += ` · ${entry.rr} RR`;
+  const rr = displayRR(entry.tier, entry.rr);
+  if (entry.tier > 0 && rr > 0) line += ` · ${rr} RR`;
   if (entry.tier >= 24 && entry.leaderboardRank) line += ` · **#${entry.leaderboardRank}**`;
   return line;
 }

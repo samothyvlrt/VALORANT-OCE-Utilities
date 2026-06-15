@@ -47,7 +47,9 @@ function hexToRgba(hex, alpha) {
  * @returns {{ buffer: Buffer, betterThanPct: number|null }}
  */
 function generateRankChart(entries, viewerTier = null) {
-  const W = 520, H = 80;
+  // 2× resolution for crisp rendering in Discord
+  const S = 2;
+  const W = 520 * S, H = 80 * S;
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
@@ -71,13 +73,13 @@ function generateRankChart(entries, viewerTier = null) {
 
   if (maxCount === 0) return { buffer: canvas.toBuffer('image/png'), betterThanPct };
 
-  // Layout
-  const PAD_L  = 8, PAD_R = 8;
-  const PAD_T  = betterThanPct != null ? 18 : 6;
-  const PAD_B  = 18;
+  // Layout — all values scaled by S
+  const PAD_L  = 8  * S, PAD_R = 8 * S;
+  const PAD_T  = (betterThanPct != null ? 18 : 6) * S;
+  const PAD_B  = 18 * S;
   const CHART_W = W - PAD_L - PAD_R;
   const CHART_H = H - PAD_T - PAD_B;
-  const GROUP_GAP = 3;
+  const GROUP_GAP = 3 * S;
   const N_GAPS    = GROUPS.length - 1; // 8
   const N_BARS    = 25;                // tiers 3-27
   const barW      = (CHART_W - GROUP_GAP * N_GAPS) / N_BARS;
@@ -96,7 +98,7 @@ function generateRankChart(entries, viewerTier = null) {
 
     for (let tier = startTier; tier <= endTier; tier++) {
       const count  = counts[tier];
-      const barH   = Math.max(3, (count / maxCount) * CHART_H);
+      const barH   = Math.max(3 * S, (count / maxCount) * CHART_H);
       const barY   = PAD_T + CHART_H - barH;
       const color  = TIER_COLORS[tier];
       const isThis = tier === viewerTier;
@@ -112,7 +114,7 @@ function generateRankChart(entries, viewerTier = null) {
       ctx.fillStyle = alpha < 1 ? hexToRgba(color, alpha) : color;
 
       // Bar with rounded top corners
-      const r = 2;
+      const r = 2 * S;
       ctx.beginPath();
       ctx.moveTo(x + r, barY);
       ctx.lineTo(x + barW - 1 - r, barY);
@@ -127,15 +129,15 @@ function generateRankChart(entries, viewerTier = null) {
       // White highlight ring on viewer's exact tier
       if (isThis) {
         ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-        ctx.lineWidth   = 1.5;
+        ctx.lineWidth   = 1.5 * S;
         ctx.beginPath();
-        ctx.moveTo(x + r - 1, barY - 1.5);
-        ctx.lineTo(x + barW - r, barY - 1.5);
-        ctx.arcTo(x + barW + 0.5, barY - 1.5, x + barW + 0.5, barY + r, r);
-        ctx.lineTo(x + barW + 0.5, barY + barH + 1);
-        ctx.lineTo(x - 0.5, barY + barH + 1);
-        ctx.lineTo(x - 0.5, barY + r);
-        ctx.arcTo(x - 0.5, barY - 1.5, x + r - 1, barY - 1.5, r);
+        ctx.moveTo(x + r - S, barY - 1.5 * S);
+        ctx.lineTo(x + barW - r, barY - 1.5 * S);
+        ctx.arcTo(x + barW + 0.5 * S, barY - 1.5 * S, x + barW + 0.5 * S, barY + r, r);
+        ctx.lineTo(x + barW + 0.5 * S, barY + barH + S);
+        ctx.lineTo(x - 0.5 * S, barY + barH + S);
+        ctx.lineTo(x - 0.5 * S, barY + r);
+        ctx.arcTo(x - 0.5 * S, barY - 1.5 * S, x + r - S, barY - 1.5 * S, r);
         ctx.closePath();
         ctx.stroke();
       }
@@ -145,12 +147,12 @@ function generateRankChart(entries, viewerTier = null) {
 
     // Group label
     const labelX = groupStartX + (barsInGroup * barW) / 2;
-    ctx.font      = `${isViewerGroup ? 'bold ' : ''}9px sans-serif`;
+    ctx.font      = `${isViewerGroup ? 'bold ' : ''}${9 * S}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = isViewerGroup
       ? '#e8eaed'
       : viewerTier != null ? '#363b44' : '#5a6070';
-    ctx.fillText(label, labelX, H - 4);
+    ctx.fillText(label, labelX, H - 4 * S);
 
     if (gi < GROUPS.length - 1) x += GROUP_GAP;
   }
@@ -158,10 +160,10 @@ function generateRankChart(entries, viewerTier = null) {
   // "Better than X%" label — top right
   if (betterThanPct != null) {
     const color   = TIER_COLORS[viewerTier] ?? '#e8eaed';
-    ctx.font      = 'bold 10px sans-serif';
+    ctx.font      = `bold ${10 * S}px sans-serif`;
     ctx.textAlign = 'right';
     ctx.fillStyle = color;
-    ctx.fillText(`better than ${betterThanPct}% of the server`, W - PAD_R, 13);
+    ctx.fillText(`better than ${betterThanPct}% of the server`, W - PAD_R, 13 * S);
   }
 
   return { buffer: canvas.toBuffer('image/png'), betterThanPct };

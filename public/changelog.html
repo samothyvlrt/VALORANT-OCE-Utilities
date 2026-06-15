@@ -240,6 +240,55 @@
   <div class="timeline">
     <div class="no-results" id="no-results">No updates match that filter.</div>
 
+    <!-- ── 16 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">16 June 2026</div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">Rank distribution chart in /leaderboard</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+          </div>
+        </div>
+        <p class="entry-desc">The /leaderboard embed now includes a 520×80px rank distribution bar chart showing all 25 tiers. When your account is linked, your tier is highlighted with a white ring and dimmed surroundings, plus a "better than X% of the server" stat in your tier colour.</p>
+      </div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">Accurate cumulative RR display for Immortal+</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+          </div>
+        </div>
+        <p class="entry-desc">Immortal 1/2/3 and Radiant players now display their total cumulative RR above Immortal 1 (0 RR). Immortal 2 shows 100+RR, Immortal 3 shows 200+RR, and Radiant shows their actual total as returned by the API — confirmed accurate against live accounts.</p>
+      </div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">Leaderboard sort fixed for Immortal+</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+          </div>
+        </div>
+        <p class="entry-desc">Immortal+ players are now sorted by cumulative RR rather than sub-tier, correctly ordering players across Immortal 1/2/3/Radiant by total rank. Leaderboard rank (#N) is displayed as a stat only.</p>
+      </div>
+
+      <div class="entry" data-tags="admin">
+        <div class="entry-top">
+          <span class="entry-title">/admin link set auto-fetches rank</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+          </div>
+        </div>
+        <p class="entry-desc">Force-linking an account via /admin link set now immediately fetches and caches the player's rank from the API, assigns their rank role, and displays the result in the confirmation reply — no need to run /profile afterwards.</p>
+      </div>
+
+    </div>
+
     <!-- ── 15 June 2026 ── -->
     <div class="date-group">
       <div class="date-label">15 June 2026</div>
