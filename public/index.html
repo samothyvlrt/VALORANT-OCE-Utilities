@@ -56,7 +56,7 @@
     .side-nav {
       position: fixed;
       left: 20px;
-      top: 50%;
+      top: clamp(240px, 50%, calc(100vh - 240px));
       transform: translateY(-50%);
       display: flex;
       align-items: flex-start;
@@ -213,7 +213,7 @@
     .hero {
       flex: 1;
       display: flex; flex-direction: column; justify-content: center; gap: 36px;
-      padding: 36px 80px;
+      padding: 36px 80px 36px 130px;
       position: relative; overflow: hidden;
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -323,7 +323,7 @@
     /* ══ FEATURES ══ */
     .features {
       justify-content: center;
-      padding: 72px 80px;
+      padding: 72px 80px 72px 130px;
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
     }
@@ -350,7 +350,7 @@
     /* ══ RANK DISTRIBUTION ══ */
     .rank-dist-section {
       justify-content: center;
-      padding: 72px 80px;
+      padding: 72px 80px 72px 130px;
       border-top: 1px solid var(--border);
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -380,7 +380,7 @@
     .community {
       flex: 1;
       justify-content: center;
-      padding: 72px 80px 0;
+      padding: 72px 80px 0 130px;
       border-top: 1px solid var(--border);
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -422,16 +422,16 @@
 
     /* ══ RESPONSIVE ══ */
     @media (max-width:1000px) {
-      .hero { padding: 36px 24px; gap: 28px; }
+      .hero { padding: 36px 24px 36px 110px; gap: 28px; }
       .hero-inner { grid-template-columns: 1fr; gap: 32px; }
       .hero-stats { gap: 24px; }
       .hero::before { display: none; }
-      .features { padding: 56px 24px; }
+      .features { padding: 56px 24px 56px 110px; }
       .cards-grid { grid-template-columns: 1fr 1fr; }
-      .rank-dist-section { padding: 56px 24px; }
+      .rank-dist-section { padding: 56px 24px 56px 110px; }
       .rank-dist-chart { gap: 3px; }
       .dist-bar-label { font-size: 8px; }
-      .community { padding: 56px 24px 0; }
+      .community { padding: 56px 24px 0 110px; }
       nav { padding: 16px 24px; }
       footer { padding: 16px 24px; flex-direction: column; gap: 10px; }
       .side-nav { left: 12px; }
