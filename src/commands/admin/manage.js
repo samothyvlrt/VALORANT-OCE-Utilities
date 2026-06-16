@@ -109,19 +109,7 @@ module.exports = {
         .addSubcommand((sub) =>
           sub
             .setName('panel')
-            .setDescription('Post the account link panel embed in this channel.')
-            .addStringOption((opt) =>
-              opt
-                .setName('title')
-                .setDescription('Custom embed title (default: "Link your Valorant Account")')
-                .setRequired(false),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('description')
-                .setDescription('Custom embed description text (optional)')
-                .setRequired(false),
-            ),
+            .setDescription('Post the account link panel embed in this channel.'),
         ),
     )
 
@@ -660,20 +648,20 @@ async function handleExport(interaction) {
 // panel
 // ─────────────────────────────────────────────
 async function handlePanel(interaction) {
-  const title       = interaction.options.getString('title')       || 'Link your Valorant Account';
-  const description = interaction.options.getString('description') ||
-    [
-      'Connect your Riot account to unlock rank roles and access your profile stats.',
-      '',
-      '> 🔗 **Link** — Link or re-link your Valorant account',
-      '> 🔄 **Update Rank** — Refresh your rank role to your current rank',
-      '> 🔓 **Unlink** — Remove your linked account',
-    ].join('\n');
-
   const panelEmbed = new EmbedBuilder()
     .setColor(config.colors.primary)
-    .setTitle(title)
-    .setDescription(description)
+    .setTitle('Rank Roles')
+    .setDescription(
+      [
+        'Link your Riot account to receive an automatic rank role.',
+        '',
+        '`/link` — Link or re-link your Valorant account',
+        '`/profile` — View your rank and stats',
+        '`/leaderboard` — See where you rank in the server',
+        '`/privacy` — Hide or show yourself on the leaderboard',
+        '`/unlink` — Remove your linked account',
+      ].join('\n'),
+    )
     .setFooter({ text: 'Valorant OCE Utilities' });
 
   const row = new ActionRowBuilder().addComponents(
