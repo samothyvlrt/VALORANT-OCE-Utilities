@@ -60,7 +60,7 @@ function displayRR(tier, rr) {
 // ─────────────────────────────────────────────
 
 function getSortedEntries() {
-  const links = db.getAllLinks();
+  const links = db.getPublicLinks();
   return links
     .map((link) => {
       let rank = null;
@@ -149,7 +149,15 @@ function buildLeaderboardAttachment(entries, viewerDiscordId = null) {
     }
   }
 
-  const { buffer } = generateRankChart(entries, viewerTier);
+  // Chart counts ALL linked accounts (including hidden) so the distribution
+  // reflects the true server population, not just visible entries.
+  const allEntries = db.getAllLinks().map((l) => {
+    let tier = 0;
+    if (l.cached_rank) try { tier = JSON.parse(l.cached_rank).tier ?? 0; } catch { /* ignore */ }
+    return { tier };
+  });
+
+  const { buffer } = generateRankChart(allEntries, viewerTier);
   return new AttachmentBuilder(buffer, { name: 'ranks.png' });
 }
 

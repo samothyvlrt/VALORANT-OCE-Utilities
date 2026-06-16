@@ -77,6 +77,7 @@ try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN stats_cached_at INTEGER`);
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_access_token TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_refresh_token TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_token_expires_at INTEGER`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`); } catch { /* already exists */ }
 
 // Rank history table — one row per rank change, written whenever updateRankCache fires
 try {
@@ -208,11 +209,29 @@ function updateStatsCache(discordId, stats) {
 }
 
 /**
- * Get all linked accounts (for global admin use).
+ * Get all linked accounts (for global admin use — includes hidden).
  * @returns {Array}
  */
 function getAllLinks() {
   return db.prepare('SELECT * FROM linked_accounts ORDER BY linked_at DESC').all();
+}
+
+/**
+ * Get only publicly visible linked accounts (hidden=0).
+ * Used by leaderboard — respects user privacy preference.
+ * @returns {Array}
+ */
+function getPublicLinks() {
+  return db.prepare('SELECT * FROM linked_accounts WHERE hidden = 0 ORDER BY linked_at DESC').all();
+}
+
+/**
+ * Toggle whether a user is hidden from the public leaderboard.
+ * @param {string} discordId
+ * @param {boolean} hidden
+ */
+function setHidden(discordId, hidden) {
+  db.prepare('UPDATE linked_accounts SET hidden = ? WHERE discord_id = ?').run(hidden ? 1 : 0, discordId);
 }
 
 /**
@@ -406,6 +425,8 @@ module.exports = {
   insertRankHistory,
   getRankHistory,
   getAllLinks,
+  getPublicLinks,
+  setHidden,
   getLinksByDiscordIds,
   // Pending verifications
   createPending,

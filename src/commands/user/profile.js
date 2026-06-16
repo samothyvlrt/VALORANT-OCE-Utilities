@@ -45,29 +45,26 @@ function formatSeason(season) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('View a linked Riot account profile.')
-    .addUserOption((opt) =>
+    .setDescription('View your linked Riot account profile.')
+    .addBooleanOption((opt) =>
       opt
-        .setName('user')
-        .setDescription('Discord user to look up (defaults to yourself)')
+        .setName('public')
+        .setDescription('Show your profile publicly in this channel (default: only you can see it)')
         .setRequired(false),
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    const isPublic = interaction.options.getBoolean('public') ?? false;
+    await interaction.deferReply({ ephemeral: !isPublic });
 
-    const target = interaction.options.getUser('user') || interaction.user;
-    const link   = db.getLinkByDiscord(target.id);
+    const link = db.getLinkByDiscord(interaction.user.id);
 
     if (!link) {
-      const isSelf = target.id === interaction.user.id;
       return interaction.editReply({
         embeds: [
           embed.warning(
             'No Account Linked',
-            isSelf
-              ? "You haven't linked a Riot account yet. Use `/link` to get started."
-              : `<@${target.id}> hasn't linked a Riot account.`,
+            "You haven't linked a Riot account yet. Use `/link` to get started.",
           ),
         ],
       });
@@ -81,7 +78,7 @@ module.exports = {
     }
     if (!rank) {
       rank = await getRank(link.riot_name, link.riot_tag, link.region).catch(() => null);
-      if (rank) db.updateRankCache(link.discord_id, rank);
+      if (rank) db.updateRankCache(interaction.user.id, rank);
     }
 
     // ── Stats cache ─────────────────────────────────────────────────────────
@@ -92,7 +89,7 @@ module.exports = {
     }
     if (!stats) {
       stats = await getPlayerStats(link.riot_puuid, link.region).catch(() => null);
-      if (stats) db.updateStatsCache(link.discord_id, stats);
+      if (stats) db.updateStatsCache(interaction.user.id, stats);
     }
 
     // ── Rank strings ────────────────────────────────────────────────────────
@@ -131,9 +128,6 @@ module.exports = {
       .setFooter({ text: 'Valorant OCE Utilities · Last 20 matches' })
       .setTimestamp()
       .addFields(
-        { name: 'Discord',       value: `<@${link.discord_id}>`,                         inline: true },
-        { name: 'Region',        value: link.region.toUpperCase(),                        inline: true },
-        { name: '​',        value: '​',                                         inline: true },
         { name: 'Current Rank',  value: rankValue,                                        inline: true },
         { name: 'Peak Rank',     value: peakValue,                                        inline: true },
         { name: '​',        value: '​',                                         inline: true },

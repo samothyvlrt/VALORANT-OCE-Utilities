@@ -16,20 +16,6 @@ module.exports = {
         .setDescription('Your Riot ID, e.g. Aceship#OCE')
         .setRequired(true),
     )
-    .addStringOption((opt) =>
-      opt
-        .setName('region')
-        .setDescription('Your Valorant region (default: ap)')
-        .setRequired(false)
-        .addChoices(
-          { name: 'Asia-Pacific (AP / OCE)', value: 'ap' },
-          { name: 'North America (NA)',       value: 'na' },
-          { name: 'Europe (EU)',              value: 'eu' },
-          { name: 'Latin America (LATAM)',    value: 'latam' },
-          { name: 'Brazil (BR)',              value: 'br' },
-          { name: 'Korea (KR)',               value: 'kr'  },
-        ),
-    ),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
@@ -41,7 +27,7 @@ module.exports = {
     }
 
     const riotId = interaction.options.getString('riot_id');
-    const region = interaction.options.getString('region') || config.riot.defaultRegion;
+    const region = config.riot.defaultRegion;
 
     try {
       const challenge = await startChallenge(interaction.user.id, riotId, region);

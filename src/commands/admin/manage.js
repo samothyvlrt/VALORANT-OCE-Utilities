@@ -55,20 +55,6 @@ module.exports = {
             .addStringOption((opt) =>
               opt.setName('riot_id').setDescription('Riot ID e.g. Aceship#OCE').setRequired(true),
             )
-            .addStringOption((opt) =>
-              opt
-                .setName('region')
-                .setDescription('Valorant region')
-                .setRequired(false)
-                .addChoices(
-                  { name: 'Asia-Pacific (AP / OCE)', value: 'ap' },
-                  { name: 'North America (NA)', value: 'na' },
-                  { name: 'Europe (EU)', value: 'eu' },
-                  { name: 'Latin America (LATAM)', value: 'latam' },
-                  { name: 'Brazil (BR)', value: 'br' },
-                  { name: 'Korea (KR)', value: 'kr' },
-                ),
-            )
             .addBooleanOption((opt) =>
               opt.setName('silent').setDescription('If true, the user will NOT be sent a DM (default: false)').setRequired(false),
             ),
@@ -263,7 +249,7 @@ async function handleSet(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const target = interaction.options.getUser('user');
   const riotId = interaction.options.getString('riot_id');
-  const region = interaction.options.getString('region') || config.riot.defaultRegion;
+  const region = config.riot.defaultRegion;
   const silent = interaction.options.getBoolean('silent') ?? false;
 
   try {
@@ -428,8 +414,9 @@ async function handleList(interaction) {
   const pageLinks = links.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
   const rows = pageLinks.map((l, i) => {
-    const num = page * ITEMS_PER_PAGE + i + 1;
-    return `\`${String(num).padStart(3)}\` <@${l.discord_id}> — **${l.riot_name}#${l.riot_tag}** (${l.region.toUpperCase()})`;
+    const num    = page * ITEMS_PER_PAGE + i + 1;
+    const hidden = l.hidden ? ' 🙈' : '';
+    return `\`${String(num).padStart(3)}\` <@${l.discord_id}> — **${l.riot_name}#${l.riot_tag}** (${l.region.toUpperCase()})${hidden}`;
   });
 
   const e = new EmbedBuilder()
@@ -565,7 +552,9 @@ async function handleStats(interaction) {
   let uncached = 0;
 
   const links = db.getAllLinks();
+  let hiddenCount = 0;
   for (const link of links) {
+    if (link.hidden) { hiddenCount++; }
     if (!link.cached_rank) { uncached++; continue; }
     try {
       const rank = JSON.parse(link.cached_rank);
@@ -579,6 +568,7 @@ async function handleStats(interaction) {
     .map((k) => `${rankEmoji[k]} **${k.charAt(0).toUpperCase() + k.slice(1)}** — ${counts[k]}`);
 
   if (uncached > 0) distLines.push(`❔ **Not yet cached** — ${uncached}`);
+  if (hiddenCount > 0) distLines.push(`🙈 **Hidden from leaderboard** — ${hiddenCount}`);
 
   const e = new EmbedBuilder()
     .setColor(config.colors.primary)
