@@ -310,7 +310,7 @@
       border-radius: var(--radius); padding: 28px 22px;
       box-shadow: 4px 4px 0 0 rgba(255,255,255,.025);
       transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
-      position: relative;
+      position: relative; cursor: pointer;
     }
     .feature-card::before {
       content: ''; position: absolute; top: 16px; left: -2px;
@@ -319,10 +319,28 @@
     }
     .feature-card:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 0 var(--shadow-red); border-color: var(--border-red); }
     .feature-card:hover::before { opacity: 1; }
+    .feature-card.active { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 0 var(--shadow-red); border-color: var(--border-red); }
+    .feature-card.active::before { opacity: 1; }
+    .feature-card.active .feature-icon { border-color: var(--border-red); background: var(--red-dim); }
     .feature-icon { width: 42px; height: 42px; background: var(--surface-2); border: 2px solid var(--border-mid); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 18px; transition: border-color 0.2s, background 0.2s; }
     .feature-card:hover .feature-icon { border-color: var(--border-red); background: var(--red-dim); }
     .feature-title { font-size: 15px; font-weight: 800; color: var(--text-bright); margin-bottom: 8px; }
     .feature-desc { font-size: 13px; color: var(--text-muted); line-height: 1.72; }
+    .feature-hint { margin-top: 14px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.18); display: flex; align-items: center; gap: 5px; transition: color 0.2s; }
+    .feature-hint svg { transition: transform 0.2s; }
+    .feature-card:hover .feature-hint, .feature-card.active .feature-hint { color: var(--red); }
+    .feature-card.active .feature-hint svg { transform: rotate(180deg); }
+    /* ── Expand panel ── */
+    .feature-expand { display: none; margin-top: 20px; background: var(--surface); border: 2px solid var(--border-red); border-radius: var(--radius); padding: 24px 28px 24px; position: relative; }
+    .feature-expand.open { display: block; animation: expandIn 0.18s ease; }
+    @keyframes expandIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .feature-expand-close { position: absolute; top: 14px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 3px 8px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1.4; }
+    .feature-expand-close:hover { color: var(--text-bright); background: var(--border); }
+    .expand-eyebrow { font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; }
+    .expand-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .expand-item { padding: 11px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .expand-cmd { font-size: 12px; font-weight: 700; color: var(--white); font-family: monospace; margin-bottom: 3px; }
+    .expand-detail { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
     /* ══ RANK DISTRIBUTION ══ */
     .rank-dist-section {
@@ -518,26 +536,35 @@
         <h2 class="section-title">Everything in <span>one bot</span></h2>
       </div>
       <div class="cards-grid">
-        <div class="feature-card">
+        <div class="feature-card" onclick="expandCard(0)">
           <div class="feature-icon">🔗</div>
           <div class="feature-title">Account Linking</div>
           <p class="feature-desc">Securely verify your Riot account via Discord OAuth. One click, done.</p>
+          <div class="feature-hint"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Commands</div>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" onclick="expandCard(1)">
           <div class="feature-icon">🏅</div>
           <div class="feature-title">Rank Roles</div>
           <p class="feature-desc">Automatically assigns and updates your rank role from Iron through Radiant.</p>
+          <div class="feature-hint"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>How it works</div>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" onclick="expandCard(2)">
           <div class="feature-icon">📊</div>
           <div class="feature-title">Leaderboard</div>
           <p class="feature-desc">Server rank leaderboard with a live distribution chart. Use <code style="font-size:11px;background:rgba(255,70,85,0.1);color:#FF4655;padding:1px 5px;border-radius:3px;">/privacy</code> to hide yourself.</p>
+          <div class="feature-hint"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Commands</div>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" onclick="expandCard(3)">
           <div class="feature-icon">🔒</div>
           <div class="feature-title">Staff Controls</div>
           <p class="feature-desc">Admin toolkit — set links, bulk resets, activity logs, and rank distribution.</p>
+          <div class="feature-hint"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Commands</div>
         </div>
+      </div>
+      <div class="feature-expand" id="feature-expand">
+        <button class="feature-expand-close" onclick="closeExpand()">✕ close</button>
+        <div class="expand-eyebrow" id="expand-eyebrow"></div>
+        <div class="expand-list" id="expand-list"></div>
       </div>
     </section>
 
@@ -598,6 +625,59 @@
     const _theme = _pool[Math.floor(Math.random() * _pool.length)];
     localStorage.setItem('navTheme', _theme);
     document.getElementById('side-nav').dataset.theme = _theme;
+
+    // ── Feature card expand ───────────────────────────────────
+    const EXPAND_DATA = [
+      { title: 'Account Linking', items: [
+        { cmd: '/link',    desc: 'Start OAuth verification and link your Riot account' },
+        { cmd: '/unlink',  desc: 'Remove your linked account from the server' },
+        { cmd: '/verify',  desc: 'Manual fallback if the OAuth redirect doesn\'t trigger' },
+        { cmd: '/profile', desc: 'View your rank, stats, and linked account details' },
+      ]},
+      { title: 'Rank Roles', items: [
+        { cmd: 'Auto-assign',     desc: 'Role assigned instantly on link — Iron through Radiant' },
+        { cmd: 'Auto-refresh',    desc: 'Rank roles silently update every 6 hours' },
+        { cmd: 'Account watch',   desc: 'Detects name changes and invalidated accounts automatically' },
+        { cmd: '/admin link set', desc: 'Admins can force-refresh any member\'s rank role' },
+      ]},
+      { title: 'Leaderboard', items: [
+        { cmd: '/leaderboard', desc: 'Server ranked list with live rank distribution chart' },
+        { cmd: '/privacy',     desc: 'Hide yourself from the list — still counted in the chart' },
+        { cmd: 'Immortal+ RR', desc: 'Sorted by cumulative RR across sub-tiers, not just position' },
+        { cmd: 'Live chart',   desc: 'Rank distribution pushed to the website every 6 hours' },
+      ]},
+      { title: 'Staff Controls', items: [
+        { cmd: '/admin link get',        desc: 'View link info and rank history for any member' },
+        { cmd: '/admin link set',        desc: 'Force-link a member without OAuth challenge' },
+        { cmd: '/admin link reset',      desc: 'Remove a link and force re-verification' },
+        { cmd: '/admin link list',       desc: 'All linked members, including hidden accounts' },
+        { cmd: '/admin link bulk-reset', desc: 'Force re-verify an entire role at once' },
+        { cmd: '/admin link panel',      desc: 'Post the user guide panel in any channel' },
+        { cmd: '/admin stats',           desc: 'Member count, link rate, and rank breakdown' },
+        { cmd: '/admin export',          desc: 'CSV export of all linked accounts' },
+      ]},
+    ];
+    let _activeCard = -1;
+    function expandCard(idx) {
+      const panel = document.getElementById('feature-expand');
+      const cards = document.querySelectorAll('.feature-card');
+      if (_activeCard === idx) { closeExpand(); return; }
+      cards.forEach((c, i) => c.classList.toggle('active', i === idx));
+      _activeCard = idx;
+      const d = EXPAND_DATA[idx];
+      document.getElementById('expand-eyebrow').textContent = d.title;
+      document.getElementById('expand-list').innerHTML = d.items.map(it =>
+        `<div class="expand-item"><div class="expand-cmd">${it.cmd}</div><div class="expand-detail">${it.desc}</div></div>`
+      ).join('');
+      panel.classList.add('open');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeExpand() {
+      document.getElementById('feature-expand').classList.remove('open');
+      document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('active'));
+      _activeCard = -1;
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExpand(); });
 
     // ── Progress bar nav ──────────────────────────────────────
     const scroll   = document.getElementById('page-scroll');
