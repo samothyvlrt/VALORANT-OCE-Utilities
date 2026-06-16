@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard · Valorant OCE Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:        #FF4655;
+      --red-dim:    rgba(255,70,85,0.10);
+      --red-border: rgba(255,70,85,0.30);
+      --bg:         #0a0a0c;
+      --surface:    #111214;
+      --surface-2:  #16191e;
+      --text-muted: #3a4252;
+      --text:       #5e6e88;
+      --text-mid:   #8a9ab8;
+      --text-bright:#edf2fa;
+      --border:     rgba(255,255,255,0.06);
+      --border-mid: rgba(255,255,255,0.11);
+      --radius-sm:  4px;
+      --radius:     8px;
+      --nav-h:      62px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 48px; height: var(--nav-h);
+      background: rgba(10,10,12,0.92);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-text { font-size: 15px; font-weight: 800; color: var(--text-bright); letter-spacing: -0.01em; }
+    .nav-logo-text span { color: var(--red); }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 7px 14px; border-radius: var(--radius-sm); transition: color 0.15s, background 0.15s; }
+    .nav-link:hover { color: var(--text-bright); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--text-bright); }
+    .nav-cta { font-size: 13px; font-weight: 700; color: #fff; background: var(--red); padding: 7px 16px; border-radius: var(--radius-sm); text-decoration: none; box-shadow: 3px 3px 0 0 rgba(255,70,85,0.5); transition: transform 0.12s, box-shadow 0.12s; }
+    .nav-cta:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 rgba(255,70,85,0.5); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 72px 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 20px;
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: var(--text-bright); letter-spacing: -0.035em; line-height: 1.04; margin-bottom: 14px; }
+    h1 em { font-style: normal; color: var(--red); }
+
+    .header-sub { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 48px; }
+
+    /* ── CONTROLS ── */
+    .controls {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .search-wrap {
+      position: relative; flex: 1; min-width: 200px;
+    }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+    }
+    .search {
+      width: 100%; padding: 10px 14px 10px 38px;
+      background: var(--surface); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-sm); color: var(--text-bright);
+      font-size: 14px; font-family: inherit;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .search::placeholder { color: var(--text-muted); }
+    .search:focus { border-color: var(--red-border); }
+
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; cursor: pointer; border: 1px solid var(--border-mid);
+      background: var(--surface); color: var(--text-muted);
+      transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+    }
+    .filter-btn:hover { color: var(--text-bright); border-color: rgba(255,255,255,0.2); }
+    .filter-btn.active { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+    .filter-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ── META ROW ── */
+    .meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .meta-count strong { color: var(--text-mid); }
+    .meta-updated { font-style: italic; }
+
+    /* ── PLAYER LIST ── */
+    .player-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .player-row {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      cursor: default;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s;
+      text-decoration: none;
+      position: relative;
+    }
+    .player-row:hover {
+      border-color: var(--border-mid);
+      background: var(--surface-2);
+      transform: translateX(2px);
+    }
+    .player-row.highlighted {
+      border-color: var(--red-border);
+      background: var(--red-dim);
+    }
+    .player-row.hidden-filter { display: none; }
+
+    .pos {
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      min-width: 28px; text-align: right; font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .pos.top3 { color: var(--text-mid); }
+
+    .rank-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .player-name {
+      flex: 1; font-size: 15px; font-weight: 700; color: var(--text-bright);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .player-tag { font-weight: 500; color: var(--text-mid); }
+
+    .player-right {
+      display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+    }
+    .tier-name { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .lb-rank { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .lb-rank::before { content: '· '; }
+
+    .rr {
+      font-size: 15px; font-weight: 800; color: var(--red);
+      font-variant-numeric: tabular-nums; min-width: 64px; text-align: right;
+    }
+
+    .share-btn {
+      position: absolute; right: 64px; top: 50%; transform: translateY(-50%);
+      opacity: 0; transition: opacity 0.15s;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); padding: 4px;
+    }
+    .player-row:hover .share-btn { opacity: 1; }
+    .share-btn:hover { color: var(--text-bright); }
+
+    /* ── STATES ── */
+    .loading, .empty-state {
+      text-align: center; padding: 80px 24px;
+      color: var(--text-muted); font-size: 15px;
+    }
+    .loading-dots span { animation: dot-blink 1.4s infinite; display: inline-block; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot-blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+    .empty-state p { margin-top: 8px; font-size: 13px; }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 32px;
+    }
+    .page-btn {
+      padding: 8px 18px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      border: 1px solid var(--border-mid); background: var(--surface);
+      color: var(--text-muted); transition: all 0.15s;
+    }
+    .page-btn:hover:not(:disabled) { color: var(--text-bright); border-color: rgba(255,255,255,0.2); }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+    .page-info { font-size: 13px; color: var(--text-muted); padding: 0 8px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 20px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--text-muted);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--red); }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .page { padding: 48px 16px 60px; }
+      .player-right { gap: 10px; }
+      .tier-name { display: none; }
+      footer { padding: 16px 20px; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-logo" href="/">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M13 1L25 13L13 25L1 13Z" fill="rgba(255,70,85,0.12)" stroke="#FF4655" stroke-width="1.5"/>
+        <path d="M13 7L19 13L13 19L7 13Z" fill="rgba(255,70,85,0.28)"/>
+      </svg>
+      <span class="nav-logo-text">Valorant <span>OCE</span> Utilities</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link active" href="/leaderboard">Leaderboard</a>
+      <a class="nav-link" href="/changelog">Changelog</a>
+      <a class="nav-link" href="/demo">Demo</a>
+      <a class="nav-cta" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Join Discord ↗</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Leaderboard</div>
+    <h1>See where you <em>rank</em></h1>
+    <p class="header-sub">
+      Server members sorted by competitive tier and RR.<br>
+      Immortal+ show their live leaderboard position.
+    </p>
+
+    <div class="controls">
+      <div class="search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search" id="search" type="text" placeholder="Search players…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="filter-group" id="filter-group">
+        <button class="filter-btn active" data-group="all">All</button>
+        <button class="filter-btn" data-group="immortal"><span class="filter-dot" style="background:#BF3136"></span>Immortal+</button>
+        <button class="filter-btn" data-group="ascendant"><span class="filter-dot" style="background:#19A97B"></span>Ascendant</button>
+        <button class="filter-btn" data-group="diamond"><span class="filter-dot" style="background:#6B56C4"></span>Diamond</button>
+        <button class="filter-btn" data-group="platinum"><span class="filter-dot" style="background:#3AB8B3"></span>Platinum</button>
+        <button class="filter-btn" data-group="gold"><span class="filter-dot" style="background:#D4AF51"></span>Gold</button>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <span class="meta-count" id="meta-count"></span>
+      <span class="meta-updated" id="meta-updated"></span>
+    </div>
+
+    <div class="player-list" id="player-list">
+      <div class="loading">
+        Loading<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination" style="display:none"></div>
+  </div>
+
+  <footer>
+    <span>© 2026 Valorant OCE Utilities · Not affiliated with Riot Games</span>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/changelog">Changelog</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </footer>
+
+  <script>
+    const TIER_COLORS = {
+      3:'#594134',4:'#594134',5:'#594134',
+      6:'#9E6230',7:'#9E6230',8:'#9E6230',
+      9:'#8BA7B7',10:'#8BA7B7',11:'#8BA7B7',
+      12:'#D4AF51',13:'#D4AF51',14:'#D4AF51',
+      15:'#3AB8B3',16:'#3AB8B3',17:'#3AB8B3',
+      18:'#6B56C4',19:'#6B56C4',20:'#6B56C4',
+      21:'#19A97B',22:'#19A97B',23:'#19A97B',
+      24:'#BF3136',25:'#BF3136',26:'#BF3136',
+      27:'#FFD63A',
+    };
+
+    const TIER_GROUP = {
+      3:'iron',4:'iron',5:'iron',
+      6:'bronze',7:'bronze',8:'bronze',
+      9:'silver',10:'silver',11:'silver',
+      12:'gold',13:'gold',14:'gold',
+      15:'platinum',16:'platinum',17:'platinum',
+      18:'diamond',19:'diamond',20:'diamond',
+      21:'ascendant',22:'ascendant',23:'ascendant',
+      24:'immortal',25:'immortal',26:'immortal',
+      27:'radiant',
+    };
+
+    const PAGE_SIZE = 20;
+    let allPlayers  = [];
+    let filtered    = [];
+    let currentPage = 1;
+    let activeGroup = 'all';
+    let searchQuery = '';
+
+    // ── Highlighted player from URL ─────────────────────────────────────
+    const urlParams   = new URLSearchParams(location.search);
+    const highlightId = urlParams.get('player'); // e.g. ?player=FragKing%23OCE
+
+    // ── Fetch data ──────────────────────────────────────────────────────
+    async function loadLeaderboard() {
+      try {
+        const res  = await fetch('/api/leaderboard');
+        const data = await res.json();
+
+        allPlayers = data.players ?? [];
+
+        if (data.updatedAt) {
+          const diff = Math.floor((Date.now() - new Date(data.updatedAt)) / 1000);
+          const rel  = diff < 60 ? 'just now'
+            : diff < 3600   ? Math.floor(diff / 60) + 'm ago'
+            : Math.floor(diff / 3600) + 'h ago';
+          document.getElementById('meta-updated').textContent = 'Updated ' + rel;
+        }
+
+        applyFilters();
+
+        if (highlightId) {
+          const idx = allPlayers.findIndex(p => `${p.riotName}#${p.riotTag}` === highlightId);
+          if (idx !== -1) {
+            currentPage = Math.ceil((idx + 1) / PAGE_SIZE);
+            render();
+            setTimeout(() => {
+              const el = document.querySelector('.player-row.highlighted');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        }
+
+      } catch {
+        document.getElementById('player-list').innerHTML =
+          '<div class="empty-state">Could not load leaderboard data.<p>The bot may not have run yet. Try again soon.</p></div>';
+      }
+    }
+
+    // ── Filter + search ──────────────────────────────────────────────────
+    function applyFilters() {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = allPlayers.filter(p => {
+        const groupMatch = activeGroup === 'all'
+          || (activeGroup === 'immortal' && p.tier >= 24)
+          || TIER_GROUP[p.tier] === activeGroup;
+        const searchMatch = !q || `${p.riotName}#${p.riotTag}`.toLowerCase().includes(q);
+        return groupMatch && searchMatch;
+      });
+      currentPage = 1;
+      render();
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────
+    function render() {
+      const list    = document.getElementById('player-list');
+      const pagDiv  = document.getElementById('pagination');
+      const metaEl  = document.getElementById('meta-count');
+      const totalPg = Math.ceil(filtered.length / PAGE_SIZE);
+      const start   = (currentPage - 1) * PAGE_SIZE;
+      const page    = filtered.slice(start, start + PAGE_SIZE);
+
+      metaEl.innerHTML = filtered.length === allPlayers.length
+        ? `<strong>${allPlayers.length}</strong> ranked players`
+        : `<strong>${filtered.length}</strong> of ${allPlayers.length} players`;
+
+      if (!allPlayers.length) {
+        list.innerHTML = '<div class="empty-state">No leaderboard data yet.<p>The bot publishes rankings on startup and every 6 hours.</p></div>';
+        pagDiv.style.display = 'none';
+        return;
+      }
+
+      if (!page.length) {
+        list.innerHTML = '<div class="empty-state">No players match your search.</div>';
+        pagDiv.style.display = 'none';
+        return;
+      }
+
+      const globalOffset = start; // position in full allPlayers for rank number
+
+      list.innerHTML = page.map((p, i) => {
+        const pos        = start + i + 1;
+        const color      = TIER_COLORS[p.tier] ?? '#555';
+        const id         = `${p.riotName}#${p.riotTag}`;
+        const isHighlight = highlightId && id === highlightId;
+        const lbStr      = p.leaderboardRank ? `· #${p.leaderboardRank}` : '';
+        const rrLabel    = p.tier >= 24 ? `${p.displayRr} RR` : `${p.rr} RR`;
+        const posStr     = String(pos).padStart(2, '0');
+
+        return `<div class="player-row${isHighlight ? ' highlighted' : ''}" data-id="${escHtml(id)}">
+          <span class="pos${pos <= 3 ? ' top3' : ''}">${posStr}</span>
+          <span class="rank-dot" style="background:${color};box-shadow:0 0 6px ${color}55"></span>
+          <span class="player-name">${escHtml(p.riotName)}<span class="player-tag">#${escHtml(p.riotTag)}</span></span>
+          <div class="player-right">
+            <span class="tier-name">${escHtml(p.tierName)}${lbStr ? `<span class="lb-rank">${lbStr}</span>` : ''}</span>
+            <span class="rr">${rrLabel}</span>
+          </div>
+          <button class="share-btn" onclick="sharePlayer(event,'${escHtml(id)}')" title="Copy link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+        </div>`;
+      }).join('');
+
+      // Pagination
+      if (totalPg <= 1) {
+        pagDiv.style.display = 'none';
+      } else {
+        pagDiv.style.display = 'flex';
+        pagDiv.innerHTML = `
+          <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+          <span class="page-info">Page ${currentPage} of ${totalPg}</span>
+          <button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPg ? 'disabled' : ''}>Next →</button>
+        `;
+      }
+    }
+
+    function goPage(n) {
+      currentPage = n;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function sharePlayer(e, id) {
+      e.stopPropagation();
+      const url = `${location.origin}/leaderboard?player=${encodeURIComponent(id)}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = e.currentTarget;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3DD68C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(() => {
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+        }, 1500);
+      });
+    }
+
+    // ── Events ───────────────────────────────────────────────────────────
+    document.getElementById('search').addEventListener('input', e => {
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+
+    document.getElementById('filter-group').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeGroup = btn.dataset.group;
+      applyFilters();
+    });
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>

@@ -10,10 +10,11 @@ git push origin main
 echo "✅ GitHub done"
 echo ""
 
-# ── 2. JRMA ───────────────────────────────────────────────────────────────
-echo "🤖 Pushing to JRMA (bot server)..."
-git push https://e3F4Ta:f3HFy4a6@justrunmy.app/git/r_Kp9b8 HEAD:deploy
-echo "✅ JRMA done"
+# ── 2. Docker Hub ─────────────────────────────────────────────────────────
+echo "🐳 Building and pushing Docker image..."
+docker build --no-cache --platform linux/amd64 -t 5amothy/valorant-bot:latest .
+docker push 5amothy/valorant-bot:latest
+echo "✅ Docker done"
 echo ""
 
 # ── 3. Vercel ─────────────────────────────────────────────────────────────
@@ -22,4 +23,4 @@ vercel --prod
 echo "✅ Vercel done"
 echo ""
 
-echo "🎉 All done! Remember to restart the bot on JRMA."
+echo "🎉 All done! Restart the bot in the JRMA dashboard to pull the new image."

@@ -171,9 +171,8 @@
     /* ══ HERO ══ */
     .hero {
       flex: 1;
-      display: grid; grid-template-columns: 1fr auto;
-      align-items: center; gap: 80px;
-      padding: 60px 80px 0;
+      display: flex; flex-direction: column; justify-content: center; gap: 36px;
+      padding: 36px 80px;
       position: relative; overflow: hidden;
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -186,7 +185,21 @@
       pointer-events: none;
     }
 
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr auto;
+      align-items: center; gap: 80px;
+    }
+
     .hero-text { position: relative; z-index: 1; max-width: 540px; }
+
+    /* ══ HERO STATS (inline below hero content) ══ */
+    .hero-stats {
+      display: flex; align-items: center; gap: 40px;
+      padding-top: 32px; border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .hero-stat { display: flex; flex-direction: column; gap: 5px; }
+    .hero-stat-sep { width: 1px; height: 36px; background: var(--border-mid); flex-shrink: 0; }
 
     .eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
@@ -256,18 +269,6 @@
     .bot-tags { display: flex; flex-wrap: wrap; gap: 6px; }
     .bot-tag { font-size: 11px; font-weight: 600; color: var(--text-mid); background: var(--surface-2); border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius-sm); }
 
-    /* ══ STATS STRIP ══ */
-    .stats-strip {
-      border-top: 1px solid var(--border);
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border);
-      flex-shrink: 0;
-    }
-    .stat-item {
-      background: var(--bg);
-      background-image: radial-gradient(circle,rgba(255,255,255,.045) 1px,transparent 1px);
-      background-size: 22px 22px;
-      padding: 22px 40px; display: flex; flex-direction: column; gap: 5px;
-    }
     .stat-num { font-size: 28px; font-weight: 900; color: var(--white); letter-spacing: -.035em; line-height: 1; }
     .stat-num span { color: var(--red); }
     .stat-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
@@ -380,7 +381,9 @@
 
     /* ══ RESPONSIVE ══ */
     @media (max-width:1000px) {
-      .hero { grid-template-columns: 1fr; padding: 48px 24px 0; gap: 40px; }
+      .hero { padding: 36px 24px; gap: 28px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .hero-stats { gap: 24px; }
       .hero::before { display: none; }
       .features { padding: 56px 24px; }
       .cards-grid { grid-template-columns: 1fr 1fr; }
@@ -434,7 +437,7 @@
           <span class="nav-logo-text">Valorant <span>OCE</span> Utilities</span>
         </a>
         <div class="nav-links">
-          <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+          <a class="nav-link" href="/leaderboard">Leaderboard</a>
           <a class="nav-link" href="/changelog">Changelog</a>
           <a class="nav-link" href="/demo">Demo</a>
           <a class="nav-cta" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Join Discord ↗</a>
@@ -442,6 +445,7 @@
       </nav>
 
       <div class="hero">
+        <div class="hero-inner">
         <div class="hero-text">
           <div class="eyebrow"><span class="eyebrow-dot"></span>Oceanic Valorant Community</div>
           <h1>The utility bot<br>for <em>Valorant OCE</em></h1>
@@ -451,7 +455,7 @@
           </p>
           <div class="cta-row">
             <a class="btn-primary" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Join the Server ↗</a>
-            <a class="btn-secondary" href="https://oce.gg" target="_blank" rel="noopener">Visit OCE.GG</a>
+            <a class="btn-secondary" href="/leaderboard">View Leaderboard →</a>
           </div>
         </div>
 
@@ -483,17 +487,15 @@
             </div>
           </div>
         </div>
-      </div>
+        </div><!-- /hero-inner -->
 
-      <div class="stats-strip">
-        <div class="stat-item"><span class="stat-num">24<span>/7</span></span><span class="stat-label">Uptime</span></div>
-        <div class="stat-item"><span class="stat-num">Iron<span>→</span></span><span class="stat-label">Rank Tracking</span></div>
-        <div class="stat-item"><span class="stat-num">OCE<span>.</span></span><span class="stat-label">Region Focus</span></div>
-      </div>
-
-      <div class="scroll-hint" aria-hidden="true">
-        <span>Scroll</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        <div class="hero-stats">
+          <div class="hero-stat"><span class="stat-num">24<span>/7</span></span><span class="stat-label">Uptime</span></div>
+          <div class="hero-stat-sep"></div>
+          <div class="hero-stat"><span class="stat-num">Iron<span>→</span></span><span class="stat-label">Rank Tracking</span></div>
+          <div class="hero-stat-sep"></div>
+          <div class="hero-stat"><span class="stat-num">OCE<span>.</span></span><span class="stat-label">Region Focus</span></div>
+        </div>
       </div>
     </section>
 
@@ -550,9 +552,9 @@
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
             discord.gg/VALORANTOCE
           </a>
-          <a class="pill" href="https://oce.gg" target="_blank" rel="noopener">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-            oce.gg
+          <a class="pill" href="/leaderboard">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            Leaderboard
           </a>
         </div>
       </div>

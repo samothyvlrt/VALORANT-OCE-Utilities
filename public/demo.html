@@ -104,7 +104,7 @@
     <span class="nav-logo-text">Valorant OCE Utilities</span>
   </a>
   <div class="nav-links">
-    <a class="nav-link" href="https://oce.gg" target="_blank" rel="noopener">OCE.GG</a>
+    <a class="nav-link" href="/leaderboard">Leaderboard</a>
     <a class="nav-link" href="https://discord.gg/VALORANTOCE" target="_blank" rel="noopener">Discord</a>
     <a class="nav-link" href="/changelog">Changelog</a>
   </div>
@@ -204,7 +204,8 @@
   </div>
 
   <div class="cmd-grid">
-    <div class="cmd-card"><div class="cmd-label">/profile</div><h3>Player Profile</h3><p>Shows current rank, peak rank, K/D, win rate, and top agents from the last 20 matches. Includes a Unicode sparkline showing rank progression over time. Supports looking up any linked member.</p><span class="cmd-visibility private">Ephemeral</span></div>
+    <div class="cmd-card"><div class="cmd-label">/profile</div><h3>Player Profile</h3><p>Shows your current rank, peak rank, K/D, win rate, and top agents from the last 20 matches. Includes a Unicode sparkline showing rank progression over time. Self-only — use <code>public: True</code> to post it visibly in the channel.</p><span class="cmd-visibility private">Ephemeral</span></div>
+    <div class="cmd-card"><div class="cmd-label">/privacy</div><h3>Privacy Toggle</h3><p>Toggle your visibility on the public <code>/leaderboard</code> ranked list. Hidden accounts are still counted in the rank distribution chart (anonymous). Re-run to flip the setting.</p><span class="cmd-visibility private">Ephemeral</span></div>
     <div class="cmd-card"><div class="cmd-label">/match latest</div><h3>Latest Match</h3><p>Full breakdown of the most recently completed match — agent, K/D/A, ACS, HS%, and a team-by-team score table.</p><span class="cmd-visibility private">Ephemeral</span></div>
     <div class="cmd-card"><div class="cmd-label">/match history</div><h3>Match History</h3><p>Last 10 matches at a glance with per-match result, agent, K/D/A, ACS, and an overall W/L record for the set.</p><span class="cmd-visibility public">Public</span></div>
     <div class="cmd-card"><div class="cmd-label">/unlink</div><h3>Unlink Account</h3><p>Removes your linked Riot account, revokes all rank roles, and clears your rank history. Requires re-verification via /link to restore access.</p><span class="cmd-visibility private">Ephemeral</span></div>

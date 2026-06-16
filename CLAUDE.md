@@ -21,24 +21,28 @@ Vercel: https://valorant-oce-utilities.vercel.app
 | **HenrikDev API** | Third-party Valorant API wrapper (`api.henrikdev.xyz`) |
 
 ### JRMA Docker details
-- Registry: `jdr-o75fr96p.justrunmy.app`
-- Image tag: `jdr-o75fr96p.justrunmy.app/o75fr96p:v3`
-- Registry user: `Ay5c4T3Q`
+- JRMA dashboard: `justrunmy.app/panel/application/35401`
 - Git push URL: `https://e3F4Ta:f3HFy4a6@justrunmy.app/git/r_Kp9b8`
 - Push target branch: `deploy`
-- **Known issue**: JRMA's git-triggered auto-build produces 0-byte Docker images and fails with "No matching nodes(preffer node not found)". Workaround: build locally and push directly to the JRMA registry, then click "Use this image" in the JRMA dashboard.
+- **JRMA registry is permanently broken** — git-triggered auto-build produces 0-byte images ("No matching nodes"). Do NOT push to `jdr-o75fr96p.justrunmy.app`.
+- **Current image**: `5amothy/valorant-bot:latest` on Docker Hub (public repo)
 
+### Docker Hub deployment (current method)
 ```bash
-docker login jdr-o75fr96p.justrunmy.app -u Ay5c4T3Q
-docker build -t jdr-o75fr96p.justrunmy.app/o75fr96p:v3 .
-docker push jdr-o75fr96p.justrunmy.app/o75fr96p:v3
+docker login -u 5amothy
+docker build --no-cache --platform linux/amd64 -t 5amothy/valorant-bot:latest .
+docker push 5amothy/valorant-bot:latest
 ```
+Then restart container in JRMA dashboard → General → Restart.
+
+**CRITICAL**: Always use `--platform linux/amd64`. Dev machine is ARM64 (macOS); JRMA runs AMD64 Linux. Without this flag the container starts with no logs and immediately fails.
 
 ### Dockerfile notes
-- Base image: `node:18` (NOT the dev machine's macOS ARM64 — always rebuild native modules in Docker)
+- Base image: `node:18`
 - `RUN npm rebuild better-sqlite3` is required — macOS binaries are incompatible with Linux
 - `/app/data` is a Docker volume — the SQLite DB persists across container restarts
 - `@napi-rs/canvas` is an optional dependency that sometimes fails to install correctly on macOS ARM64. Fix: `rm -rf node_modules package-lock.json && npm install`
+- **DB note**: Switching Docker images resets the volume if the new container doesn't mount the same named volume. Existing linked users will need to re-link after a fresh container.
 
 ---
 
