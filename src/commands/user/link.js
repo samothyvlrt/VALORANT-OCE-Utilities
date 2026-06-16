@@ -15,7 +15,7 @@ module.exports = {
         .setName('riot_id')
         .setDescription('Your Riot ID, e.g. Aceship#OCE')
         .setRequired(true),
-    )
+    ),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
