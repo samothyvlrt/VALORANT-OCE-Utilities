@@ -240,7 +240,7 @@
   <div class="timeline">
     <div class="no-results" id="no-results">No updates match that filter.</div>
 
-    <!-- ── 16 June 2026 (2) ── -->
+    <!-- ── 16 June 2026 (3) ── -->
     <div class="date-group">
       <div class="date-label">16 June 2026</div>
 
@@ -252,17 +252,38 @@
             <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
           </div>
         </div>
-        <p class="entry-desc">Users can now run <code>/privacy</code> to toggle their visibility on <code>/leaderboard</code>. Hidden accounts are excluded from the public leaderboard but remain fully visible to admins via <code>/admin link list</code> and <code>/admin stats</code>.</p>
+        <p class="entry-desc">Users can now run <code>/privacy</code> to toggle their visibility on <code>/leaderboard</code>. Hidden accounts are excluded from the ranked list but still counted in the rank distribution chart. Admins can see all accounts via <code>/admin link list</code> (hidden entries marked 🙈) and <code>/admin stats</code>.</p>
+      </div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">/profile is now self-only with an optional public toggle</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+          </div>
+        </div>
+        <p class="entry-desc"><code>/profile</code> no longer accepts a <code>user</code> option — it only shows your own linked account. Add <code>public: True</code> to post it visibly in the channel (handy for showing off your rank). Private by default.</p>
+      </div>
+
+      <div class="entry" data-tags="commands">
+        <div class="entry-top">
+          <span class="entry-title">Region option removed from /link and /admin link set</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+          </div>
+        </div>
+        <p class="entry-desc">This server is OCE/AP only. The region selector has been removed from <code>/link</code> and <code>/admin link set</code> — all accounts are registered to the AP region automatically.</p>
       </div>
 
       <div class="entry" data-tags="admin">
         <div class="entry-top">
-          <span class="entry-title">Fixed tierToRoleKey — rank roles now assign correctly</span>
+          <span class="entry-title">Fixed rank role assignments — Radiant was mapping to Unranked</span>
           <div class="entry-tags">
             <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
           </div>
         </div>
-        <p class="entry-desc">Rank role assignments were using the wrong tier number ranges (off by 2 from the Valorant API values). Radiant (tier 27) was being mapped to Unranked. All ranges are now correct.</p>
+        <p class="entry-desc">Rank role assignments and <code>/admin stats</code> were using incorrect tier number ranges (off by 2 from the Valorant API values). Radiant (tier 27) was being mapped to Unranked. All ranges are now correct — re-run <code>/admin link set</code> for any already-linked members to refresh their roles.</p>
       </div>
     </div>
 
