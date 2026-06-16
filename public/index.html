@@ -76,29 +76,84 @@
       left: 50%; top: 0;
       transform: translateX(-50%);
       width: 1px;
-      background: var(--red);
+      background: linear-gradient(to bottom, rgba(160,80,255,0.9), rgba(100,20,200,0.4));
       transition: height 0.35s ease;
       pointer-events: none;
     }
+
+    /* ── Omen smoke dots ── */
     .side-dot {
-      position: relative;
-      z-index: 1;
-      width: 7px; height: 7px;
+      position: relative; z-index: 1;
+      width: 10px; height: 10px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.12);
-      border: 1.5px solid rgba(255,255,255,0.18);
+      background: radial-gradient(circle at 40% 35%, #250840, #0d0018);
+      border: 1px solid rgba(130,50,220,0.25);
       cursor: pointer;
-      transition: all 0.25s ease;
-      padding: 6px;
-      background-clip: content-box;
+      transition: all 0.35s ease;
+      box-shadow: 0 0 6px rgba(100,20,180,0.2), inset 0 0 4px rgba(80,0,140,0.3);
     }
-    .side-dot:hover { background: rgba(255,255,255,0.35); border-color: rgba(255,255,255,0.45); }
+    .side-dot:hover {
+      border-color: rgba(160,80,255,0.5);
+      box-shadow: 0 0 10px rgba(130,50,220,0.4), inset 0 0 6px rgba(120,40,220,0.4);
+      transform: scale(1.2);
+    }
+
+    /* Active dot — Omen smoke deployed */
     .side-dot.active {
-      background: var(--red);
-      border-color: var(--red);
-      box-shadow: 0 0 0 4px rgba(255,70,85,0.18);
-      padding: 4px;
+      width: 14px; height: 14px;
+      background: radial-gradient(circle at 38% 32%, #5a1fa0, #180430);
+      border: 1px solid rgba(180,100,255,0.7);
+      box-shadow:
+        0 0 0 3px rgba(120,40,220,0.12),
+        0 0 14px rgba(150,60,255,0.55),
+        0 0 28px rgba(100,20,200,0.3),
+        inset 0 0 8px rgba(200,120,255,0.35);
+      animation: omen-breathe 2.8s ease-in-out infinite;
     }
+
+    /* Rotating orbit ring */
+    .side-dot.active::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-top-color: rgba(180,100,255,0.65);
+      border-right-color: rgba(140,60,255,0.2);
+      animation: omen-orbit 1.8s linear infinite;
+    }
+
+    /* Outer slow counter-ring */
+    .side-dot.active::after {
+      content: '';
+      position: absolute;
+      inset: -9px;
+      border-radius: 50%;
+      border: 0.5px dashed rgba(130,50,220,0.22);
+      animation: omen-orbit 4s linear infinite reverse;
+    }
+
+    @keyframes omen-breathe {
+      0%, 100% {
+        box-shadow:
+          0 0 0 3px rgba(120,40,220,0.12),
+          0 0 14px rgba(150,60,255,0.55),
+          0 0 28px rgba(100,20,200,0.3),
+          inset 0 0 8px rgba(200,120,255,0.35);
+      }
+      50% {
+        box-shadow:
+          0 0 0 6px rgba(120,40,220,0.07),
+          0 0 22px rgba(150,60,255,0.8),
+          0 0 44px rgba(100,20,200,0.45),
+          inset 0 0 12px rgba(200,120,255,0.55);
+      }
+    }
+    @keyframes omen-orbit {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
     .side-dot-label {
       position: absolute;
       left: 22px; top: 50%;
@@ -116,7 +171,7 @@
       text-transform: uppercase;
     }
     .side-dot:hover .side-dot-label { opacity: 1; }
-    .side-dot.active .side-dot-label { color: var(--red); }
+    .side-dot.active .side-dot-label { color: rgba(180,120,255,0.9); }
 
     /* ══ SCROLL CONTAINER ══ */
     .page-scroll {
