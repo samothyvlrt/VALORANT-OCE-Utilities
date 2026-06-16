@@ -26,7 +26,6 @@
     }
 
     html, body {
-      height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -56,7 +55,7 @@
     .page {
       max-width: 860px;
       margin: 0 auto;
-      padding: 72px 24px 80px;
+      padding: 72px 24px 100px;
     }
 
     /* ── HEADER ── */
@@ -71,34 +70,15 @@
     h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: var(--text-bright); letter-spacing: -0.035em; line-height: 1.04; margin-bottom: 14px; }
     h1 em { font-style: normal; color: var(--red); }
 
-    .header-sub { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 48px; }
+    .header-sub { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 40px; }
 
-    /* ── CONTROLS ── */
-    .controls {
-      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-      margin-bottom: 24px;
+    /* ── FILTER TABS ── */
+    .filter-bar {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 28px;
     }
-    .search-wrap {
-      position: relative; flex: 1; min-width: 200px;
-    }
-    .search-icon {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-      color: var(--text-muted); pointer-events: none;
-    }
-    .search {
-      width: 100%; padding: 10px 14px 10px 38px;
-      background: var(--surface); border: 1px solid var(--border-mid);
-      border-radius: var(--radius-sm); color: var(--text-bright);
-      font-size: 14px; font-family: inherit;
-      transition: border-color 0.15s;
-      outline: none;
-    }
-    .search::placeholder { color: var(--text-muted); }
-    .search:focus { border-color: var(--red-border); }
-
-    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
     .filter-btn {
-      padding: 8px 14px; border-radius: var(--radius-sm);
+      padding: 7px 14px; border-radius: var(--radius-sm);
       font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
       text-transform: uppercase; cursor: pointer; border: 1px solid var(--border-mid);
       background: var(--surface); color: var(--text-muted);
@@ -106,41 +86,46 @@
     }
     .filter-btn:hover { color: var(--text-bright); border-color: rgba(255,255,255,0.2); }
     .filter-btn.active { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
-    .filter-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .filter-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── META ROW ── */
+    /* ── META ── */
     .meta-row {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
+      font-size: 12px; color: var(--text-muted); margin-bottom: 16px;
       flex-wrap: wrap; gap: 8px;
     }
     .meta-count strong { color: var(--text-mid); }
-    .meta-updated { font-style: italic; }
 
-    /* ── PLAYER LIST ── */
+    /* ── PLAYER ROWS ── */
     .player-list { display: flex; flex-direction: column; gap: 8px; }
 
+    /* Entry animation — rows start invisible, observer triggers .visible */
     .player-row {
       display: flex; align-items: center; gap: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px 20px;
-      cursor: default;
-      transition: border-color 0.15s, background 0.15s, transform 0.12s;
-      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s,
+                  opacity 0.4s ease, translate 0.4s ease;
       position: relative;
+      /* start hidden for scroll-in effect */
+      opacity: 0;
+      translate: 0 18px;
+    }
+    .player-row.visible {
+      opacity: 1;
+      translate: 0 0;
     }
     .player-row:hover {
       border-color: var(--border-mid);
       background: var(--surface-2);
-      transform: translateX(2px);
+      transform: translateX(3px);
     }
     .player-row.highlighted {
       border-color: var(--red-border);
       background: var(--red-dim);
     }
-    .player-row.hidden-filter { display: none; }
 
     .pos {
       font-size: 13px; font-weight: 700; color: var(--text-muted);
@@ -151,7 +136,9 @@
 
     .rank-dot {
       width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      transition: transform 0.2s;
     }
+    .player-row:hover .rank-dot { transform: scale(1.4); }
 
     .player-name {
       flex: 1; font-size: 15px; font-weight: 700; color: var(--text-bright);
@@ -162,23 +149,39 @@
     .player-right {
       display: flex; align-items: center; gap: 16px; flex-shrink: 0;
     }
-    .tier-name { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-    .lb-rank { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-    .lb-rank::before { content: '· '; }
+    .tier-label {
+      font-size: 13px; color: var(--text-muted); font-weight: 500; white-space: nowrap;
+    }
+    .lb-pos { color: var(--text-muted); margin-left: 2px; }
 
     .rr {
       font-size: 15px; font-weight: 800; color: var(--red);
       font-variant-numeric: tabular-nums; min-width: 64px; text-align: right;
     }
 
+    /* Share button */
     .share-btn {
-      position: absolute; right: 64px; top: 50%; transform: translateY(-50%);
+      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
       opacity: 0; transition: opacity 0.15s;
       background: none; border: none; cursor: pointer;
-      color: var(--text-muted); padding: 4px;
+      color: var(--text-muted); padding: 4px 2px; line-height: 0;
     }
     .player-row:hover .share-btn { opacity: 1; }
     .share-btn:hover { color: var(--text-bright); }
+
+    /* hide RR when share button is visible so they don't overlap */
+    .player-row:hover .rr { opacity: 0; }
+
+    /* ── RANK DIVIDER ── */
+    .rank-divider {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin: 8px 0 4px;
+      opacity: 0; translate: 0 10px;
+      transition: opacity 0.4s ease, translate 0.4s ease;
+    }
+    .rank-divider.visible { opacity: 1; translate: 0 0; }
+    .rank-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     /* ── STATES ── */
     .loading, .empty-state {
@@ -189,23 +192,7 @@
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes dot-blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
-
     .empty-state p { margin-top: 8px; font-size: 13px; }
-
-    /* ── PAGINATION ── */
-    .pagination {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 32px;
-    }
-    .page-btn {
-      padding: 8px 18px; border-radius: var(--radius-sm);
-      font-size: 13px; font-weight: 700; cursor: pointer;
-      border: 1px solid var(--border-mid); background: var(--surface);
-      color: var(--text-muted); transition: all 0.15s;
-    }
-    .page-btn:hover:not(:disabled) { color: var(--text-bright); border-color: rgba(255,255,255,0.2); }
-    .page-btn:disabled { opacity: 0.3; cursor: default; }
-    .page-info { font-size: 13px; color: var(--text-muted); padding: 0 8px; }
 
     /* ── FOOTER ── */
     footer {
@@ -219,9 +206,8 @@
 
     @media (max-width: 640px) {
       nav { padding: 16px 20px; }
-      .page { padding: 48px 16px 60px; }
-      .player-right { gap: 10px; }
-      .tier-name { display: none; }
+      .page { padding: 48px 16px 80px; }
+      .tier-label { display: none; }
       footer { padding: 16px 20px; flex-direction: column; }
     }
   </style>
@@ -252,24 +238,18 @@
       Immortal+ show their live leaderboard position.
     </p>
 
-    <div class="controls">
-      <div class="search-wrap">
-        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search" id="search" type="text" placeholder="Search players…" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="filter-group" id="filter-group">
-        <button class="filter-btn active" data-group="all">All</button>
-        <button class="filter-btn" data-group="immortal"><span class="filter-dot" style="background:#BF3136"></span>Immortal+</button>
-        <button class="filter-btn" data-group="ascendant"><span class="filter-dot" style="background:#19A97B"></span>Ascendant</button>
-        <button class="filter-btn" data-group="diamond"><span class="filter-dot" style="background:#6B56C4"></span>Diamond</button>
-        <button class="filter-btn" data-group="platinum"><span class="filter-dot" style="background:#3AB8B3"></span>Platinum</button>
-        <button class="filter-btn" data-group="gold"><span class="filter-dot" style="background:#D4AF51"></span>Gold</button>
-      </div>
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" data-group="all">All</button>
+      <button class="filter-btn" data-group="immortal"><span class="filter-dot" style="background:#BF3136"></span>Immortal+</button>
+      <button class="filter-btn" data-group="ascendant"><span class="filter-dot" style="background:#19A97B"></span>Ascendant</button>
+      <button class="filter-btn" data-group="diamond"><span class="filter-dot" style="background:#6B56C4"></span>Diamond</button>
+      <button class="filter-btn" data-group="platinum"><span class="filter-dot" style="background:#3AB8B3"></span>Platinum</button>
+      <button class="filter-btn" data-group="gold"><span class="filter-dot" style="background:#D4AF51"></span>Gold</button>
     </div>
 
     <div class="meta-row">
       <span class="meta-count" id="meta-count"></span>
-      <span class="meta-updated" id="meta-updated"></span>
+      <span id="meta-updated" style="font-size:12px;color:var(--text-muted);font-style:italic"></span>
     </div>
 
     <div class="player-list" id="player-list">
@@ -277,8 +257,6 @@
         Loading<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
       </div>
     </div>
-
-    <div class="pagination" id="pagination" style="display:none"></div>
   </div>
 
   <footer>
@@ -316,23 +294,35 @@
       27:'radiant',
     };
 
-    const PAGE_SIZE = 20;
+    // Group labels — show a divider when the rank group changes
+    const GROUP_LABEL = {
+      radiant:'Radiant', immortal:'Immortal', ascendant:'Ascendant',
+      diamond:'Diamond', platinum:'Platinum', gold:'Gold',
+      silver:'Silver', bronze:'Bronze', iron:'Iron',
+    };
+
     let allPlayers  = [];
-    let filtered    = [];
-    let currentPage = 1;
     let activeGroup = 'all';
-    let searchQuery = '';
 
-    // ── Highlighted player from URL ─────────────────────────────────────
     const urlParams   = new URLSearchParams(location.search);
-    const highlightId = urlParams.get('player'); // e.g. ?player=FragKing%23OCE
+    const highlightId = urlParams.get('player');
 
-    // ── Fetch data ──────────────────────────────────────────────────────
+    // ── Scroll-in observer ──────────────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          // Stagger rows that enter at the same time
+          setTimeout(() => e.target.classList.add('visible'), i * 40);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    // ── Fetch ───────────────────────────────────────────────────────────
     async function loadLeaderboard() {
       try {
         const res  = await fetch('/api/leaderboard');
         const data = await res.json();
-
         allPlayers = data.players ?? [];
 
         if (data.updatedAt) {
@@ -343,113 +333,85 @@
           document.getElementById('meta-updated').textContent = 'Updated ' + rel;
         }
 
-        applyFilters();
+        render();
 
         if (highlightId) {
-          const idx = allPlayers.findIndex(p => `${p.riotName}#${p.riotTag}` === highlightId);
-          if (idx !== -1) {
-            currentPage = Math.ceil((idx + 1) / PAGE_SIZE);
-            render();
-            setTimeout(() => {
-              const el = document.querySelector('.player-row.highlighted');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }
+          requestAnimationFrame(() => {
+            const el = document.querySelector('.player-row.highlighted');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
         }
-
       } catch {
         document.getElementById('player-list').innerHTML =
-          '<div class="empty-state">Could not load leaderboard data.<p>The bot may not have run yet. Try again soon.</p></div>';
+          '<div class="empty-state">Could not load leaderboard.<p>The bot may not have run yet — try again soon.</p></div>';
       }
-    }
-
-    // ── Filter + search ──────────────────────────────────────────────────
-    function applyFilters() {
-      const q = searchQuery.toLowerCase().trim();
-      filtered = allPlayers.filter(p => {
-        const groupMatch = activeGroup === 'all'
-          || (activeGroup === 'immortal' && p.tier >= 24)
-          || TIER_GROUP[p.tier] === activeGroup;
-        const searchMatch = !q || `${p.riotName}#${p.riotTag}`.toLowerCase().includes(q);
-        return groupMatch && searchMatch;
-      });
-      currentPage = 1;
-      render();
     }
 
     // ── Render ───────────────────────────────────────────────────────────
     function render() {
-      const list    = document.getElementById('player-list');
-      const pagDiv  = document.getElementById('pagination');
-      const metaEl  = document.getElementById('meta-count');
-      const totalPg = Math.ceil(filtered.length / PAGE_SIZE);
-      const start   = (currentPage - 1) * PAGE_SIZE;
-      const page    = filtered.slice(start, start + PAGE_SIZE);
+      const list = document.getElementById('player-list');
+      const meta = document.getElementById('meta-count');
 
-      metaEl.innerHTML = filtered.length === allPlayers.length
+      const players = activeGroup === 'all'
+        ? allPlayers
+        : allPlayers.filter(p =>
+            activeGroup === 'immortal'
+              ? p.tier >= 24
+              : TIER_GROUP[p.tier] === activeGroup
+          );
+
+      meta.innerHTML = players.length === allPlayers.length
         ? `<strong>${allPlayers.length}</strong> ranked players`
-        : `<strong>${filtered.length}</strong> of ${allPlayers.length} players`;
+        : `<strong>${players.length}</strong> of ${allPlayers.length} players`;
 
       if (!allPlayers.length) {
         list.innerHTML = '<div class="empty-state">No leaderboard data yet.<p>The bot publishes rankings on startup and every 6 hours.</p></div>';
-        pagDiv.style.display = 'none';
+        return;
+      }
+      if (!players.length) {
+        list.innerHTML = '<div class="empty-state">No players in this tier yet.</div>';
         return;
       }
 
-      if (!page.length) {
-        list.innerHTML = '<div class="empty-state">No players match your search.</div>';
-        pagDiv.style.display = 'none';
-        return;
-      }
+      let lastGroup = null;
+      const html    = [];
 
-      const globalOffset = start; // position in full allPlayers for rank number
+      players.forEach((p, i) => {
+        const group   = TIER_GROUP[p.tier];
+        const color   = TIER_COLORS[p.tier] ?? '#555';
+        const id      = `${p.riotName}#${p.riotTag}`;
+        const isHigh  = highlightId && id === highlightId;
+        const rrLabel = p.tier >= 24 ? `${p.displayRr} RR` : `${p.rr} RR`;
+        const lbBit   = p.leaderboardRank ? `<span class="lb-pos">· #${p.leaderboardRank}</span>` : '';
+        const posStr  = String(i + 1).padStart(2, '0');
 
-      list.innerHTML = page.map((p, i) => {
-        const pos        = start + i + 1;
-        const color      = TIER_COLORS[p.tier] ?? '#555';
-        const id         = `${p.riotName}#${p.riotTag}`;
-        const isHighlight = highlightId && id === highlightId;
-        const lbStr      = p.leaderboardRank ? `· #${p.leaderboardRank}` : '';
-        const rrLabel    = p.tier >= 24 ? `${p.displayRr} RR` : `${p.rr} RR`;
-        const posStr     = String(pos).padStart(2, '0');
+        // Rank group divider
+        if (group !== lastGroup && GROUP_LABEL[group]) {
+          html.push(`<div class="rank-divider">${GROUP_LABEL[group]}</div>`);
+          lastGroup = group;
+        }
 
-        return `<div class="player-row${isHighlight ? ' highlighted' : ''}" data-id="${escHtml(id)}">
-          <span class="pos${pos <= 3 ? ' top3' : ''}">${posStr}</span>
-          <span class="rank-dot" style="background:${color};box-shadow:0 0 6px ${color}55"></span>
-          <span class="player-name">${escHtml(p.riotName)}<span class="player-tag">#${escHtml(p.riotTag)}</span></span>
+        html.push(`<div class="player-row${isHigh ? ' highlighted' : ''}" data-id="${esc(id)}">
+          <span class="pos${i < 3 ? ' top3' : ''}">${posStr}</span>
+          <span class="rank-dot" style="background:${color};box-shadow:0 0 7px ${color}66"></span>
+          <span class="player-name">${esc(p.riotName)}<span class="player-tag">#${esc(p.riotTag)}</span></span>
           <div class="player-right">
-            <span class="tier-name">${escHtml(p.tierName)}${lbStr ? `<span class="lb-rank">${lbStr}</span>` : ''}</span>
+            <span class="tier-label">${esc(p.tierName)}${lbBit}</span>
             <span class="rr">${rrLabel}</span>
           </div>
-          <button class="share-btn" onclick="sharePlayer(event,'${escHtml(id)}')" title="Copy link">
+          <button class="share-btn" onclick="sharePlayer(event,'${esc(id)}')" title="Copy link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           </button>
-        </div>`;
-      }).join('');
+        </div>`);
+      });
 
-      // Pagination
-      if (totalPg <= 1) {
-        pagDiv.style.display = 'none';
-      } else {
-        pagDiv.style.display = 'flex';
-        pagDiv.innerHTML = `
-          <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
-          <span class="page-info">Page ${currentPage} of ${totalPg}</span>
-          <button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPg ? 'disabled' : ''}>Next →</button>
-        `;
-      }
+      list.innerHTML = html.join('');
+
+      // Attach scroll observer to every row + divider
+      list.querySelectorAll('.player-row, .rank-divider').forEach(el => observer.observe(el));
     }
 
-    function goPage(n) {
-      currentPage = n;
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
+    // ── Share ───────────────────────────────────────────────────────────
     function sharePlayer(e, id) {
       e.stopPropagation();
       const url = `${location.origin}/leaderboard?player=${encodeURIComponent(id)}`;
@@ -462,19 +424,18 @@
       });
     }
 
-    // ── Events ───────────────────────────────────────────────────────────
-    document.getElementById('search').addEventListener('input', e => {
-      searchQuery = e.target.value;
-      applyFilters();
-    });
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-    document.getElementById('filter-group').addEventListener('click', e => {
+    // ── Filter ──────────────────────────────────────────────────────────
+    document.getElementById('filter-bar').addEventListener('click', e => {
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeGroup = btn.dataset.group;
-      applyFilters();
+      render();
     });
 
     loadLeaderboard();
