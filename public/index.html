@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Valorant OCE Utilities</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -76,83 +77,29 @@
       left: 50%; top: 0;
       transform: translateX(-50%);
       width: 1px;
-      background: linear-gradient(to bottom, rgba(160,80,255,0.9), rgba(100,20,200,0.4));
       transition: height 0.35s ease;
       pointer-events: none;
     }
 
-    /* ── Omen smoke dots ── */
+    /* ── Base dot structure (shared across all themes) ── */
     .side-dot {
       position: relative; z-index: 1;
       width: 10px; height: 10px;
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 35%, #250840, #0d0018);
-      border: 1px solid rgba(130,50,220,0.25);
       cursor: pointer;
       transition: all 0.35s ease;
-      box-shadow: 0 0 6px rgba(100,20,180,0.2), inset 0 0 4px rgba(80,0,140,0.3);
     }
-    .side-dot:hover {
-      border-color: rgba(160,80,255,0.5);
-      box-shadow: 0 0 10px rgba(130,50,220,0.4), inset 0 0 6px rgba(120,40,220,0.4);
-      transform: scale(1.2);
-    }
+    .side-dot.active { width: 14px; height: 14px; }
 
-    /* Active dot — Omen smoke deployed */
-    .side-dot.active {
-      width: 14px; height: 14px;
-      background: radial-gradient(circle at 38% 32%, #5a1fa0, #180430);
-      border: 1px solid rgba(180,100,255,0.7);
-      box-shadow:
-        0 0 0 3px rgba(120,40,220,0.12),
-        0 0 14px rgba(150,60,255,0.55),
-        0 0 28px rgba(100,20,200,0.3),
-        inset 0 0 8px rgba(200,120,255,0.35);
-      animation: omen-breathe 2.8s ease-in-out infinite;
-    }
-
-    /* Rotating orbit ring */
-    .side-dot.active::before {
-      content: '';
-      position: absolute;
-      inset: -5px;
-      border-radius: 50%;
-      border: 1px solid transparent;
-      border-top-color: rgba(180,100,255,0.65);
-      border-right-color: rgba(140,60,255,0.2);
-      animation: omen-orbit 1.8s linear infinite;
-    }
-
-    /* Outer slow counter-ring */
+    .side-dot.active::before,
     .side-dot.active::after {
       content: '';
       position: absolute;
-      inset: -9px;
       border-radius: 50%;
-      border: 0.5px dashed rgba(130,50,220,0.22);
-      animation: omen-orbit 4s linear infinite reverse;
+      border: 1px solid transparent;
     }
-
-    @keyframes omen-breathe {
-      0%, 100% {
-        box-shadow:
-          0 0 0 3px rgba(120,40,220,0.12),
-          0 0 14px rgba(150,60,255,0.55),
-          0 0 28px rgba(100,20,200,0.3),
-          inset 0 0 8px rgba(200,120,255,0.35);
-      }
-      50% {
-        box-shadow:
-          0 0 0 6px rgba(120,40,220,0.07),
-          0 0 22px rgba(150,60,255,0.8),
-          0 0 44px rgba(100,20,200,0.45),
-          inset 0 0 12px rgba(200,120,255,0.55);
-      }
-    }
-    @keyframes omen-orbit {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
+    .side-dot.active::before { inset: -5px; }
+    .side-dot.active::after  { inset: -9px; border-width: 0.5px; border-style: dashed; }
 
     .side-dot-label {
       position: absolute;
@@ -171,7 +118,207 @@
       text-transform: uppercase;
     }
     .side-dot:hover .side-dot-label { opacity: 1; }
-    .side-dot.active .side-dot-label { color: rgba(180,120,255,0.9); }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME: OMEN — Dark purple smoke, slow orbit
+    ══════════════════════════════════════════════ */
+    [data-theme="omen"] .side-nav-progress {
+      background: linear-gradient(to bottom, rgba(160,80,255,0.9), rgba(100,20,200,0.4));
+    }
+    [data-theme="omen"] .side-dot {
+      background: radial-gradient(circle at 40% 35%, #250840, #0d0018);
+      border: 1px solid rgba(130,50,220,0.25);
+      box-shadow: 0 0 6px rgba(100,20,180,0.2), inset 0 0 4px rgba(80,0,140,0.3);
+    }
+    [data-theme="omen"] .side-dot:hover {
+      border-color: rgba(160,80,255,0.5);
+      box-shadow: 0 0 10px rgba(130,50,220,0.4), inset 0 0 6px rgba(120,40,220,0.4);
+      transform: scale(1.2);
+    }
+    [data-theme="omen"] .side-dot.active {
+      background: radial-gradient(circle at 38% 32%, #5a1fa0, #180430);
+      border: 1px solid rgba(180,100,255,0.7);
+      box-shadow: 0 0 0 3px rgba(120,40,220,0.12), 0 0 14px rgba(150,60,255,0.55), 0 0 28px rgba(100,20,200,0.3), inset 0 0 8px rgba(200,120,255,0.35);
+      animation: omen-breathe 2.8s ease-in-out infinite;
+    }
+    [data-theme="omen"] .side-dot.active::before {
+      border-color: transparent;
+      border-top-color: rgba(180,100,255,0.65);
+      border-right-color: rgba(140,60,255,0.2);
+      animation: spin 1.8s linear infinite;
+    }
+    [data-theme="omen"] .side-dot.active::after {
+      border-color: rgba(130,50,220,0.22);
+      animation: spin 4s linear infinite reverse;
+    }
+    [data-theme="omen"] .side-dot.active .side-dot-label { color: rgba(180,120,255,0.9); }
+    @keyframes omen-breathe {
+      0%,100% { box-shadow: 0 0 0 3px rgba(120,40,220,0.12), 0 0 14px rgba(150,60,255,0.55), 0 0 28px rgba(100,20,200,0.3),  inset 0 0 8px rgba(200,120,255,0.35); }
+      50%     { box-shadow: 0 0 0 6px rgba(120,40,220,0.07), 0 0 22px rgba(150,60,255,0.80), 0 0 44px rgba(100,20,200,0.45), inset 0 0 12px rgba(200,120,255,0.55); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME: PHOENIX — Fire flicker, rapid orbit
+    ══════════════════════════════════════════════ */
+    [data-theme="phoenix"] .side-nav-progress {
+      background: linear-gradient(to bottom, rgba(255,120,20,0.9), rgba(200,40,0,0.4));
+    }
+    [data-theme="phoenix"] .side-dot {
+      background: radial-gradient(circle at 40% 35%, #2a0800, #0f0300);
+      border: 1px solid rgba(200,60,0,0.25);
+      box-shadow: 0 0 5px rgba(200,60,0,0.15), inset 0 0 3px rgba(160,40,0,0.25);
+    }
+    [data-theme="phoenix"] .side-dot:hover {
+      border-color: rgba(255,120,20,0.55);
+      box-shadow: 0 0 10px rgba(255,100,20,0.45), inset 0 0 5px rgba(220,60,0,0.4);
+      transform: scale(1.2);
+    }
+    [data-theme="phoenix"] .side-dot.active {
+      background: radial-gradient(circle at 40% 28%, #ff6b1a, #8b1a00);
+      border: 1px solid rgba(255,140,30,0.75);
+      animation: phoenix-flicker 0.18s steps(1) infinite;
+    }
+    [data-theme="phoenix"] .side-dot.active::before {
+      border-color: transparent;
+      border-top-color: rgba(255,140,0,0.8);
+      border-right-color: rgba(255,80,0,0.3);
+      animation: spin 0.55s linear infinite;
+    }
+    [data-theme="phoenix"] .side-dot.active::after {
+      border-color: rgba(200,80,0,0.18);
+      border-style: solid;
+      animation: spin 1.1s linear infinite;
+    }
+    [data-theme="phoenix"] .side-dot.active .side-dot-label { color: rgba(255,150,50,0.95); }
+    @keyframes phoenix-flicker {
+      0%  { box-shadow: 0 -3px 18px rgba(255,100,20,0.75), 0 0 8px  rgba(255,60,0,0.50),  inset 0 0 8px  rgba(255,120,0,0.40); }
+      15% { box-shadow: 0 -6px 26px rgba(255,180,0,0.95),  0 0 13px rgba(255,90,0,0.75),  inset 0 0 11px rgba(255,160,0,0.60); }
+      30% { box-shadow: 0 -1px 10px rgba(200,50,0,0.50),   0 0 5px  rgba(180,30,0,0.35),  inset 0 0 5px  rgba(200,80,0,0.25); }
+      50% { box-shadow: 0 -5px 22px rgba(255,150,10,0.90), 0 0 11px rgba(255,80,0,0.65),  inset 0 0 9px  rgba(255,140,0,0.50); }
+      70% { box-shadow: 0 -7px 28px rgba(255,200,30,1.00), 0 0 14px rgba(255,120,0,0.80), inset 0 0 12px rgba(255,180,0,0.65); }
+      85% { box-shadow: 0 -2px 12px rgba(220,60,0,0.55),   0 0 6px  rgba(200,40,0,0.40),  inset 0 0 6px  rgba(220,90,0,0.30); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME: SAGE — Healing orb, gentle mint pulse
+    ══════════════════════════════════════════════ */
+    [data-theme="sage"] .side-nav-progress {
+      background: linear-gradient(to bottom, rgba(60,214,140,0.85), rgba(20,140,80,0.4));
+    }
+    [data-theme="sage"] .side-dot {
+      background: radial-gradient(circle at 40% 35%, #092018, #030a06);
+      border: 1px solid rgba(60,200,120,0.2);
+      box-shadow: 0 0 5px rgba(40,180,100,0.15), inset 0 0 3px rgba(30,140,80,0.2);
+    }
+    [data-theme="sage"] .side-dot:hover {
+      border-color: rgba(60,214,140,0.5);
+      box-shadow: 0 0 10px rgba(60,214,140,0.35), inset 0 0 5px rgba(40,180,110,0.3);
+      transform: scale(1.2);
+    }
+    [data-theme="sage"] .side-dot.active {
+      background: radial-gradient(circle at 40% 35%, #0e5e30, #021508);
+      border: 1px solid rgba(60,214,140,0.7);
+      box-shadow: 0 0 0 4px rgba(40,180,100,0.10), 0 0 14px rgba(60,214,140,0.5), 0 0 28px rgba(30,160,100,0.25), inset 0 0 8px rgba(80,230,150,0.3);
+      animation: sage-pulse 3.2s ease-in-out infinite;
+    }
+    [data-theme="sage"] .side-dot.active::before {
+      border-color: rgba(60,214,140,0.18);
+      border-style: solid;
+      animation: spin 5s linear infinite;
+    }
+    [data-theme="sage"] .side-dot.active::after {
+      border-color: transparent;
+      animation: none;
+    }
+    [data-theme="sage"] .side-dot.active .side-dot-label { color: rgba(60,214,140,0.95); }
+    @keyframes sage-pulse {
+      0%,100% { box-shadow: 0 0 0 4px rgba(40,180,100,0.10), 0 0 14px rgba(60,214,140,0.50), 0 0 28px rgba(30,160,100,0.25), inset 0 0 8px  rgba(80,230,150,0.30); }
+      50%     { box-shadow: 0 0 0 7px rgba(40,180,100,0.06), 0 0 22px rgba(60,214,140,0.75), 0 0 44px rgba(30,160,100,0.38), inset 0 0 12px rgba(80,230,150,0.50); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME: JETT — Wind rush, blazing fast rings
+    ══════════════════════════════════════════════ */
+    [data-theme="jett"] .side-nav-progress {
+      background: linear-gradient(to bottom, rgba(120,200,255,0.9), rgba(60,140,220,0.4));
+    }
+    [data-theme="jett"] .side-dot {
+      background: radial-gradient(circle at 40% 35%, #0a1826, #030810);
+      border: 1px solid rgba(100,180,255,0.2);
+      box-shadow: 0 0 5px rgba(80,160,240,0.15), inset 0 0 3px rgba(60,120,200,0.2);
+    }
+    [data-theme="jett"] .side-dot:hover {
+      border-color: rgba(140,210,255,0.55);
+      box-shadow: 0 0 10px rgba(100,180,255,0.4), inset 0 0 5px rgba(80,160,230,0.3);
+      transform: scale(1.2);
+    }
+    [data-theme="jett"] .side-dot.active {
+      background: radial-gradient(circle at 40% 35%, #1a5a8a, #060e20);
+      border: 1px solid rgba(140,210,255,0.8);
+      box-shadow: 0 0 0 3px rgba(100,180,255,0.12), 0 0 16px rgba(120,200,255,0.65), 0 0 32px rgba(80,160,240,0.35), inset 0 0 10px rgba(160,220,255,0.4);
+      animation: jett-rush 0.9s ease-in-out infinite;
+    }
+    [data-theme="jett"] .side-dot.active::before {
+      border-color: transparent;
+      border-top-color: rgba(160,220,255,0.9);
+      border-left-color: rgba(100,180,255,0.3);
+      animation: spin 0.45s linear infinite;
+    }
+    [data-theme="jett"] .side-dot.active::after {
+      border-color: rgba(100,180,255,0.2);
+      border-style: solid;
+      animation: spin 0.75s linear infinite reverse;
+    }
+    [data-theme="jett"] .side-dot.active .side-dot-label { color: rgba(140,210,255,0.95); }
+    @keyframes jett-rush {
+      0%,100% { box-shadow: 0 0 0 3px rgba(100,180,255,0.12), 0 0 16px rgba(120,200,255,0.65), 0 0 32px rgba(80,160,240,0.35), inset 0 0 10px rgba(160,220,255,0.40); }
+      40%     { box-shadow: 0 0 0 5px rgba(100,180,255,0.08), 0 0 24px rgba(140,220,255,0.90), 0 0 48px rgba(100,180,255,0.50), inset 0 0 14px rgba(180,230,255,0.60); }
+      70%     { box-shadow: 0 0 0 2px rgba(80,160,240,0.08),  0 0 10px rgba(100,180,240,0.40), 0 0 20px rgba(60,140,220,0.20),  inset 0 0 6px  rgba(120,200,240,0.25); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME: VIPER — Toxic acid, drip glow downward
+    ══════════════════════════════════════════════ */
+    [data-theme="viper"] .side-nav-progress {
+      background: linear-gradient(to bottom, rgba(80,220,80,0.85), rgba(40,160,40,0.4));
+    }
+    [data-theme="viper"] .side-dot {
+      background: radial-gradient(circle at 40% 35%, #091808, #020a01);
+      border: 1px solid rgba(60,180,50,0.2);
+      box-shadow: 0 0 5px rgba(50,180,50,0.15), inset 0 0 3px rgba(40,160,40,0.2);
+    }
+    [data-theme="viper"] .side-dot:hover {
+      border-color: rgba(80,220,70,0.5);
+      box-shadow: 0 0 10px rgba(70,210,60,0.4), inset 0 0 5px rgba(50,180,40,0.3);
+      transform: scale(1.2);
+    }
+    [data-theme="viper"] .side-dot.active {
+      background: radial-gradient(circle at 40% 35%, #0f3d08, #010d00);
+      border: 1px solid rgba(80,220,70,0.6);
+      box-shadow: 0 0 0 3px rgba(60,200,50,0.10), 0 5px 14px rgba(70,200,60,0.45), 0 10px 28px rgba(40,170,40,0.28), inset 0 0 8px rgba(90,230,70,0.25);
+      animation: viper-ooze 3.5s ease-in-out infinite;
+    }
+    [data-theme="viper"] .side-dot.active::before {
+      border-color: transparent;
+      border-top-color: rgba(80,220,70,0.5);
+      border-right-color: rgba(60,180,50,0.15);
+      animation: spin 2.5s linear infinite;
+    }
+    [data-theme="viper"] .side-dot.active::after {
+      border-color: rgba(60,180,50,0.15);
+      animation: spin 5s linear infinite reverse;
+    }
+    [data-theme="viper"] .side-dot.active .side-dot-label { color: rgba(80,220,70,0.95); }
+    @keyframes viper-ooze {
+      0%,100% { box-shadow: 0 0 0 3px rgba(60,200,50,0.10), 0 5px 14px rgba(70,200,60,0.45),  0 10px 28px rgba(40,170,40,0.28),  inset 0 0 8px  rgba(90,230,70,0.25); }
+      40%     { box-shadow: 0 0 0 5px rgba(60,200,50,0.06), 0 8px 22px rgba(70,220,60,0.65),  0 16px 40px rgba(40,190,40,0.40),  inset 0 0 12px rgba(90,240,70,0.40); }
+      70%     { box-shadow: 0 0 0 2px rgba(60,200,50,0.07), 0 2px 9px  rgba(60,180,50,0.28),  0 5px  18px rgba(30,150,30,0.18),  inset 0 0 5px  rgba(70,200,60,0.18); }
+    }
 
     /* ══ SCROLL CONTAINER ══ */
     .page-scroll {
@@ -461,7 +608,7 @@
 <body>
 
   <!-- SIDE NAV -->
-  <aside class="side-nav" id="side-nav" aria-label="Section navigation">
+  <aside class="side-nav" id="side-nav" data-theme="omen" aria-label="Section navigation">
     <div class="side-nav-track"></div>
     <div class="side-nav-progress" id="side-progress"></div>
     <div class="side-dot active" data-target="s-hero" onclick="snapTo('s-hero')" role="button" aria-label="Hero">
@@ -634,6 +781,11 @@
   </div><!-- /page-scroll -->
 
   <script>
+    // ── Ability-themed nav dots (random on each page load) ───
+    const ABILITY_THEMES = ['omen', 'phoenix', 'sage', 'jett', 'viper'];
+    document.getElementById('side-nav').dataset.theme =
+      ABILITY_THEMES[Math.floor(Math.random() * ABILITY_THEMES.length)];
+
     // ── Snap nav ──────────────────────────────────────────────
     const scroll   = document.getElementById('page-scroll');
     const dots     = document.querySelectorAll('.side-dot');
