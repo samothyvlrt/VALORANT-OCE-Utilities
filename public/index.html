@@ -622,8 +622,11 @@
   <script>
     // ── Ability-themed nav dots (random on each page load) ───
     const ABILITY_THEMES = ['omen', 'phoenix', 'sage', 'jett', 'viper'];
-    document.getElementById('side-nav').dataset.theme =
-      ABILITY_THEMES[Math.floor(Math.random() * ABILITY_THEMES.length)];
+    const _lastTheme = localStorage.getItem('navTheme');
+    const _pool = _lastTheme ? ABILITY_THEMES.filter(t => t !== _lastTheme) : ABILITY_THEMES;
+    const _theme = _pool[Math.floor(Math.random() * _pool.length)];
+    localStorage.setItem('navTheme', _theme);
+    document.getElementById('side-nav').dataset.theme = _theme;
 
     // ── Progress bar nav ──────────────────────────────────────
     const scroll   = document.getElementById('page-scroll');
