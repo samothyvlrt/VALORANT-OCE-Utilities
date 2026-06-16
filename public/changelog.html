@@ -240,6 +240,43 @@
   <div class="timeline">
     <div class="no-results" id="no-results">No updates match that filter.</div>
 
+    <!-- ── 16 June 2026 (4) ── -->
+    <div class="date-group">
+      <div class="date-label">16 June 2026</div>
+
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">Bot hosting migrated from JRMA registry to Docker Hub</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-infra)20;color:var(--tag-infra);border-color:var(--tag-infra)40">infra</span>
+          </div>
+        </div>
+        <p class="entry-desc">JRMA's internal container registry is permanently broken — auto-builds produce 0-byte images. The bot now deploys via Docker Hub, built locally with <code>--platform linux/amd64</code> to match JRMA's AMD64 Linux environment. JRMA is configured to pull from Docker Hub on restart.</p>
+      </div>
+
+      <div class="entry" data-tags="infra">
+        <div class="entry-top">
+          <span class="entry-title">Switched to global slash commands — removed guild command duplicates</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-infra)20;color:var(--tag-infra);border-color:var(--tag-infra)40">infra</span>
+          </div>
+        </div>
+        <p class="entry-desc">Guild-scoped commands were creating duplicates alongside global commands. All guild commands have been cleared and the bot now registers globally only — commands are consistent across all servers and there are no duplicate entries in the command list.</p>
+      </div>
+
+      <div class="entry" data-tags="commands ux admin">
+        <div class="entry-top">
+          <span class="entry-title">/admin link panel — hardcoded user guide, removed custom title/description options</span>
+          <div class="entry-tags">
+            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+          </div>
+        </div>
+        <p class="entry-desc">The panel command no longer accepts <code>title</code> or <code>description</code> options. It now posts a concise, hardcoded embed listing the five user-facing commands — <code>/link</code>, <code>/profile</code>, <code>/leaderboard</code>, <code>/privacy</code>, and <code>/unlink</code> — each with a one-line description.</p>
+      </div>
+
+    </div>
+
     <!-- ── 16 June 2026 (3) ── -->
     <div class="date-group">
       <div class="date-label">16 June 2026</div>
@@ -299,7 +336,7 @@
             <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
           </div>
         </div>
-        <p class="entry-desc">The /leaderboard embed now includes a 520×80px rank distribution bar chart showing all 25 tiers. When your account is linked, your tier is highlighted with a white ring and dimmed surroundings, plus a "better than X% of the server" stat in your tier colour.</p>
+        <p class="entry-desc">The /leaderboard embed now includes a 1040×160px rank distribution bar chart (rendered at 2× resolution) showing all 25 tiers. When your account is linked, your tier is highlighted with a white ring and dimmed surroundings, plus a "better than X% of the server" stat in your tier colour.</p>
       </div>
 
       <div class="entry" data-tags="commands ux">
