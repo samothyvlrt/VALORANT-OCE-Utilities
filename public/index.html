@@ -91,30 +91,11 @@
       width: 14px; height: 1px;
       background: rgba(255,255,255,0.12);
     }
-    .prog-labels {
-      height: 268px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .prog-label {
-      all: unset;
-      cursor: pointer;
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-family: monospace;
-      white-space: nowrap;
-      color: rgba(255,255,255,0.2);
-      transition: color 0.3s;
-    }
-    .prog-label:hover { color: rgba(255,255,255,0.5); }
     /* ── Ability themes: fill + cap ── */
 
     /* OMEN */
     [data-theme="omen"] .prog-fill { background: rgba(100,30,200,0.45); }
     [data-theme="omen"] .prog-cap  { background: #7a28c0; animation: omen-cap 2.8s ease-in-out infinite; }
-    [data-theme="omen"] .prog-label.active { color: rgba(160,80,255,0.95); }
     @keyframes omen-cap {
       0%,100% { box-shadow: 0 0 0 2px rgba(120,40,220,0.12), 0 0 10px rgba(150,60,255,0.60), 0 0 20px rgba(100,20,200,0.30); }
       50%     { box-shadow: 0 0 0 4px rgba(120,40,220,0.07), 0 0 18px rgba(150,60,255,0.88), 0 0 34px rgba(100,20,200,0.45); }
@@ -123,7 +104,6 @@
     /* PHOENIX */
     [data-theme="phoenix"] .prog-fill { background: rgba(200,65,0,0.45); }
     [data-theme="phoenix"] .prog-cap  { background: #d94000; animation: phoenix-cap 0.18s steps(1) infinite; }
-    [data-theme="phoenix"] .prog-label.active { color: rgba(255,150,50,0.95); }
     @keyframes phoenix-cap {
       0%  { box-shadow: 0 -2px 14px rgba(255,100,20,0.70), 0 0 6px  rgba(255,60,0,0.50); }
       15% { box-shadow: 0 -5px 22px rgba(255,180,0,0.95),  0 0 12px rgba(255,90,0,0.80); }
@@ -136,7 +116,6 @@
     /* SAGE */
     [data-theme="sage"] .prog-fill { background: rgba(0,180,200,0.42); }
     [data-theme="sage"] .prog-cap  { background: #00a8bc; animation: sage-cap 3.2s ease-in-out infinite; }
-    [data-theme="sage"] .prog-label.active { color: rgba(0,225,240,0.95); }
     @keyframes sage-cap {
       0%,100% { box-shadow: 0 0 0 2px rgba(0,200,220,0.10), 0 0 10px rgba(0,220,235,0.55), 0 0 20px rgba(0,170,200,0.28); transform: scale(1.00); }
       50%     { box-shadow: 0 0 0 4px rgba(0,200,220,0.06), 0 0 18px rgba(0,230,245,0.82), 0 0 34px rgba(0,190,220,0.40); transform: scale(1.10); }
@@ -145,7 +124,6 @@
     /* JETT */
     [data-theme="jett"] .prog-fill { background: rgba(70,140,230,0.42); }
     [data-theme="jett"] .prog-cap  { background: #4a88d8; animation: jett-cap 0.9s ease-in-out infinite; }
-    [data-theme="jett"] .prog-label.active { color: rgba(140,210,255,0.95); }
     @keyframes jett-cap {
       0%,100% { box-shadow: 0 0 0 2px rgba(100,180,255,0.12), 0 0 12px rgba(120,200,255,0.65), 0 0 24px rgba(80,160,240,0.35); }
       40%     { box-shadow: 0 0 0 5px rgba(100,180,255,0.07), 0 0 22px rgba(140,220,255,0.92), 0 0 38px rgba(100,180,255,0.50); }
@@ -155,7 +133,6 @@
     /* VIPER */
     [data-theme="viper"] .prog-fill { background: rgba(110,200,10,0.40); }
     [data-theme="viper"] .prog-cap  { background: #78c000; animation: viper-cap 3.5s ease-in-out infinite; }
-    [data-theme="viper"] .prog-label.active { color: rgba(150,255,50,0.95); }
     @keyframes viper-cap {
       0%,100% { box-shadow: 0 0 0 2px rgba(120,230,20,0.10), 0 5px 12px rgba(130,240,30,0.50), 0 9px 22px rgba(90,200,0,0.30); }
       40%     { box-shadow: 0 0 0 4px rgba(120,230,20,0.06), 0 8px 20px rgba(150,255,40,0.72), 0 15px 32px rgba(110,220,0,0.42); }
@@ -213,7 +190,7 @@
     .hero {
       flex: 1;
       display: flex; flex-direction: column; justify-content: center; gap: 36px;
-      padding: 36px 80px 36px 130px;
+      padding: 36px 80px;
       position: relative; overflow: hidden;
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -323,7 +300,7 @@
     /* ══ FEATURES ══ */
     .features {
       justify-content: center;
-      padding: 72px 80px 72px 130px;
+      padding: 72px 80px;
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
     }
@@ -350,7 +327,7 @@
     /* ══ RANK DISTRIBUTION ══ */
     .rank-dist-section {
       justify-content: center;
-      padding: 72px 80px 72px 130px;
+      padding: 72px 80px;
       border-top: 1px solid var(--border);
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -380,7 +357,7 @@
     .community {
       flex: 1;
       justify-content: center;
-      padding: 72px 80px 0 130px;
+      padding: 72px 80px 0;
       border-top: 1px solid var(--border);
       background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 22px 22px;
@@ -422,16 +399,16 @@
 
     /* ══ RESPONSIVE ══ */
     @media (max-width:1000px) {
-      .hero { padding: 36px 24px 36px 110px; gap: 28px; }
+      .hero { padding: 36px 24px; gap: 28px; }
       .hero-inner { grid-template-columns: 1fr; gap: 32px; }
       .hero-stats { gap: 24px; }
       .hero::before { display: none; }
-      .features { padding: 56px 24px 56px 110px; }
+      .features { padding: 56px 24px; }
       .cards-grid { grid-template-columns: 1fr 1fr; }
-      .rank-dist-section { padding: 56px 24px 56px 110px; }
+      .rank-dist-section { padding: 56px 24px; }
       .rank-dist-chart { gap: 3px; }
       .dist-bar-label { font-size: 8px; }
-      .community { padding: 56px 24px 0 110px; }
+      .community { padding: 56px 24px 0; }
       nav { padding: 16px 24px; }
       footer { padding: 16px 24px; flex-direction: column; gap: 10px; }
       .side-nav { left: 12px; }
@@ -455,12 +432,6 @@
       <div class="prog-tick" style="top:33.33%"></div>
       <div class="prog-tick" style="top:66.66%"></div>
       <div class="prog-tick" style="top:calc(100% - 1px)"></div>
-    </div>
-    <div class="prog-labels">
-      <button class="prog-label" id="plbl-0" onclick="jumpTo('s-hero')">01 · Hero</button>
-      <button class="prog-label" id="plbl-1" onclick="jumpTo('s-features')">02 · Features</button>
-      <button class="prog-label" id="plbl-2" onclick="jumpTo('s-dist')">03 · Ranks</button>
-      <button class="prog-label" id="plbl-3" onclick="jumpTo('s-community')">04 · Community</button>
     </div>
   </aside>
 
@@ -630,15 +601,9 @@
 
     // ── Progress bar nav ──────────────────────────────────────
     const scroll   = document.getElementById('page-scroll');
-    const sections = document.querySelectorAll('.snap-section');
     const progFill = document.getElementById('prog-fill');
     const progCap  = document.getElementById('prog-cap');
-    const labels   = document.querySelectorAll('.prog-label');
     const TRACK_H  = 268;
-
-    function jumpTo(id) {
-      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-    }
 
     function updateProgress() {
       const top     = scroll.scrollTop;
@@ -646,10 +611,6 @@
       const pct     = maxTop > 0 ? Math.min(1, top / maxTop) : 0;
       progFill.style.height = (pct * 100) + '%';
       progCap.style.top     = (pct * TRACK_H - 5) + 'px';
-
-      const activeIdx = Math.min(sections.length - 1,
-        Math.round(top / (scroll.clientHeight || 1)));
-      labels.forEach((lbl, i) => lbl.classList.toggle('active', i === activeIdx));
     }
 
     scroll.addEventListener('scroll', updateProgress, { passive: true });
