@@ -210,7 +210,7 @@
   <div class="cmd-grid">
     <div class="cmd-card"><div class="cmd-label">/profile</div><h3>Player Profile</h3><p>Shows your current rank, peak rank, K/D, win rate, and top agents from the last 20 matches. Includes a Unicode sparkline showing rank progression over time. Self-only — use <code>public: True</code> to post it visibly in the channel.</p><span class="cmd-visibility private">Ephemeral</span></div>
     <div class="cmd-card"><div class="cmd-label">/privacy</div><h3>Privacy Toggle</h3><p>Toggle your visibility on the public <code>/leaderboard</code> ranked list. Hidden accounts are still counted in the rank distribution chart (anonymous). Re-run to flip the setting.</p><span class="cmd-visibility private">Ephemeral</span></div>
-    <div class="cmd-card"><div class="cmd-label">/match latest</div><h3>Latest Match</h3><p>Full breakdown of the most recently completed match — agent, K/D/A, ACS, HS%, and a team-by-team score table.</p><span class="cmd-visibility private">Ephemeral</span></div>
+    <div class="cmd-card"><div class="cmd-label">/match latest</div><h3>Latest Match</h3><p>Full breakdown of the most recently completed match — agent, K/D/A, ACS, HS%, and a team-by-team score table.</p><span class="cmd-visibility public">Public</span></div>
     <div class="cmd-card"><div class="cmd-label">/match history</div><h3>Match History</h3><p>Last 10 matches at a glance with per-match result, agent, K/D/A, ACS, and an overall W/L record for the set.</p><span class="cmd-visibility public">Public</span></div>
     <div class="cmd-card"><div class="cmd-label">/unlink</div><h3>Unlink Account</h3><p>Removes your linked Riot account, revokes all rank roles, and clears your rank history. Requires re-verification via /link to restore access.</p><span class="cmd-visibility private">Ephemeral</span></div>
     <div class="cmd-card"><div class="cmd-label">/leaderboard</div><h3>Server Leaderboard</h3><p>Paginated ranked list of all verified server members sorted by competitive tier and RR. Immortal+ members show their live leaderboard position. Your own position is pinned below the page when you're not on the current page.</p><span class="cmd-visibility public">Public</span></div>
@@ -269,7 +269,6 @@
             <div style="margin-top:10px"><div class="embed-field-label" style="margin-bottom:6px">Enemy Team (RED)</div><div class="embed-field-value" style="font-family:'Courier New',monospace;font-size:12px;line-height:1.8"><code>Neon       20/18/5  258 ACS</code><br><code>Viper      16/15/7  198 ACS</code><br><code>Reyna      14/19/3  185 ACS</code><br><code>Fade       10/17/12 155 ACS</code><br><code>Brimstone   7/14/9  118 ACS</code></div></div>
             <div class="embed-footer">Valorant OCE Utilities · Latest Match</div>
           </div>
-          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
         </div>
       </div>
       <div class="discord-msg" style="margin-top:8px">
@@ -323,7 +322,7 @@
   </div>
   <div class="flow">
     <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>/admin link get — look up any member's link</h3><p>View a member's linked Riot account, rank, region, link date, and full audit history of changes to their link.</p></div></div>
-    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>/admin link remove — revoke a link</h3><p>Manually remove a member's verified link and rank role. All actions are written to the audit log with moderator attribution.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>/admin link reset — revoke a link</h3><p>Manually remove a member's verified link and rank role. All actions are written to the audit log with moderator attribution.</p></div></div>
     <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>/admin link bulk-reset — season resets</h3><p>Force re-verification for all members of a given role — used at the start of each Valorant act to refresh rank data across the server.</p></div></div>
     <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>Duplicate link attempt logging</h3><p>When a user attempts to claim a Riot account already linked to another Discord member, the attempt is logged to the staff channel with the claimant, the Riot ID, and the current owner.</p></div></div>
     <div class="flow-step"><div class="step-num">05</div><div class="step-content"><h3>Background account validation</h3><p>Every 6 hours the bot re-checks all linked accounts via Discord's connections API. Account swaps and disconnections are detected automatically with a full scan summary posted to the staff log channel.</p></div></div>
