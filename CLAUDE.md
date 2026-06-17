@@ -22,7 +22,7 @@ Vercel: https://valorant-oce-utilities.vercel.app
 
 ### JRMA Docker details
 - JRMA dashboard: `justrunmy.app/panel/application/35401`
-- Git push URL: `https://e3F4Ta:f3HFy4a6@justrunmy.app/git/r_Kp9b8`
+- Git push URL: `https://<jrma-user>:<jrma-token>@justrunmy.app/git/r_Kp9b8`
 - Push target branch: `deploy`
 - **JRMA registry is permanently broken** — git-triggered auto-build produces 0-byte images ("No matching nodes"). Do NOT push to `jdr-o75fr96p.justrunmy.app`.
 - **Current image**: `5amothy/valorant-bot:latest` on Docker Hub (public repo)
@@ -70,7 +70,7 @@ node deploy-commands.js --guild --guildId 537887361292304385
 
 ### JRMA git push only
 ```bash
-git push https://e3F4Ta:f3HFy4a6@justrunmy.app/git/r_Kp9b8 HEAD:deploy
+git push https://<jrma-user>:<jrma-token>@justrunmy.app/git/r_Kp9b8 HEAD:deploy
 ```
 
 ### Remove index.lock if git is stuck
