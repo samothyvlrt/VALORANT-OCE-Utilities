@@ -143,6 +143,17 @@ async function finaliseIfReady(discordId) {
  * Internal: write the verified link to SQLite and audit log.
  */
 function _completeVerification(discordId, result) {
+  // Re-check PUUID uniqueness — another user may have claimed this account
+  // between startChallenge() and OAuth completing (TOCTOU race condition).
+  const existingByPuuid = db.getLinkByPuuid(result.puuid);
+  if (existingByPuuid && existingByPuuid.discord_id !== discordId) {
+    db.removePending(discordId);
+    throw new VerificationError(
+      `**${result.riotName}#${result.riotTag}** was linked to another Discord account while your verification was in progress.\n\n` +
+      `If this is your account, please contact a moderator.`,
+    );
+  }
+
   db.upsertLink({
     discordId,
     puuid:    result.puuid,
