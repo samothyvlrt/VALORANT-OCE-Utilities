@@ -38,7 +38,7 @@ Then restart container in JRMA dashboard → General → Restart.
 **CRITICAL**: Always use `--platform linux/amd64`. Dev machine is ARM64 (macOS); JRMA runs AMD64 Linux. Without this flag the container starts with no logs and immediately fails.
 
 ### Dockerfile notes
-- Base image: `node:18`
+- Base image: `node:20`
 - `RUN npm rebuild better-sqlite3` is required — macOS binaries are incompatible with Linux
 - `/app/data` is a Docker volume — the SQLite DB persists across container restarts
 - `@napi-rs/canvas` is an optional dependency that sometimes fails to install correctly on macOS ARM64. Fix: `rm -rf node_modules package-lock.json && npm install`
@@ -48,10 +48,12 @@ Then restart container in JRMA dashboard → General → Restart.
 
 ## Deployment Commands
 
-### Full ship (GitHub + JRMA git push + Vercel)
+### Full ship (GitHub + Docker Hub + Vercel)
 ```bash
 npm run ship
 # = bash scripts/deploy.sh
+# Builds and pushes Docker image, pushes to GitHub, deploys to Vercel
+# Then restart the container in JRMA dashboard to pull the new image
 ```
 
 ### Re-register Discord slash commands (REQUIRED after any command option change)
@@ -66,11 +68,6 @@ node deploy-commands.js            # global (up to 1hr propagation)
 ```bash
 # Run in JRMA shell, or swap DEV_GUILD_ID in .env to main server ID
 node deploy-commands.js --guild --guildId 537887361292304385
-```
-
-### JRMA git push only
-```bash
-git push https://<jrma-user>:<jrma-token>@justrunmy.app/git/r_Kp9b8 HEAD:deploy
 ```
 
 ### Remove index.lock if git is stuck
