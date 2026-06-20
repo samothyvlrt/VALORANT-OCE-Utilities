@@ -31,6 +31,17 @@ module.exports = {
     // ── Background account validation every 6 hours ───────────────────────
     async function runAccountValidation() {
       try {
+      // ── Sanity check: duplicate PUUIDs (should always be 0) ──────────────
+      const duplicates = db.getDuplicatePuuids();
+      if (duplicates.length > 0) {
+        console.warn(`[validation] WARNING: ${duplicates.length} duplicate PUUID(s) detected!`);
+        logAdminAction(client, {
+          action:  '⚠️ Duplicate PUUIDs Detected',
+          fields:  Object.fromEntries(duplicates.map((d) => [d.riot_puuid, `Discord IDs: ${d.discord_ids} (count: ${d.count})`])),
+          guildId: config.discord.guildId,
+        });
+      }
+
       const links = db.getLinksWithTokens();
       console.log(`[validation] Starting account scan — ${links.length} account(s) to check`);
 
@@ -194,9 +205,24 @@ module.exports = {
       }
     }
 
-    // Run once on startup (after a short delay), then every 6 hours
+    // ── Schedule: midnight + noon AEST (UTC+10), every 12 hours ─────────────
+    function msUntilNextMidnightAEST() {
+      const AEST_OFFSET_MS = 10 * 60 * 60 * 1000; // UTC+10, fixed (no DST)
+      const nowAEST = Date.now() + AEST_OFFSET_MS;
+      const msSinceMidnight = nowAEST % (24 * 60 * 60 * 1000);
+      return (24 * 60 * 60 * 1000) - msSinceMidnight;
+    }
+
+    // Run once on startup (after a short delay)
     setTimeout(() => runAccountValidation(), 60 * 1000);
-    setInterval(() => runAccountValidation(), 6 * 60 * 60 * 1000);
+
+    // Then run at midnight AEST and every 12h thereafter (midnight + noon AEST)
+    const msToMidnight = msUntilNextMidnightAEST();
+    console.log(`[validation] Scheduled scan in ${(msToMidnight / 3600000).toFixed(1)}h (next midnight AEST)`);
+    setTimeout(() => {
+      runAccountValidation();
+      setInterval(() => runAccountValidation(), 12 * 60 * 60 * 1000);
+    }, msToMidnight);
 
     // ── Publish stats + leaderboard to Redis (for web pages) ────────────────
     generateStats();

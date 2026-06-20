@@ -413,6 +413,19 @@ function setSetting(key, value) {
   `).run(key, value);
 }
 
+/**
+ * Sanity check: return any riot_puuid that appears more than once.
+ * Should always return [] given the UNIQUE constraint, but catches DB corruption.
+ */
+function getDuplicatePuuids() {
+  return db.prepare(`
+    SELECT riot_puuid, COUNT(*) as count, GROUP_CONCAT(discord_id) as discord_ids
+    FROM linked_accounts
+    GROUP BY riot_puuid
+    HAVING count > 1
+  `).all();
+}
+
 module.exports = {
   // Linked accounts
   getLinkByDiscord,
@@ -447,6 +460,7 @@ module.exports = {
   // Settings
   getSetting,
   setSetting,
+  getDuplicatePuuids,
   // Raw db handle (for advanced queries in admin commands)
   db,
 };

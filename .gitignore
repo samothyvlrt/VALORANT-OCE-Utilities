@@ -1,4 +1,5 @@
 .env
+.mcp.json
 node_modules/
 data/bot.db
 data/bot.db-wal
