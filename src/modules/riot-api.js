@@ -37,7 +37,8 @@ function mapHenrikError(err) {
   if (status === 404) throw new RiotApiError('Account not found. Check the Riot ID and region.', 404);
   if (status === 429) throw new RiotApiError('Rate limit reached. Please wait a moment and try again.', 429);
   if (status === 403) throw new RiotApiError('API key invalid or missing. Contact the bot owner.', 403);
-  throw new RiotApiError(`Riot API error (${status ?? 'network'})`, status ?? 0);
+  if (!status || status >= 500) throw new RiotApiError('Riot data is temporarily unavailable — please try again in a few minutes.', status ?? 0);
+  throw new RiotApiError(`Riot API error (${status})`, status);
 }
 
 // ─────────────────────────────────────────────
