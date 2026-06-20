@@ -41,6 +41,7 @@ module.exports = {
           guildId: config.discord.guildId,
         });
       }
+      const dupStatus = duplicates.length === 0 ? '✅ None' : `⚠️ ${duplicates.length} found`;
 
       const links = db.getLinksWithTokens();
       console.log(`[validation] Starting account scan — ${links.length} account(s) to check`);
@@ -134,11 +135,12 @@ module.exports = {
       await logAdminAction(client, {
         action:  'Account Scan Complete',
         fields:  {
-          '✅ Passed':      `${passed}`,
-          '✏️ Renamed':     `${renamed}`,
-          '❌ Invalidated': `${invalidated}`,
-          '⚠️ Errors':      `${errors}`,
-          'Total Scanned':  `${links.length}`,
+          '✅ Passed':        `${passed}`,
+          '✏️ Renamed':       `${renamed}`,
+          '❌ Invalidated':   `${invalidated}`,
+          '⚠️ Errors':        `${errors}`,
+          'Total Scanned':    `${links.length}`,
+          'Duplicate PUUIDs': dupStatus,
         },
         guildId: config.discord.guildId,
       });
