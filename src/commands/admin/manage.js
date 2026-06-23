@@ -37,9 +37,12 @@ module.exports = {
         .addSubcommand((sub) =>
           sub
             .setName('get')
-            .setDescription("View a member's linked Riot account.")
+            .setDescription('Look up a link by Discord member or Riot ID.')
             .addUserOption((opt) =>
-              opt.setName('user').setDescription('Discord member').setRequired(true),
+              opt.setName('user').setDescription('Discord member').setRequired(false),
+            )
+            .addStringOption((opt) =>
+              opt.setName('riot_id').setDescription('Riot ID e.g. Aceship#OCE').setRequired(false),
             ),
         )
 
@@ -190,16 +193,43 @@ module.exports = {
 // ─────────────────────────────────────────────
 async function handleGet(interaction) {
   await interaction.deferReply({ ephemeral: true });
-  const target = interaction.options.getUser('user');
-  const link = db.getLinkByDiscord(target.id);
+  const target  = interaction.options.getUser('user');
+  const riotId  = interaction.options.getString('riot_id');
 
-  if (!link) {
+  if (!target && !riotId) {
     return interaction.editReply({
-      embeds: [embed.warning('No Link', `<@${target.id}> has no linked Riot account.`)],
+      embeds: [embed.error('Missing input', 'Provide either a Discord user or a Riot ID.')],
+    });
+  }
+  if (target && riotId) {
+    return interaction.editReply({
+      embeds: [embed.error('Too many inputs', 'Provide either a Discord user or a Riot ID, not both.')],
     });
   }
 
-  const history = db.getLinkHistory(target.id);
+  let link;
+  if (target) {
+    link = db.getLinkByDiscord(target.id);
+    if (!link) {
+      return interaction.editReply({
+        embeds: [embed.warning('No Link', `<@${target.id}> has no linked Riot account.`)],
+      });
+    }
+  } else {
+    const { parseRiotId } = require('../../modules/riot-api');
+    let parsed;
+    try { parsed = parseRiotId(riotId); } catch {
+      return interaction.editReply({ embeds: [embed.error('Invalid Riot ID', 'Format must be `Name#Tag`.')] });
+    }
+    link = db.getLinkByRiotId(parsed.name, parsed.tag);
+    if (!link) {
+      return interaction.editReply({
+        embeds: [embed.warning('No Link', `**${riotId}** is not linked to any Discord account.`)],
+      });
+    }
+  }
+
+  const history = db.getLinkHistory(link.discord_id);
 
   // Build history field — Riot ID, PUUID, timestamp per entry
   let historyValue = '*No history recorded*';

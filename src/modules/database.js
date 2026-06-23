@@ -115,6 +115,17 @@ function getLinkByPuuid(puuid) {
 }
 
 /**
+ * Get a linked account by Riot name + tag (case-insensitive).
+ * @param {string} name
+ * @param {string} tag
+ */
+function getLinkByRiotId(name, tag) {
+  return db.prepare(
+    'SELECT * FROM linked_accounts WHERE LOWER(riot_name) = LOWER(?) AND LOWER(riot_tag) = LOWER(?)',
+  ).get(name, tag);
+}
+
+/**
  * Upsert (create or update) a verified link.
  */
 function upsertLink({ discordId, puuid, riotName, riotTag, region }) {
@@ -431,6 +442,7 @@ module.exports = {
   getLinkByDiscord,
   updateStatsCache,
   getLinkByPuuid,
+  getLinkByRiotId,
   upsertLink,
   removeLink,
   updateLinkRiotId,
