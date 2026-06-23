@@ -91,53 +91,9 @@
       width: 14px; height: 1px;
       background: rgba(255,255,255,0.12);
     }
-    /* ── Ability themes: fill + cap ── */
-
-    /* OMEN */
-    [data-theme="omen"] .prog-fill { background: rgba(100,30,200,0.45); }
-    [data-theme="omen"] .prog-cap  { background: #7a28c0; animation: omen-cap 2.8s ease-in-out infinite; }
-    @keyframes omen-cap {
-      0%,100% { box-shadow: 0 0 0 2px rgba(120,40,220,0.12), 0 0 10px rgba(150,60,255,0.60), 0 0 20px rgba(100,20,200,0.30); }
-      50%     { box-shadow: 0 0 0 4px rgba(120,40,220,0.07), 0 0 18px rgba(150,60,255,0.88), 0 0 34px rgba(100,20,200,0.45); }
-    }
-
-    /* PHOENIX */
-    [data-theme="phoenix"] .prog-fill { background: rgba(200,65,0,0.45); }
-    [data-theme="phoenix"] .prog-cap  { background: #d94000; animation: phoenix-cap 0.18s steps(1) infinite; }
-    @keyframes phoenix-cap {
-      0%  { box-shadow: 0 -2px 14px rgba(255,100,20,0.70), 0 0 6px  rgba(255,60,0,0.50); }
-      15% { box-shadow: 0 -5px 22px rgba(255,180,0,0.95),  0 0 12px rgba(255,90,0,0.80); }
-      30% { box-shadow: 0 -1px 7px  rgba(200,50,0,0.45),   0 0 4px  rgba(180,30,0,0.35); }
-      50% { box-shadow: 0 -4px 18px rgba(255,150,10,0.88), 0 0 9px  rgba(255,80,0,0.65); }
-      70% { box-shadow: 0 -7px 26px rgba(255,200,30,1.00), 0 0 14px rgba(255,120,0,0.85); }
-      85% { box-shadow: 0 -2px 10px rgba(220,60,0,0.52),   0 0 5px  rgba(200,40,0,0.40); }
-    }
-
-    /* SAGE */
-    [data-theme="sage"] .prog-fill { background: rgba(0,180,200,0.42); }
-    [data-theme="sage"] .prog-cap  { background: #00a8bc; animation: sage-cap 3.2s ease-in-out infinite; }
-    @keyframes sage-cap {
-      0%,100% { box-shadow: 0 0 0 2px rgba(0,200,220,0.10), 0 0 10px rgba(0,220,235,0.55), 0 0 20px rgba(0,170,200,0.28); transform: scale(1.00); }
-      50%     { box-shadow: 0 0 0 4px rgba(0,200,220,0.06), 0 0 18px rgba(0,230,245,0.82), 0 0 34px rgba(0,190,220,0.40); transform: scale(1.10); }
-    }
-
-    /* JETT */
-    [data-theme="jett"] .prog-fill { background: rgba(70,140,230,0.42); }
-    [data-theme="jett"] .prog-cap  { background: #4a88d8; animation: jett-cap 0.9s ease-in-out infinite; }
-    @keyframes jett-cap {
-      0%,100% { box-shadow: 0 0 0 2px rgba(100,180,255,0.12), 0 0 12px rgba(120,200,255,0.65), 0 0 24px rgba(80,160,240,0.35); }
-      40%     { box-shadow: 0 0 0 5px rgba(100,180,255,0.07), 0 0 22px rgba(140,220,255,0.92), 0 0 38px rgba(100,180,255,0.50); }
-      70%     { box-shadow: 0 0 0 1px rgba(80,160,240,0.07),  0 0 6px  rgba(100,180,240,0.38), 0 0 12px rgba(60,140,220,0.18); }
-    }
-
-    /* VIPER */
-    [data-theme="viper"] .prog-fill { background: rgba(110,200,10,0.40); }
-    [data-theme="viper"] .prog-cap  { background: #78c000; animation: viper-cap 3.5s ease-in-out infinite; }
-    @keyframes viper-cap {
-      0%,100% { box-shadow: 0 0 0 2px rgba(120,230,20,0.10), 0 5px 12px rgba(130,240,30,0.50), 0 9px 22px rgba(90,200,0,0.30); }
-      40%     { box-shadow: 0 0 0 4px rgba(120,230,20,0.06), 0 8px 20px rgba(150,255,40,0.72), 0 15px 32px rgba(110,220,0,0.42); }
-      70%     { box-shadow: 0 0 0 1px rgba(120,230,20,0.07), 0 2px 7px  rgba(110,210,10,0.28), 0 4px  13px rgba(70,170,0,0.18); }
-    }
+    /* ── Progress fill + cap (site theme, static) ── */
+    .prog-fill { background: var(--red); }
+    .prog-cap  { background: var(--red); }
 
     /* ══ SCROLL CONTAINER ══ */
     .page-scroll {
@@ -442,7 +398,7 @@
 <body>
 
   <!-- SIDE NAV — progress bar -->
-  <aside class="side-nav" id="side-nav" data-theme="omen" aria-label="Section navigation">
+  <aside class="side-nav" id="side-nav" aria-label="Section navigation">
     <div class="prog-track">
       <div class="prog-fill" id="prog-fill"></div>
       <div class="prog-cap"  id="prog-cap"></div>
@@ -618,14 +574,6 @@
   </div><!-- /page-scroll -->
 
   <script>
-    // ── Ability-themed nav dots (random on each page load) ───
-    const ABILITY_THEMES = ['omen', 'phoenix', 'sage', 'jett', 'viper'];
-    const _lastTheme = localStorage.getItem('navTheme');
-    const _pool = _lastTheme ? ABILITY_THEMES.filter(t => t !== _lastTheme) : ABILITY_THEMES;
-    const _theme = _pool[Math.floor(Math.random() * _pool.length)];
-    localStorage.setItem('navTheme', _theme);
-    document.getElementById('side-nav').dataset.theme = _theme;
-
     // ── Feature card expand ───────────────────────────────────
     const EXPAND_DATA = [
       { title: 'Account Linking', items: [
