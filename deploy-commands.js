@@ -7,9 +7,11 @@
  *   node deploy-commands.js                      — register globally (up to 1 hr to propagate)
  *   node deploy-commands.js --guild              — register ALL commands to DEV_GUILD_ID (instant)
  *   node deploy-commands.js --main-guild         — register ONLY /lock + /unlock to MAIN_GUILD_ID (instant)
+ *   node deploy-commands.js --main-full          — register ALL commands to MAIN_GUILD_ID (instant, for testing/go-live)
  *   node deploy-commands.js --clear              — clear all global commands
  *   node deploy-commands.js --guild --clear      — clear all dev guild commands
  *   node deploy-commands.js --main-guild --clear — clear all main guild commands
+ *   node deploy-commands.js --main-full --clear  — clear all main guild commands
  */
 
 const { REST, Routes } = require('discord.js');
@@ -20,6 +22,7 @@ const config = require('./config');
 const args = process.argv.slice(2);
 const useGuild     = args.includes('--guild');
 const useMainGuild = args.includes('--main-guild');
+const useMainFull  = args.includes('--main-full');
 const clear        = args.includes('--clear');
 
 // Commands that are allowed on the main server
@@ -44,7 +47,17 @@ const rest = new REST().setToken(config.discord.token);
 
 (async () => {
   try {
-    if (useMainGuild) {
+    if (useMainFull) {
+      if (!config.discord.mainGuildId) {
+        console.error('MAIN_GUILD_ID is not set in .env');
+        process.exit(1);
+      }
+      const route = Routes.applicationGuildCommands(config.discord.clientId, config.discord.mainGuildId);
+      await rest.put(route, { body: clear ? [] : commands });
+      console.log(clear
+        ? `✅ Cleared all commands from main guild ${config.discord.mainGuildId}`
+        : `✅ Deployed ${commands.length} command(s) to main guild ${config.discord.mainGuildId} (full set).`);
+    } else if (useMainGuild) {
       if (!config.discord.mainGuildId) {
         console.error('MAIN_GUILD_ID is not set in .env');
         process.exit(1);

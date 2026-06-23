@@ -15,6 +15,23 @@ const config = {
     adminRoleIds: process.env.ADMIN_ROLE_IDS
       ? process.env.ADMIN_ROLE_IDS.split(',').map((id) => id.trim()).filter(Boolean)
       : [],
+
+    // Staff permission hierarchy (cumulative — higher levels inherit all lower commands).
+    // Each tier maps to a single Discord role ID. A member's effective level is the
+    // HIGHEST tier whose role they hold. Discord Administrator and bypass users = Infinity.
+    staffTiers: [
+      { level: 1, key: 'moderator',      label: 'Moderator',           roleId: process.env.STAFF_ROLE_MOD || null },
+      { level: 2, key: 'snr_moderator',  label: 'Senior Moderator',    roleId: process.env.STAFF_ROLE_SNR_MOD || null },
+      { level: 3, key: 'admin',          label: 'Admin',               roleId: process.env.STAFF_ROLE_ADMIN || null },
+      { level: 4, key: 'snr_admin',      label: 'Senior Admin',        roleId: process.env.STAFF_ROLE_SNR_ADMIN || null },
+      { level: 5, key: 'head_admin',     label: 'Head Admin',          roleId: process.env.STAFF_ROLE_HEAD_ADMIN || null },
+      { level: 6, key: 'snr_management', label: 'Senior Management',   roleId: process.env.STAFF_ROLE_SNR_MGMT || null },
+    ],
+
+    // Users who can run every command irrespective of roles (comma-separated).
+    bypassUserIds: process.env.BYPASS_USER_IDS
+      ? process.env.BYPASS_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean)
+      : [],
   },
 
   riot: {

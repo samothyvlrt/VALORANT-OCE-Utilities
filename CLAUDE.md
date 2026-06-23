@@ -58,16 +58,29 @@ npm run ship
 
 ### Re-register Discord slash commands (REQUIRED after any command option change)
 ```bash
-node deploy-commands.js --guild    # instant, hits DEV_GUILD_ID
-node deploy-commands.js            # global (up to 1hr propagation)
+node deploy-commands.js --guild       # instant, hits DEV_GUILD_ID
+node deploy-commands.js --main-full    # instant, ALL commands → MAIN_GUILD_ID (testing/go-live)
+node deploy-commands.js --main-guild   # instant, ONLY /lock + /unlock → MAIN_GUILD_ID
+node deploy-commands.js                # global (up to 1hr propagation)
 ```
 
 > `npm run ship` does NOT re-register slash commands. Any change to command options, names, or new commands requires running `deploy-commands.js` separately.
 
 ### Deploy to main guild (when ready to go live)
 ```bash
-# Run in JRMA shell, or swap DEV_GUILD_ID in .env to main server ID
-node deploy-commands.js --guild --guildId 537887361292304385
+node deploy-commands.js --main-full    # full command set, instant (registers all user + staff commands)
+```
+
+> The hidden staff commands (`/lookup`, `/setlink`, etc.) will only appear for staff
+> after granting their roles access in **Server Settings → Integrations → (bot) →
+> Command Permissions**. Until the bot is actually in the main guild with the
+> `applications.commands` scope, deploys to it return `50001 Missing Access`.
+
+### Clear all command scopes
+```bash
+node deploy-commands.js --clear                # global (up to ~1hr to disappear)
+node deploy-commands.js --guild --clear        # dev guild (instant)
+node deploy-commands.js --main-full --clear    # main guild (instant)
 ```
 
 ### Remove index.lock if git is stuck
@@ -176,17 +189,17 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 ## Key Design Decisions
 
 ### Region
-**AP/OCE only** — region option removed from `/link` and `/admin link set`. All accounts hardcoded to `config.riot.defaultRegion` (ap). Do not add region selectors back.
+**AP/OCE only** — region option removed from `/link` and `/setlink`. All accounts hardcoded to `config.riot.defaultRegion` (ap). Do not add region selectors back.
 
 ### Privacy toggle (`/privacy`)
 - Users can hide themselves from the public `/leaderboard` ranked list
 - Hidden accounts are **still counted in the rank distribution chart** (anonymous aggregate)
-- Hidden accounts are visible to admins via `/admin link list` (marked 🙈) and `/admin stats`
+- Hidden accounts are visible to staff via `/links` (marked 🙈) and `/serverstats`
 - `db.getPublicLinks()` — public list (hidden=0), used by leaderboard ranked entries
 - `db.getAllLinks()` — all accounts including hidden, used by chart, admin commands, stats generation
 
 ### `/profile`
-- Self-only — no `user` option. Admins use `/admin link get` to look up others.
+- Self-only — no `user` option. Staff use `/lookup` to look up others.
 - `public: true` option to post visibly in channel (default: ephemeral)
 
 ### Rank chart (`src/utils/rank-chart.js`)
@@ -222,7 +235,7 @@ rm -rf node_modules package-lock.json && npm install
 Auto-build from git push produces empty images. Use direct Docker push as workaround (see Infrastructure section above).
 
 ### `tierToRoleKey` — historical bug (fixed)
-Old version had tier ranges off by 2 (e.g. `tier === 25` for Radiant instead of `tier === 27`). Fixed in `src/utils/roles.js`. If any users have wrong rank roles, re-run `/admin link set` to trigger reassignment.
+Old version had tier ranges off by 2 (e.g. `tier === 25` for Radiant instead of `tier === 27`). Fixed in `src/utils/roles.js`. If any users have wrong rank roles, re-run `/setlink` to trigger reassignment.
 
 ---
 
@@ -239,18 +252,62 @@ Old version had tier ranges off by 2 (e.g. `tier === 25` for Radiant instead of 
 | `/unlink` | Remove own linked account. |
 | `/lock` / `/unlock` | VC lock — separate bot running on main server. |
 
-### Admin commands (`/admin`)
-| Subcommand | Notes |
-|------------|-------|
-| `link get <user>` | Show link info + history for a user |
-| `link set <user> <riot_id>` | Force-link (no ownership challenge). Auto-fetches rank and assigns role. AP only. |
-| `link reset <user>` | Remove link, force re-verification |
-| `link list` | All linked members (includes hidden, marked 🙈) |
-| `link bulk-reset <role>` | Force re-verify entire role |
-| `link panel` | Post the hardcoded user guide panel in current channel |
-| `log setup <channel>` | Set staff activity log channel |
-| `stats` | Member count, link rate, rank distribution (includes hidden accounts) |
-| `export` | CSV export of linked accounts |
+### Staff commands (standalone — `/admin` no longer exists)
+
+As of the permission-hierarchy refactor, the single `/admin` command was split into
+nine standalone top-level commands. Each is hidden from regular members via
+`setDefaultMemberPermissions('0')` and gated in code by tier (see Permission Hierarchy
+below). Visibility for staff is granted once per server via **Server Settings →
+Integrations → (bot) → Command Permissions**.
+
+| Command (old name) | Min tier | Notes |
+|--------------------|----------|-------|
+| `/lookup` (`admin link get`)        | Moderator (1)     | Show link info + history. Has `user` and `riot_id` options. |
+| `/links` (`admin link list`)        | Moderator (1)     | All linked members (includes hidden, marked 🙈). `role`, `page` options. |
+| `/resetlink` (`admin link reset`)   | Snr Moderator (2) | Remove link, force re-verification. `reason`, `silent` options. |
+| `/serverstats` (`admin stats`)      | Admin (3)         | Member count, link rate, rank distribution (includes hidden). |
+| `/exportlinks` (`admin export`)     | Admin (3)         | CSV export of linked accounts. `role` option. |
+| `/setlink` (`admin link set`)       | Snr Admin (4)     | Force-link (no ownership challenge). Auto-fetches rank + role. `silent` option. |
+| `/bulkreset` (`admin link bulk-reset`) | Snr Admin (4)  | Force re-verify entire role. `reason`, `silent` options. |
+| `/linkpanel` (`admin link panel`)   | Snr Admin (4)     | Post the user-guide panel in current channel. |
+| `/logsetup` (`admin log setup`)     | Snr Admin (4)     | Set staff activity log channel. |
+
+> Splitting was a deliberate choice: separate top-level commands let Discord hide a
+> command from roles that can't use it. Tier enforcement is still done in code
+> (`src/utils/permissions.js`), which is the source of truth — the Integrations grant
+> only controls visibility.
+
+---
+
+## Permission Hierarchy (main server)
+
+Cumulative — each tier inherits every command of the tiers below it. A member's
+effective level is the **highest** tier role they hold. Defined in
+`config.discord.staffTiers` (env-driven) and enforced by `requireTier()` /
+`memberLevel()` in `src/utils/permissions.js`.
+
+| Level | Tier | Role ID | Adds access to |
+|-------|------|---------|----------------|
+| 1 | Moderator         | `537917072458383362` | `/lookup`, `/links` |
+| 2 | Senior Moderator  | `952850368432320512` | `/resetlink` |
+| 3 | Admin             | `537911688490385419` | `/serverstats`, `/exportlinks` |
+| 4 | Senior Admin      | `883659514233114705` | `/setlink`, `/bulkreset`, `/linkpanel`, `/logsetup` |
+| 5 | Head Admin        | `681608242379489280` | (everything prior) |
+| 6 | Senior Management | `681467969280147474` | (everything prior) |
+
+- **Bypass user** `974820968545542194` (`BYPASS_USER_IDS`) → runs every command, any role, level `Infinity`.
+- **Discord Administrator** permission → also treated as level `Infinity` (covers server owner / dev guild).
+- **Restricted role** `798956686580383794` → may run **only** `/lock` and `/unlock`. Enforced by a global gate in `interactionCreate.js` (`ALWAYS_ALLOWED` set). Bypass users are exempt.
+
+### Command access tiers
+- **Everyone, incl. Restricted:** `/lock`, `/unlock`
+- **Everyone except Restricted:** `/link`, `/unlink`, `/leaderboard`, `/profile`, `/privacy`, `/match`, `/verify`
+- **Staff (tier-gated):** the nine commands in the table above
+
+### Adding/adjusting a command's required tier
+Each command file calls `await requireTier(interaction, LEVELS.X)` at the top of
+`execute`. Change the `LEVELS.X` constant to re-tier it. No central matrix — the gate
+is co-located with each command.
 
 ---
 
@@ -261,9 +318,18 @@ DISCORD_TOKEN=
 CLIENT_ID=
 GUILD_ID=                    # dev/OCE server
 DEV_GUILD_ID=                # same as GUILD_ID for now
-MAIN_GUILD_ID=537887361292304385   # main server (lock/unlock only)
-ADMIN_ROLE_IDS=              # comma-separated
-RESTRICTED_ROLE_ID=          # users who cannot link
+MAIN_GUILD_ID=537887361292304385   # main server (required for --main-guild / --main-full)
+ADMIN_ROLE_IDS=              # legacy single-tier admin roles, superseded by STAFF_ROLE_* below
+RESTRICTED_ROLE_ID=798956686580383794   # may ONLY run /lock and /unlock
+
+# Staff permission hierarchy (cumulative). See "Permission Hierarchy" section.
+STAFF_ROLE_MOD=              # Moderator        (level 1)
+STAFF_ROLE_SNR_MOD=          # Senior Moderator (level 2)
+STAFF_ROLE_ADMIN=            # Admin            (level 3)
+STAFF_ROLE_SNR_ADMIN=        # Senior Admin     (level 4)
+STAFF_ROLE_HEAD_ADMIN=       # Head Admin       (level 5)
+STAFF_ROLE_SNR_MGMT=         # Senior Management(level 6)
+BYPASS_USER_IDS=             # comma-separated; run every command irrespective of roles
 
 HENRIK_API_KEY=
 RIOT_API_KEY=                # optional, unused currently
@@ -288,6 +354,46 @@ ROLE_IMMORTAL=
 ROLE_RADIANT=
 ROLE_UNRANKED=
 ```
+
+---
+
+## JRMA Environment Variables (container config)
+
+**`.env` is in `.dockerignore`** — it is NOT baked into the image. The running
+container reads config only from the env vars set in the **JRMA dashboard → app →
+Environment**. The local `.env` is for `npm run dev` only. After changing any var,
+**restart the container** (env changes don't apply to a running container).
+
+All role/ID values must belong to the server the bot actually runs against (main):
+
+| ENV NAME | ID |
+|----------|-----|
+| `ROLE_UNRANKED` | `1067376098515619850` |
+| `ROLE_IRON` | `729684895332302859` |
+| `ROLE_BRONZE` | `729684963154329671` |
+| `ROLE_SILVER` | `729683497249144874` |
+| `ROLE_GOLD` | `729683894776889485` |
+| `ROLE_PLATINUM` | `729685025074839562` |
+| `ROLE_DIAMOND` | `729685114166050845` |
+| `ROLE_ASCENDANT` | `987665252546125845` |
+| `ROLE_IMMORTAL` | `729685190645121045` |
+| `ROLE_RADIANT` | `729688533920645161` |
+| `STAFF_ROLE_MOD` | `537917072458383362` |
+| `STAFF_ROLE_SNR_MOD` | `952850368432320512` |
+| `STAFF_ROLE_ADMIN` | `537911688490385419` |
+| `STAFF_ROLE_SNR_ADMIN` | `883659514233114705` |
+| `STAFF_ROLE_HEAD_ADMIN` | `681608242379489280` |
+| `STAFF_ROLE_SNR_MGMT` | `681467969280147474` |
+| `RESTRICTED_ROLE_ID` | `798956686580383794` |
+| `BYPASS_USER_IDS` | `974820968545542194` |
+
+Plus the non-ID secrets/config: `DISCORD_TOKEN`, `CLIENT_ID`, `DISCORD_CLIENT_SECRET`,
+`GUILD_ID`, `MAIN_GUILD_ID`, `HENRIK_API_KEY`, `UPSTASH_REDIS_REST_URL`,
+`UPSTASH_REDIS_REST_TOKEN`, `OAUTH_REDIRECT_URI`, `DEFAULT_REGION`.
+
+- Missing `STAFF_ROLE_*` → that tier matches no one (commands unreachable except bypass/Administrator).
+- Missing `RESTRICTED_ROLE_ID` → the restricted gate silently does nothing.
+- Missing `ROLE_*` → that rank can't be assigned.
 
 ---
 

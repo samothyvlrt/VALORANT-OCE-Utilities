@@ -6,7 +6,7 @@ const db      = require('../modules/database');
 const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
 const { getRank, getAccount, RiotApiError } = require('../modules/riot-api');
 const { startChallenge, VerificationError } = require('../modules/verification');
-const { isRestricted } = require('../utils/permissions');
+const { isRestricted, isBypass, ALWAYS_ALLOWED } = require('../utils/permissions');
 const { logAdminAction } = require('../utils/activity-log');
 
 module.exports = {
@@ -23,6 +23,21 @@ module.exports = {
         console.warn(`[interaction] Unknown command: ${interaction.commandName}`);
         return;
       }
+
+      // ── Restricted gate ──────────────────────────────────────────
+      // Restricted members may only run the always-allowed commands
+      // (lock / unlock). Bypass users are exempt.
+      if (
+        isRestricted(interaction.member) &&
+        !ALWAYS_ALLOWED.has(interaction.commandName) &&
+        !isBypass(interaction.user.id)
+      ) {
+        return interaction.reply({
+          embeds: [embed.error('Restricted', 'You are not permitted to use this command.')],
+          ephemeral: true,
+        }).catch(() => {});
+      }
+
       try {
         await command.execute(interaction);
       } catch (err) {
