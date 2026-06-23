@@ -141,7 +141,7 @@
   </div>
 
   <div class="flow" style="margin-top:40px">
-    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>Admin sets up the verification panel</h3><p>An admin runs <code>/admin link panel</code> to post a persistent "Link Account" button in a channel. Members interact with this to begin verification.</p></div></div>
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>Admin sets up the verification panel</h3><p>An admin runs <code>/linkpanel</code> to post a persistent "Link Account" button in a channel. Members interact with this to begin verification.</p></div></div>
     <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>Player runs /link with their Riot ID</h3><p>The bot looks up the account via the Riot API and generates a unique OAuth state token. A verification link is sent privately to the player's DMs.</p></div></div>
     <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>Player authorises via Discord OAuth</h3><p>The player clicks the link, which redirects to Discord's OAuth screen. The bot reads their connected Riot Games account from Discord's connections API.</p></div></div>
     <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>PUUID verified — rank fetched — role assigned</h3><p>The bot confirms the PUUID of the connected account matches the Riot ID provided, then fetches competitive rank and assigns the correct rank role in the server.</p></div></div>
@@ -321,9 +321,9 @@
     <p>Administrators have a full suite of moderation tools for managing linked accounts, enforcing verification integrity, and auditing activity.</p>
   </div>
   <div class="flow">
-    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>/admin link get — look up any member's link</h3><p>View a member's linked Riot account, rank, region, link date, and full audit history of changes to their link.</p></div></div>
-    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>/admin link reset — revoke a link</h3><p>Manually remove a member's verified link and rank role. All actions are written to the audit log with moderator attribution.</p></div></div>
-    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>/admin link bulk-reset — season resets</h3><p>Force re-verification for all members of a given role — used at the start of each Valorant act to refresh rank data across the server.</p></div></div>
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>/lookup — look up any member's link</h3><p>View a member's linked Riot account, rank, region, link date, and full audit history of changes to their link.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>/resetlink — revoke a link</h3><p>Manually remove a member's verified link and rank role. All actions are written to the audit log with moderator attribution.</p></div></div>
+    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>/bulkreset — season resets</h3><p>Force re-verification for all members of a given role — used at the start of each Valorant act to refresh rank data across the server.</p></div></div>
     <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>Duplicate link attempt logging</h3><p>When a user attempts to claim a Riot account already linked to another Discord member, the attempt is logged to the staff channel with the claimant, the Riot ID, and the current owner.</p></div></div>
     <div class="flow-step"><div class="step-num">05</div><div class="step-content"><h3>Background account validation</h3><p>Every 6 hours the bot re-checks all linked accounts via Discord's connections API. Account swaps and disconnections are detected automatically with a full scan summary posted to the staff log channel.</p></div></div>
   </div>

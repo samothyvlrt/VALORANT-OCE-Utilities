@@ -638,7 +638,7 @@
         { cmd: 'Auto-assign',     desc: 'Role assigned instantly on link — Iron through Radiant' },
         { cmd: 'Account audit',   desc: 'Checks for swapped or invalidated accounts every 6 hours' },
         { cmd: 'Account watch',   desc: 'Detects name changes and invalidated accounts automatically' },
-        { cmd: '/admin link set', desc: 'Admins can force-refresh any member\'s rank role' },
+        { cmd: '/setlink', desc: 'Staff can force-refresh any member\'s rank role' },
       ]},
       { title: 'Leaderboard', items: [
         { cmd: '/leaderboard', desc: 'Server ranked list with live rank distribution chart' },
@@ -647,14 +647,15 @@
         { cmd: 'Live chart',   desc: 'Rank distribution pushed to the website every 6 hours' },
       ]},
       { title: 'Staff Controls', items: [
-        { cmd: '/admin link get',        desc: 'View link info and rank history for any member' },
-        { cmd: '/admin link set',        desc: 'Force-link a member without OAuth challenge' },
-        { cmd: '/admin link reset',      desc: 'Remove a link and force re-verification' },
-        { cmd: '/admin link list',       desc: 'All linked members, including hidden accounts' },
-        { cmd: '/admin link bulk-reset', desc: 'Force re-verify an entire role at once' },
-        { cmd: '/admin link panel',      desc: 'Post the user guide panel in any channel' },
-        { cmd: '/admin stats',           desc: 'Member count, link rate, and rank breakdown' },
-        { cmd: '/admin export',          desc: 'CSV export of all linked accounts' },
+        { cmd: '/lookup',      desc: 'View link info and rank history for any member' },
+        { cmd: '/setlink',     desc: 'Force-link a member without OAuth challenge' },
+        { cmd: '/resetlink',   desc: 'Remove a link and force re-verification' },
+        { cmd: '/links',       desc: 'All linked members, including hidden accounts' },
+        { cmd: '/bulkreset',   desc: 'Force re-verify an entire role at once' },
+        { cmd: '/linkpanel',   desc: 'Post the user guide panel in any channel' },
+        { cmd: '/serverstats', desc: 'Member count, link rate, and rank breakdown' },
+        { cmd: '/exportlinks', desc: 'CSV export of all linked accounts' },
+        { cmd: 'Role-gated',   desc: 'Staff commands are tiered and visible only to permitted roles' },
       ]},
     ];
     let _activeCard = -1;
