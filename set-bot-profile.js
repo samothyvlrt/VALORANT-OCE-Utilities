@@ -9,7 +9,7 @@ require('dotenv').config();
 
 const AVATAR_URL = 'https://cdn.discordapp.com/avatars/1367857894397186058/343315bcc2033fd24ba904285c3505af.webp?size=160';
 const BANNER_URL = 'https://cdn.discordapp.com/banners/1367857894397186058/d07aeec9fc6dcc23bef57498bd9cb79c.png?size=600';
-const BIO        = 'Supporting discord.gg/valorantoce riot account verification.';
+const BIO        = 'Supporting discord.gg/valorantoce riot account verification.\n\nDeveloped by @5amothy\nhttps://valorant-oce-utilities.vercel.app';
 
 async function fetchBase64(url) {
   const res = await fetch(url);
