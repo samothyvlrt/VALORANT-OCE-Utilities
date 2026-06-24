@@ -17,36 +17,44 @@ module.exports = {
 
     const panelEmbed = new EmbedBuilder()
       .setColor(config.colors.primary)
-      .setTitle('Rank Roles')
+      .setTitle('🎖️ Rank Role System')
       .setDescription(
         [
-          'Link your Riot account to receive an automatic rank role.',
+          'Welcome to the **Rank Role system!** By verifying your Riot account, we can automatically assign you a role based on your **VALORANT** rank.',
           '',
-          '`/link` — Link or re-link your Valorant account',
-          '`/profile` — View your rank and stats',
-          '`/leaderboard` — See where you rank in the server',
-          '`/privacy` — Hide or show yourself on the leaderboard',
-          '`/unlink` — Remove your linked account',
+          '**➕ Add** — To get started, use the **Add** button below. This directs you to a login page to connect your Riot account.',
+          '**🔄 Update** — Refreshes your role to match your current rank, e.g. you\'ve been promoted in-game and it hasn\'t reflected on your rank role yet.',
+          '**🗑️ Remove** — Removes your rank role.',
         ].join('\n'),
       )
+      .addFields({
+        name: 'Other commands',
+        value: [
+          '`/profile` — View your rank, stats, and linked account',
+          '`/leaderboard` — Server rankings with a live rank-distribution chart',
+          '`/privacy` — Hide or show yourself on the public leaderboard',
+          '`/match` — View your most recent match stats',
+          '`/verify` — Manual fallback if the login redirect doesn\'t trigger',
+        ].join('\n'),
+      })
       .setFooter({ text: 'Valorant OCE Utilities' });
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('link_btn')
-        .setLabel('Link')
+        .setLabel('Add')
         .setStyle(ButtonStyle.Primary)
-        .setEmoji('🔗'),
+        .setEmoji('➕'),
       new ButtonBuilder()
         .setCustomId('update_rank_btn')
-        .setLabel('Update Rank')
+        .setLabel('Update')
         .setStyle(ButtonStyle.Secondary)
         .setEmoji('🔄'),
       new ButtonBuilder()
         .setCustomId('unlink_btn')
-        .setLabel('Unlink')
+        .setLabel('Remove')
         .setStyle(ButtonStyle.Danger)
-        .setEmoji('🔓'),
+        .setEmoji('🗑️'),
     );
 
     await interaction.channel.send({ embeds: [panelEmbed], components: [row] });
