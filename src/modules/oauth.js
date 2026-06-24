@@ -30,7 +30,11 @@ function getOAuthUrl(state) {
     response_type: 'code',
     scope:         'identify connections',
     state,
-    prompt:        'none', // skip the "are you sure?" screen if already authorized
+    // 'consent' forces the authorize screen every time so the `connections`
+    // scope is always granted. With 'none', Discord silently reuses a prior
+    // authorization that may lack `connections`, returning an empty
+    // /users/@me/connections array and breaking verification.
+    prompt:        'consent',
   });
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
