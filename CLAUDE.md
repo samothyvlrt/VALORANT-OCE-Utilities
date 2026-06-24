@@ -60,6 +60,7 @@ npm run ship
 ```bash
 node deploy-commands.js --guild       # instant, hits DEV_GUILD_ID
 node deploy-commands.js --main-full    # instant, ALL commands → MAIN_GUILD_ID (testing/go-live)
+node deploy-commands.js --main-admin   # instant, ONLY the 9 staff commands → MAIN_GUILD_ID (phased rollout)
 node deploy-commands.js --main-guild   # instant, ONLY /lock + /unlock → MAIN_GUILD_ID
 node deploy-commands.js                # global (up to 1hr propagation)
 ```
