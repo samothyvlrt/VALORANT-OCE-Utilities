@@ -7,7 +7,7 @@
  *   node deploy-commands.js                      — register globally (up to 1 hr to propagate)
  *   node deploy-commands.js --guild              — register ALL commands to DEV_GUILD_ID (instant)
  *   node deploy-commands.js --main-guild         — register ONLY /lock + /unlock to MAIN_GUILD_ID (instant)
- *   node deploy-commands.js --main-admin         — register ONLY the staff/admin commands to MAIN_GUILD_ID (instant)
+ *   node deploy-commands.js --main-admin         — register the staff/admin commands + /lock + /unlock to MAIN_GUILD_ID (instant)
  *   node deploy-commands.js --main-full          — register ALL commands to MAIN_GUILD_ID (instant, for testing/go-live)
  *   node deploy-commands.js --clear              — clear all global commands
  *   node deploy-commands.js --guild --clear      — clear all dev guild commands
@@ -76,9 +76,11 @@ const rest = new REST().setToken(config.discord.token);
         await rest.put(route, { body: [] });
         console.log(`✅ Cleared all commands from main guild ${config.discord.mainGuildId}`);
       } else {
-        const filtered = commands.filter((c) => adminCommandNames.has(c.name));
+        // Phased-rollout set: the staff/admin commands + the always-available
+        // /lock and /unlock. Excludes the user-facing linking commands.
+        const filtered = commands.filter((c) => adminCommandNames.has(c.name) || MAIN_GUILD_COMMANDS.has(c.name));
         await rest.put(route, { body: filtered });
-        console.log(`✅ Deployed ${filtered.length} staff command(s) to main guild ${config.discord.mainGuildId}: ${filtered.map((c) => '/' + c.name).join(', ')}`);
+        console.log(`✅ Deployed ${filtered.length} command(s) to main guild ${config.discord.mainGuildId}: ${filtered.map((c) => '/' + c.name).join(', ')}`);
       }
     } else if (useMainGuild) {
       if (!config.discord.mainGuildId) {
