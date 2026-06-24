@@ -22,7 +22,7 @@ module.exports = {
         [
           'Welcome to the **Rank Role system!** By verifying your Riot account, we can automatically assign you a role based on your **VALORANT** rank.',
           '',
-          '**➕ Add** — To get started, use the **Add** button below. This directs you to a login page to connect your Riot account.',
+          '**🔗 Add** — To get started, use the **Add** button below. This directs you to a login page to connect your Riot account.',
           '**🔄 Update** — Refreshes your role to match your current rank, e.g. you\'ve been promoted in-game and it hasn\'t reflected on your rank role yet.',
           '**🗑️ Remove** — Removes your rank role.',
         ].join('\n'),
@@ -44,7 +44,7 @@ module.exports = {
         .setCustomId('link_btn')
         .setLabel('Add')
         .setStyle(ButtonStyle.Primary)
-        .setEmoji('➕'),
+        .setEmoji('🔗'),
       new ButtonBuilder()
         .setCustomId('update_rank_btn')
         .setLabel('Update')
