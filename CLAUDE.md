@@ -58,11 +58,16 @@ npm run ship
 
 ### Re-register Discord slash commands (REQUIRED after any command option change)
 ```bash
-node deploy-commands.js --guild       # instant, hits DEV_GUILD_ID
-node deploy-commands.js --main-full    # instant, ALL commands → MAIN_GUILD_ID (testing/go-live)
-node deploy-commands.js --main-admin   # instant, ONLY the 9 staff commands → MAIN_GUILD_ID (phased rollout)
-node deploy-commands.js --main-guild   # instant, ONLY /lock + /unlock → MAIN_GUILD_ID
-node deploy-commands.js                # global (up to 1hr propagation)
+node deploy-commands.js --guild        # instant, ALL commands → DEV_GUILD_ID
+node deploy-commands.js                 # global (up to 1hr propagation)
+
+# Main guild — group flags COMBINE; each deploy REPLACES the whole main set,
+# so pass every group you want live in ONE command:
+node deploy-commands.js --main-lock    # /lock + /unlock
+node deploy-commands.js --main-user    # user commands (link, unlink, leaderboard, profile, privacy, match, verify)
+node deploy-commands.js --main-admin   # the 9 staff/admin commands
+node deploy-commands.js --main-admin --main-lock   # admin + lock/unlock
+node deploy-commands.js --main-full    # everything (all groups)
 ```
 
 > `npm run ship` does NOT re-register slash commands. Any change to command options, names, or new commands requires running `deploy-commands.js` separately.
