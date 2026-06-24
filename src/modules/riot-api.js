@@ -175,16 +175,27 @@ async function getRank(name, tag, region = config.riot.defaultRegion) {
     const current = d?.current_data;
     const peak    = d?.highest_rank;
 
-    // Return at minimum peak data even if currently unranked
-    const isRanked = current && (current.currenttier ?? 0) > 0;
+    // At an Act/Episode rollover Riot keeps a player's previous tier in the API
+    // until they finish their placement game(s). HenrikDev reports how many
+    // placement games are still required via `games_needed_for_rating`; while
+    // that's > 0 the player is effectively Unranked for the new act, regardless
+    // of the stale `currenttier`. The field may be absent on some responses, so
+    // it defaults to 0 — leaving existing behaviour unchanged.
+    const gamesNeeded  = current?.games_needed_for_rating ?? 0;
+    const inPlacements = gamesNeeded > 0;
+
+    // Return at minimum peak data even if currently unranked / in placements
+    const isRanked = current && (current.currenttier ?? 0) > 0 && !inPlacements;
 
     return {
       tier:            isRanked ? (current.currenttier ?? 0) : 0,
       tierName:        isRanked ? (current.currenttierpatched ?? 'Unranked') : 'Unranked',
       rr:              isRanked ? (current.ranking_in_tier ?? 0) : 0,
-      leaderboardRank: current.leaderboard_rank ?? null,
+      leaderboardRank: current?.leaderboard_rank ?? null,
       rrChangeLast:    isRanked ? (current.mmr_change_to_last_game ?? null) : null,
       smallIcon:       isRanked ? (current.images?.small ?? null) : null,
+      inPlacements,
+      gamesNeeded,
       peakTier:        peak?.tier ?? 0,
       peakTierName:    peak?.patched_tier ?? null,
       peakSeason:      peak?.season ?? null,
