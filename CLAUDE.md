@@ -172,9 +172,26 @@ Redis key spaces:
 
 ---
 
-## Database (SQLite via better-sqlite3)
+## Database (SQLite via better-sqlite3-multiple-ciphers)
 
 File: `data/bot.db` (persisted as Docker volume at `/app/data`)
+
+### Encryption at rest
+Uses `better-sqlite3-multiple-ciphers` (drop-in replacement for `better-sqlite3`).
+When `DB_ENCRYPTION_KEY` is set, `database.js` runs `PRAGMA key=...` immediately
+after opening, so the `.db` file is AES-encrypted at rest (required by Discord's
+developer policy for stored API data, and declared in the privileged-intent review).
+`scripts/seed-test-data.js` applies the same key.
+
+- The key PRAGMA must be the **first** statement after opening — before WAL/schema.
+- If `DB_ENCRYPTION_KEY` is unset, the bot logs a warning and runs **unencrypted**
+  (fine for local dev; must be set in JRMA for production).
+- **An existing UNENCRYPTED `bot.db` cannot be opened once a key is set** (throws
+  "file is not a database" → container crash loop). When enabling encryption, start
+  from a fresh DB (wipe the volume). Pre-launch test data is disposable.
+- Losing/changing the key makes the DB permanently unreadable — back it up.
+- `npm rebuild better-sqlite3-multiple-ciphers` in the Dockerfile replaces the old
+  `better-sqlite3` rebuild step.
 
 ### Key tables
 
@@ -418,7 +435,8 @@ All role/ID values must belong to the server the bot actually runs against (main
 
 Plus the non-ID secrets/config: `DISCORD_TOKEN`, `CLIENT_ID`, `DISCORD_CLIENT_SECRET`,
 `GUILD_ID`, `MAIN_GUILD_ID`, `HENRIK_API_KEY`, `UPSTASH_REDIS_REST_URL`,
-`UPSTASH_REDIS_REST_TOKEN`, `OAUTH_REDIRECT_URI`, `DEFAULT_REGION`.
+`UPSTASH_REDIS_REST_TOKEN`, `OAUTH_REDIRECT_URI`, `DEFAULT_REGION`,
+`DB_ENCRYPTION_KEY` (encryption-at-rest key — see Database section; required in prod).
 
 - Missing `STAFF_ROLE_*` → that tier matches no one (commands unreachable except bypass/Administrator).
 - Missing `RESTRICTED_ROLE_ID` → the restricted gate silently does nothing.

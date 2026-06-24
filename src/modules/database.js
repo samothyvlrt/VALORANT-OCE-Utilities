@@ -1,4 +1,4 @@
-const Database = require('better-sqlite3');
+const Database = require('better-sqlite3-multiple-ciphers');
 const path = require('path');
 const fs = require('fs');
 
@@ -9,6 +9,17 @@ const DB_PATH = path.join(DB_DIR, 'bot.db');
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const db = new Database(DB_PATH);
+
+// ── Encryption at rest ──────────────────────────────────────────────
+// When DB_ENCRYPTION_KEY is set, the database file is encrypted at rest
+// (AES, via better-sqlite3-multiple-ciphers). The key PRAGMA MUST be the
+// first statement after opening, before anything else touches the file.
+const DB_KEY = process.env.DB_ENCRYPTION_KEY;
+if (DB_KEY) {
+  db.pragma(`key='${DB_KEY.replace(/'/g, "''")}'`);
+} else {
+  console.warn('[db] DB_ENCRYPTION_KEY is not set — the database is NOT encrypted at rest. Set it in production.');
+}
 
 // WAL mode for better concurrent read performance
 db.pragma('journal_mode = WAL');

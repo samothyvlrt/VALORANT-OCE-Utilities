@@ -5,7 +5,7 @@
  * Remove with: node scripts/seed-test-data.js --clean
  */
 
-const Database = require('better-sqlite3');
+const Database = require('better-sqlite3-multiple-ciphers');
 const path     = require('path');
 
 const DB_PATH = process.env.DATA_DIR
@@ -13,6 +13,11 @@ const DB_PATH = process.env.DATA_DIR
   : path.join(__dirname, '../data/bot.db');
 
 const db = new Database(DB_PATH);
+
+// Match the main app: open the encrypted DB with the same key.
+if (process.env.DB_ENCRYPTION_KEY) {
+  db.pragma(`key='${process.env.DB_ENCRYPTION_KEY.replace(/'/g, "''")}'`);
+}
 
 const CLEAN = process.argv.includes('--clean');
 
