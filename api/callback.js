@@ -105,10 +105,17 @@ module.exports = async (req, res) => {
   }
 
   // ── Check for the expected Riot account ──────────────────────────────────
-  const expectedName = `${pending.riotName}#${pending.riotTag}`.toLowerCase();
-  const riotConn = connections.find(
-    (c) => c.type === 'riotgames' && c.name?.toLowerCase() === expectedName,
-  );
+  const expectedName      = `${pending.riotName}#${pending.riotTag}`.toLowerCase();
+  const expectedNameNoTag = pending.riotName.toLowerCase();
+  const riotConn = connections.find((c) => {
+    if (c.type !== 'riotgames') return false;
+    // Primary, format-proof match: Discord's Riot connection `id` is the PUUID.
+    if (pending.puuid && c.id === pending.puuid) return true;
+    // Fallbacks for if the id isn't the PUUID — match `name` with or without
+    // the #tag, since Discord's connection name formatting varies.
+    const n = c.name?.toLowerCase();
+    return n === expectedName || n === expectedNameNoTag;
+  });
 
   // ── DEBUG: log what Discord actually returns for Riot connections ──────────
   // Remove once the matching behaviour is confirmed.
