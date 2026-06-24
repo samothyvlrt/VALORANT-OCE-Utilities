@@ -138,11 +138,23 @@ module.exports = async (req, res) => {
       riotTag:  pending.riotTag,
     }, { ex: 300 }).catch(() => {});
 
+    // ── TEMPORARY on-page debug — remove once matching is confirmed ──────────
+    const debugInfo =
+      `<br><br><div style="text-align:left;font-family:monospace;font-size:12px;` +
+      `background:rgba(0,0,0,0.35);padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;color:#bbb">` +
+      `DEBUG (temporary)\n` +
+      `types returned: ${connections.map((c) => c.type).join(', ') || '(none)'}\n` +
+      `riotgames (full): ${JSON.stringify(connections.filter((c) => c.type === 'riotgames'))}\n` +
+      `expected puuid: ${pending.puuid ?? '(none)'}\n` +
+      `expected name : ${expectedName}` +
+      `</div>`;
+
     return res.send(page('fail',
       `${pending.riotName}#${pending.riotTag} not found`,
       `Your Discord connections don't include <strong>${pending.riotName}#${pending.riotTag}</strong>.<br><br>` +
       `Go to <strong>Discord Settings → Connections → Riot Games</strong>, connect that account, ` +
-      `then run <code>/link</code> again.`,
+      `then run <code>/link</code> again.` +
+      debugInfo,
     ));
   }
 
