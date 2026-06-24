@@ -10,6 +10,7 @@ const config = {
     allowedGuildIds: [
       process.env.GUILD_ID,
       process.env.DEV_GUILD_ID,
+      process.env.MAIN_GUILD_ID,
     ].filter(Boolean),
     restrictedRoleId: process.env.RESTRICTED_ROLE_ID || null,
     adminRoleIds: process.env.ADMIN_ROLE_IDS
