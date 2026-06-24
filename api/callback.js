@@ -110,6 +110,15 @@ module.exports = async (req, res) => {
     (c) => c.type === 'riotgames' && c.name?.toLowerCase() === expectedName,
   );
 
+  // ── DEBUG: log what Discord actually returns for Riot connections ──────────
+  // Remove once the matching behaviour is confirmed.
+  console.log('[callback] connection types returned:', connections.map((c) => c.type).join(', ') || '(none)');
+  console.log('[callback] riotgames entries:', JSON.stringify(
+    connections.filter((c) => c.type === 'riotgames')
+      .map((c) => ({ id: c.id, name: c.name, verified: c.verified })),
+  ));
+  console.log('[callback] expected (name#tag, lowercased):', expectedName, '| matched:', !!riotConn);
+
   // Clean up the state regardless of outcome
   await redis.del(`oauth:${state}`).catch(() => {});
 
