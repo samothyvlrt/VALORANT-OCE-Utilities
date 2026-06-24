@@ -141,7 +141,20 @@ Important field names from `/v2/mmr`:
 - `current_data.ranking_in_tier` → stored as `rr` in DB (within-tier value)
 - `current_data.leaderboard_rank` → Radiant/Immortal leaderboard position
 - `current_data.elo` → internal Riot MMR (NOT the same as cumulative Immortal RR — do not use for display)
+- `current_data.games_needed_for_rating` → placement games still required this act (see Placement handling below)
 - `highest_rank` → peak tier data
+
+### Placement handling (Act/Episode rollover)
+At an Act rollover, Riot keeps returning a player's **previous** `currenttier` until
+they finish their placement game(s) — so the API still shows e.g. Diamond 3 on day one
+of a new act. `getRank()` treats `current_data.games_needed_for_rating > 0` as
+**Unranked** (tier 0) for the new act, overriding the stale tier. The field defaults to
+0 when absent, so this never regresses normally-ranked players. `getRank()` also returns
+`inPlacements` (bool) and `gamesNeeded` (number) for any future "in placements" display.
+
+> Caveat: this only flips a player to Unranked if HenrikDev actually populates
+> `games_needed_for_rating > 0` for them. If they still show their old rank after a
+> rollover, HenrikDev isn't exposing that field for the account yet — not a bug.
 
 ---
 
@@ -238,6 +251,19 @@ Auto-build from git push produces empty images. Use direct Docker push as workar
 ### `tierToRoleKey` — historical bug (fixed)
 Old version had tier ranges off by 2 (e.g. `tier === 25` for Radiant instead of `tier === 27`). Fixed in `src/utils/roles.js`. If any users have wrong rank roles, re-run `/setlink` to trigger reassignment.
 
+### "The application did not respond" on a guild
+`interactionCreate.js` drops any interaction whose `guildId` is not in
+`config.discord.allowedGuildIds`, which is built from `GUILD_ID`, `DEV_GUILD_ID`, and
+`MAIN_GUILD_ID`. If the bot is in a server but none of those env vars contain that
+server's ID, every command silently returns → Discord shows "The application did not
+respond" with nothing logged. Fix: ensure the guild's ID is set in one of those vars
+(e.g. `GUILD_ID=537887361292304385` for main) and restart the container. Note
+`MAIN_GUILD_ID` was added to the runtime allow-list specifically to prevent this.
+
+> Distinguish from a missing-handler case: if logs show `Unknown command: <name>`, the
+> running image is stale (old code) — rebuild/push and restart. Nothing logged at all =
+> the guild allow-list gate above.
+
 ---
 
 ## Commands Reference
@@ -270,7 +296,7 @@ Integrations → (bot) → Command Permissions**.
 | `/exportlinks` (`admin export`)     | Admin (3)         | CSV export of linked accounts. `role` option. |
 | `/setlink` (`admin link set`)       | Snr Admin (4)     | Force-link (no ownership challenge). Auto-fetches rank + role. `silent` option. |
 | `/bulkreset` (`admin link bulk-reset`) | Snr Admin (4)  | Force re-verify entire role. `reason`, `silent` options. |
-| `/linkpanel` (`admin link panel`)   | Snr Admin (4)     | Post the user-guide panel in current channel. |
+| `/linkpanel` (`admin link panel`)   | Snr Admin (4)     | Post the rank-role panel (Add / Update / Remove buttons → `link_btn`/`update_rank_btn`/`unlink_btn`) in current channel. |
 | `/logsetup` (`admin log setup`)     | Snr Admin (4)     | Set staff activity log channel. |
 
 > Splitting was a deliberate choice: separate top-level commands let Discord hide a
@@ -317,9 +343,11 @@ is co-located with each command.
 ```
 DISCORD_TOKEN=
 CLIENT_ID=
-GUILD_ID=                    # dev/OCE server
-DEV_GUILD_ID=                # same as GUILD_ID for now
-MAIN_GUILD_ID=537887361292304385   # main server (required for --main-guild / --main-full)
+GUILD_ID=                    # a guild the bot serves (main: 537887361292304385)
+DEV_GUILD_ID=                # test/dev guild
+MAIN_GUILD_ID=537887361292304385   # main server (used by --main-* deploys AND the runtime allow-list)
+# Runtime allow-list = [GUILD_ID, DEV_GUILD_ID, MAIN_GUILD_ID]. The bot ignores
+# interactions from any guild not in this list (see "did not respond" gotcha).
 ADMIN_ROLE_IDS=              # legacy single-tier admin roles, superseded by STAFF_ROLE_* below
 RESTRICTED_ROLE_ID=798956686580383794   # may ONLY run /lock and /unlock
 
