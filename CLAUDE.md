@@ -255,6 +255,22 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 - 10-minute reconnect grace period for members who were in the channel when it was locked
 - Uses Discord permission overwrites (Allow Connect) per member
 
+### Shared channel constants (`src/modules/channels.js`)
+- `COMP_SQUAD_VCS` — the Comp 1–15 + Squad 0–10 voice channel IDs. Single source of
+  truth used by `/lock`, `/unlock`, and `/lfg` (previously duplicated in lock/unlock).
+- `LFG_CHANNELS` — the two looking-for-games text channels where `/lfg` may be run.
+- Dev guild (`DEV_GUILD_ID`) bypasses both gates so it can be tested anywhere.
+
+### `/lfg`
+- Gated to `LFG_CHANNELS`; poster must be in a `COMP_SQUAD_VCS` voice channel.
+- Auto rank range from the cached ranks of linked members in the VC
+  (`rankRangeFromLinks` in `lfg.js`, exported + unit-tested; ignores tier 0 / unlinked).
+- Join button = a 30-min VC invite; Refresh button re-reads members/rank. Refresh state
+  is encoded in the button `customId` (`lfg_refresh|vcId|mode|players|code`), so it's
+  **stateless** and survives restarts — handler lives in `interactionCreate.js`.
+- v1 is snapshot + manual Refresh. Live auto-updates via `voiceStateUpdate` are a planned
+  fast-follow (the event handler already exists for VC lock). Future: `/lft`, `/scrim`.
+
 ---
 
 ## Known Issues / Gotchas
@@ -299,7 +315,8 @@ respond" with nothing logged. Fix: ensure the guild's ID is set in one of those 
 | `/leaderboard` | Public ranked list + rank distribution chart. Hidden users excluded from list but counted in chart. |
 | `/privacy` | Toggle leaderboard visibility (ephemeral toggle). |
 | `/unlink` | Remove own linked account. |
-| `/lock` / `/unlock` | VC lock — separate bot running on main server. |
+| `/lock` / `/unlock` | VC lock — Comp/Squad VCs only. |
+| `/lfg` | Looking-for-group post. Run in an LFG channel while in a Comp/Squad VC. `mode` (Competitive/Casual/Premier), `players` (1–4), `code` (optional). Posts mode/LF-count/members-in-voice/auto rank range + Join (VC invite) and Refresh buttons. |
 
 ### Staff commands (standalone — `/admin` no longer exists)
 

@@ -1,5 +1,6 @@
-const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
+const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
 const { getSortedEntries, buildLeaderboardPage, buildLeaderboardAttachment, buildRow, PAGE_SIZE } = require('../commands/user/leaderboard');
+const { buildLfgEmbed, buildLfgRow } = require('../commands/user/lfg');
 const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
@@ -55,6 +56,25 @@ module.exports = {
     // ── Buttons ──────────────────────────────────────────────────
     if (interaction.isButton()) {
       const { customId } = interaction;
+
+      // LFG refresh — re-read the VC's members + rank and update the post
+      if (customId.startsWith('lfg_refresh|')) {
+        const [, vcId, mode, players, code] = customId.split('|');
+        let vc = interaction.guild?.channels?.cache.get(vcId);
+        if (!vc) vc = await interaction.guild?.channels?.fetch(vcId).catch(() => null);
+        if (!vc) {
+          return interaction.reply({
+            embeds: [embed.warning('Channel Gone', 'That voice channel no longer exists.')],
+            ephemeral: true,
+          });
+        }
+        const footerText = interaction.message.embeds[0]?.footer?.text ?? null;
+        const joinUrl = interaction.message.components?.[0]?.components
+          ?.find((c) => c.style === ButtonStyle.Link)?.url ?? null;
+        const e   = buildLfgEmbed({ vc, mode, players, code: code || null, footerText });
+        const row = buildLfgRow({ joinUrl, vcId, mode, players, code: code || null });
+        return interaction.update({ embeds: [e], components: [row] });
+      }
 
       // Link button — show Riot ID modal
       if (customId === 'link_btn') {
