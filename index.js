@@ -22,6 +22,7 @@ client.commands = new Collection();
 // ─────────────────────────────────────────────
 const commandDirs = [
   path.join(__dirname, 'src/commands/user'),
+  path.join(__dirname, 'src/commands/server'),
   path.join(__dirname, 'src/commands/admin'),
 ];
 

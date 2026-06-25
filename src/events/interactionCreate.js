@@ -1,6 +1,7 @@
-const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
+const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const { getSortedEntries, buildLeaderboardPage, buildLeaderboardAttachment, buildRow, PAGE_SIZE } = require('../commands/user/leaderboard');
-const { buildLfgEmbed, buildLfgRow } = require('../commands/user/lfg');
+const { renderLfg } = require('../commands/server/lfg');
+const lfgPosts = require('../modules/lfg-posts');
 const embed   = require('../utils/embed');
 const config  = require('../../config');
 const db      = require('../modules/database');
@@ -57,22 +58,24 @@ module.exports = {
     if (interaction.isButton()) {
       const { customId } = interaction;
 
-      // LFG refresh — re-read the VC's members + rank and update the post
-      if (customId.startsWith('lfg_refresh|')) {
-        const [, vcId, mode, players, code] = customId.split('|');
-        let vc = interaction.guild?.channels?.cache.get(vcId);
-        if (!vc) vc = await interaction.guild?.channels?.fetch(vcId).catch(() => null);
-        if (!vc) {
+      // LFG refresh — re-read the VC's members and update the post
+      if (customId === 'lfg_refresh') {
+        const post = lfgPosts.get(interaction.message.id);
+        if (!post) {
+          return interaction.reply({
+            embeds: [embed.warning('LFG Expired', 'This post is no longer active. Run `/lfg` to post a new one.')],
+            ephemeral: true,
+          });
+        }
+        const rendered = renderLfg(interaction.guild, post);
+        if (!rendered) {
+          lfgPosts.remove(interaction.message.id);
           return interaction.reply({
             embeds: [embed.warning('Channel Gone', 'That voice channel no longer exists.')],
             ephemeral: true,
           });
         }
-        const footerText = interaction.message.embeds[0]?.footer?.text ?? null;
-        const joinUrl = `https://discord.com/channels/${interaction.guildId}/${vcId}`;
-        const e   = buildLfgEmbed({ vc, mode, players, code: code || null, footerText });
-        const row = buildLfgRow({ joinUrl, vcId, mode, players, code: code || null });
-        return interaction.update({ embeds: [e], components: [row] });
+        return interaction.update(rendered);
       }
 
       // Link button — show Riot ID modal

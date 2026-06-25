@@ -1,5 +1,7 @@
 const { Events } = require('discord.js');
 const vcLock = require('../modules/vc-lock');
+const lfgPosts = require('../modules/lfg-posts');
+const { renderLfg } = require('../commands/server/lfg');
 
 module.exports = {
   name: Events.VoiceStateUpdate,
@@ -8,6 +10,26 @@ module.exports = {
     const userId      = oldState.member?.id ?? newState.member?.id;
     const leftId      = oldState.channelId;
     const joinedId    = newState.channelId;
+
+    // ── LFG live updates ────────────────────────────────────────────────────
+    // Re-render any active LFG posts tied to a VC that just changed membership.
+    const guild = newState.guild || oldState.guild;
+    const affectedVcs = new Set([leftId, joinedId].filter(Boolean));
+    for (const vcId of affectedVcs) {
+      for (const [messageId, post] of lfgPosts.forVc(vcId)) {
+        try {
+          const channel = guild.channels.cache.get(post.channelId)
+            || await guild.channels.fetch(post.channelId).catch(() => null);
+          const msg = channel ? await channel.messages.fetch(messageId).catch(() => null) : null;
+          if (!msg) { lfgPosts.remove(messageId); continue; }
+          const rendered = renderLfg(guild, post);
+          if (!rendered) { lfgPosts.remove(messageId); continue; }
+          await msg.edit(rendered);
+        } catch (err) {
+          console.warn('[lfg] live update failed:', err.message);
+        }
+      }
+    }
 
     if (!userId) return;
 

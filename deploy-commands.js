@@ -3,6 +3,11 @@
  *
  * Registers slash commands with Discord.
  *
+ * Command groups (by source directory):
+ *   user   — src/commands/user   (link, unlink, leaderboard, profile, privacy, match, verify)
+ *   server — src/commands/server  (lock, unlock, lfg)
+ *   admin  — src/commands/admin   (the 9 staff commands)
+ *
  * Global / dev:
  *   node deploy-commands.js                        — register ALL commands globally (up to 1 hr)
  *   node deploy-commands.js --guild                — register ALL commands to DEV_GUILD_ID (instant)
@@ -10,13 +15,11 @@
  * Main guild (instant). IMPORTANT: each deploy REPLACES the entire main command
  * set (Discord PUT semantics). The group flags below COMBINE, so pass every group
  * you want live in ONE command:
- *   node deploy-commands.js --main-lock            — /lock + /unlock
+ *   node deploy-commands.js --main-server          — lock, unlock, lfg
  *   node deploy-commands.js --main-user            — user-facing commands (link, unlink, leaderboard, profile, privacy, match, verify)
  *   node deploy-commands.js --main-admin           — the 9 staff/admin commands
- *   node deploy-commands.js --main-admin --main-lock           — admin + lock/unlock
- *   node deploy-commands.js --main-admin --main-user --main-lock — everything (same as --main-full)
+ *   node deploy-commands.js --main-admin --main-server          — admin + server
  *   node deploy-commands.js --main-full            — everything (all groups)
- *   (--main-guild is kept as an alias for --main-lock)
  *
  * Clearing (any --main-* flag + --clear clears the WHOLE main guild set):
  *   node deploy-commands.js --clear                — clear global commands
@@ -30,33 +33,32 @@ const path = require('path');
 const config = require('./config');
 
 const args = process.argv.slice(2);
-const useGuild     = args.includes('--guild');
-const useMainFull  = args.includes('--main-full');
-const useMainAdmin = args.includes('--main-admin');
-const useMainUser  = args.includes('--main-user');
-const useMainLock  = args.includes('--main-lock') || args.includes('--main-guild'); // --main-guild = alias
-const clear        = args.includes('--clear');
-const anyMain      = useMainFull || useMainAdmin || useMainUser || useMainLock;
-
-// The always-available VC commands (their own group).
-const LOCK_COMMANDS = new Set(['lock', 'unlock']);
+const useGuild      = args.includes('--guild');
+const useMainFull   = args.includes('--main-full');
+const useMainAdmin  = args.includes('--main-admin');
+const useMainUser   = args.includes('--main-user');
+const useMainServer = args.includes('--main-server');
+const clear         = args.includes('--clear');
+const anyMain       = useMainFull || useMainAdmin || useMainUser || useMainServer;
 
 const commands = [];
-const adminCommandNames = new Set(); // from src/commands/admin
-const userCommandNames  = new Set(); // from src/commands/user (incl. lock/unlock)
+// Command names by group (populated from each source directory).
+const groups = { user: new Set(), server: new Set(), admin: new Set() };
 
 if (!clear) {
   const commandDirs = [
-    { dir: path.join(__dirname, 'src/commands/user'),  admin: false },
-    { dir: path.join(__dirname, 'src/commands/admin'), admin: true  },
+    { dir: path.join(__dirname, 'src/commands/user'),   group: 'user'   },
+    { dir: path.join(__dirname, 'src/commands/server'), group: 'server' },
+    { dir: path.join(__dirname, 'src/commands/admin'),  group: 'admin'  },
   ];
-  for (const { dir, admin } of commandDirs) {
+  for (const { dir, group } of commandDirs) {
+    if (!fs.existsSync(dir)) continue;
     for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.js'))) {
       const cmd = require(path.join(dir, file));
       if ('data' in cmd) {
         const json = cmd.data.toJSON();
         commands.push(json);
-        (admin ? adminCommandNames : userCommandNames).add(json.name);
+        groups[group].add(json.name);
       }
     }
   }
@@ -66,9 +68,9 @@ if (!clear) {
 function mainGuildSelection() {
   if (useMainFull) return new Set(commands.map((c) => c.name));
   const want = new Set();
-  if (useMainAdmin) for (const n of adminCommandNames) want.add(n);
-  if (useMainUser)  for (const n of userCommandNames) if (!LOCK_COMMANDS.has(n)) want.add(n);
-  if (useMainLock)  for (const n of LOCK_COMMANDS) want.add(n);
+  if (useMainAdmin)  for (const n of groups.admin)  want.add(n);
+  if (useMainUser)   for (const n of groups.user)   want.add(n);
+  if (useMainServer) for (const n of groups.server) want.add(n);
   return want;
 }
 
