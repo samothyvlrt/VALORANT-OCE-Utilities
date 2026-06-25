@@ -17,31 +17,39 @@ const lfgPosts = require('../../modules/lfg-posts');
 
 const TEST_GUILD_ID = config.discord.devGuildId;
 const MODES = ['Competitive', 'Casual', 'Premier'];
+// Premier divisions, lowest → highest. Invite is the apex.
+const PREMIER_DIVISIONS = ['Open', 'Intermediate', 'Advanced', 'Elite', 'Contender', 'Invite'];
 
-function buildLfgEmbed({ vc, mode, players, rank, code, footerText }) {
+function buildLfgEmbed({ vc, mode, players, rank, division, code, footerText }) {
   const members  = [...vc.members.values()];
   const mentions = members.length ? members.map((m) => `<@${m.id}>`).join(' ') : '*nobody yet*';
 
   const e = new EmbedBuilder()
     .setColor(config.colors.primary)
     .setTitle(`${mode} | LF${players}`)
-    .addFields(
-      { name: 'Voice channel', value: vc.name, inline: true },
-      { name: 'Rank range', value: rank || 'Any', inline: true },
-      { name: `Members in voice (${members.length})`, value: mentions, inline: false },
-    );
+    .addFields({ name: 'Voice channel', value: vc.name, inline: true });
+
+  // Rank/division field is mode-specific. Casual shows nothing rank-related.
+  if (mode === 'Competitive') {
+    e.addFields({ name: 'Rank range', value: rank || 'Any', inline: true });
+  } else if (mode === 'Premier') {
+    e.addFields({ name: 'Division', value: division || 'Any', inline: true });
+  }
+
+  e.addFields({ name: `Members in voice (${members.length})`, value: mentions, inline: false });
   if (code) e.addFields({ name: 'Lobby code', value: `\`${code}\``, inline: true });
   if (footerText) e.setFooter({ text: footerText });
   e.setTimestamp();
   return e;
 }
 
+// Single Join deep-link button (no invite permission needed). Refresh was removed
+// now that members update live; a "Refresh rank" button can return once rank is
+// auto-derived from linked PUUIDs.
 function buildLfgRow({ guildId, vcId }) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Join VC')
       .setURL(`https://discord.com/channels/${guildId}/${vcId}`).setEmoji('🔊'),
-    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setCustomId('lfg_refresh')
-      .setLabel('Refresh').setEmoji('🔄'),
   );
 }
 
@@ -55,7 +63,7 @@ function renderLfg(guild, post) {
   const vc = guild.channels.cache.get(post.vcId);
   if (!vc) return null;
   return {
-    embeds:     [buildLfgEmbed({ vc, mode: post.mode, players: post.players, rank: post.rank, code: post.code, footerText: post.footerText })],
+    embeds:     [buildLfgEmbed({ vc, mode: post.mode, players: post.players, rank: post.rank, division: post.division, code: post.code, footerText: post.footerText })],
     components: [buildLfgRow({ guildId: guild.id, vcId: post.vcId })],
   };
 }
@@ -77,8 +85,13 @@ module.exports = {
         .setRequired(true).setMinValue(1).setMaxValue(4),
     )
     .addStringOption((o) =>
-      o.setName('rank').setDescription('Rank range you\'re after, e.g. "Silver - Gold" (optional)')
+      o.setName('rank').setDescription('Competitive only — rank range, e.g. "Silver - Gold"')
         .setRequired(false).setMaxLength(32),
+    )
+    .addStringOption((o) =>
+      o.setName('division').setDescription('Premier only — your team\'s division')
+        .setRequired(false)
+        .addChoices(...PREMIER_DIVISIONS.map((d) => ({ name: d, value: d }))),
     )
     .addStringOption((o) =>
       o.setName('code').setDescription('Party/lobby code (optional)').setRequired(false).setMaxLength(16),
@@ -108,27 +121,28 @@ module.exports = {
       });
     }
 
-    const mode    = interaction.options.getString('mode');
-    const players = interaction.options.getInteger('players');
-    const rankRaw = interaction.options.getString('rank');
-    const codeRaw = interaction.options.getString('code');
-    const rank    = rankRaw ? rankRaw.trim().slice(0, 32) : null;
-    const code    = codeRaw ? codeRaw.replace(/`/g, '').trim().slice(0, 16) : null;
+    const mode     = interaction.options.getString('mode');
+    const players  = interaction.options.getInteger('players');
+    const rankRaw  = interaction.options.getString('rank');
+    const division = interaction.options.getString('division');
+    const codeRaw  = interaction.options.getString('code');
+    const rank     = rankRaw ? rankRaw.trim().slice(0, 32) : null;
+    const code     = codeRaw ? codeRaw.replace(/`/g, '').trim().slice(0, 16) : null;
 
     const post = {
       guildId:    interaction.guildId,
       channelId:  interaction.channelId,
       vcId:       vc.id,
-      mode, players, rank, code,
+      mode, players, rank, division, code,
       footerText: `LFG by ${interaction.user.tag}`,
     };
 
     await interaction.reply({
-      embeds:     [buildLfgEmbed({ vc, mode, players, rank, code, footerText: post.footerText })],
+      embeds:     [buildLfgEmbed({ vc, mode, players, rank, division, code, footerText: post.footerText })],
       components: [buildLfgRow({ guildId: interaction.guildId, vcId: vc.id })],
     });
 
-    // Register for live updates + Refresh.
+    // Register for live updates.
     try {
       const msg = await interaction.fetchReply();
       lfgPosts.register(msg.id, post);

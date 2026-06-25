@@ -270,14 +270,20 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 
 ### `/lfg` (in `src/commands/server`)
 - Gated to `LFG_CHANNELS`; poster must be in a `COMP_SQUAD_VCS` voice channel.
-- **Rank range is entered manually** (`rank` option). No linked-account requirement.
-  *Future:* require a verified (RSO) linked account and auto-derive the range.
-- Join button = a channel **deep-link** (`discord.com/channels/<guild>/<vc>`), so it needs
-  no Create Instant Invite permission. Refresh button + live updates are driven by an
-  in-memory registry (`src/modules/lfg-posts.js`), keyed by message ID, 30-min TTL.
-- **Live updates:** `voiceStateUpdate` re-renders any LFG post tied to a VC whose
-  membership changed (members-in-voice field). Best-effort; registry is cleared on restart
-  (old posts then show "LFG Expired" on Refresh). Future: `/lft`, `/scrim`.
+- **Mode-conditional rank field** (no linked-account requirement):
+  - Competitive → `rank` (manual text range, e.g. "Silver - Gold")
+  - Premier → `division` (choice: Open/Intermediate/Advanced/Elite/Contender/Invite)
+  - Casual → no rank/division field shown
+  - Discord can't show options conditionally, so `rank` + `division` are both optional
+    options; the embed uses whichever matches the mode.
+  - *Future:* require a verified (RSO) linked account and auto-derive the Competitive range.
+- Only button is **Join** = a channel deep-link (`discord.com/channels/<guild>/<vc>`),
+  no Create Instant Invite permission needed. (Refresh was removed — members update live;
+  a "Refresh rank" button can return once rank is auto-derived from linked PUUIDs.)
+- **Live updates:** an in-memory registry (`src/modules/lfg-posts.js`, keyed by message ID,
+  30-min TTL) lets `voiceStateUpdate` re-render any LFG post tied to a VC whose membership
+  changed (members-in-voice field). Best-effort; registry clears on restart. Future:
+  `/lft`, `/scrim`.
 
 ---
 
@@ -324,7 +330,7 @@ respond" with nothing logged. Fix: ensure the guild's ID is set in one of those 
 | `/privacy` | Toggle leaderboard visibility (ephemeral toggle). |
 | `/unlink` | Remove own linked account. |
 | `/lock` / `/unlock` | VC lock — Comp/Squad VCs only. |
-| `/lfg` | Looking-for-group post (server group). Run in an LFG channel while in a Comp/Squad VC. `mode` (Competitive/Casual/Premier), `players` (1–4), `rank` (manual, optional), `code` (optional). Members-in-voice updates live; Join button = VC deep-link. |
+| `/lfg` | Looking-for-group post (server group). Run in an LFG channel while in a Comp/Squad VC. `mode` (Competitive/Casual/Premier), `players` (1–4), `rank` (Competitive only), `division` (Premier only), `code` (optional). Members-in-voice updates live; Join button = VC deep-link. |
 
 ### Staff commands (standalone — `/admin` no longer exists)
 
