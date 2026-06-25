@@ -17,6 +17,15 @@ module.exports = {
     console.log(`[bot] Logged in as ${client.user.tag}`);
     console.log(`[bot] Serving ${client.guilds.cache.size} guild(s) | ${db.countLinks()} linked accounts`);
 
+    // Permission-config diagnostic — confirms env vars actually loaded.
+    const tiersSet = config.discord.staffTiers.filter((t) => t.roleId).length;
+    console.log(
+      `[perms] bypass users: ${config.discord.bypassUserIds.length ? config.discord.bypassUserIds.join(', ') : 'none'}` +
+      ` | staff tier roles: ${tiersSet}/${config.discord.staffTiers.length} set` +
+      ` | restricted role: ${config.discord.restrictedRoleId ? 'set' : 'unset'}` +
+      ` | db encrypted: ${process.env.DB_ENCRYPTION_KEY ? 'yes' : 'NO'}`,
+    );
+
     client.user.setPresence({
       status:     'online',
       activities: [{ name: '🔗 oce.gg', type: ActivityType.Watching }],
