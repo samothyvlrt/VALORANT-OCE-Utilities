@@ -69,8 +69,7 @@ module.exports = {
           });
         }
         const footerText = interaction.message.embeds[0]?.footer?.text ?? null;
-        const joinUrl = interaction.message.components?.[0]?.components
-          ?.find((c) => c.style === ButtonStyle.Link)?.url ?? null;
+        const joinUrl = `https://discord.com/channels/${interaction.guildId}/${vcId}`;
         const e   = buildLfgEmbed({ vc, mode, players, code: code || null, footerText });
         const row = buildLfgRow({ joinUrl, vcId, mode, players, code: code || null });
         return interaction.update({ embeds: [e], components: [row] });

@@ -137,14 +137,9 @@ module.exports = {
     const codeRaw = interaction.options.getString('code');
     const code    = codeRaw ? codeRaw.replace(/[|`]/g, '').trim().slice(0, 16) : null;
 
-    // A 30-minute invite to the VC powers the Join button.
-    let joinUrl = null;
-    try {
-      const invite = await vc.createInvite({ maxAge: 1800, maxUses: 0, reason: 'LFG join link' });
-      joinUrl = invite.url;
-    } catch (err) {
-      console.warn('[lfg] Could not create invite:', err.message);
-    }
+    // Deep-link straight to the voice channel — no invite permission needed
+    // (members are already in the guild). Clicking jumps them to the VC to join.
+    const joinUrl = `https://discord.com/channels/${interaction.guildId}/${vc.id}`;
 
     const e   = buildLfgEmbed({ vc, mode, players, code, footerText: `LFG by ${interaction.user.tag}` });
     const row = buildLfgRow({ joinUrl, vcId: vc.id, mode, players, code });
