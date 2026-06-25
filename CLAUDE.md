@@ -277,13 +277,18 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
   - Discord can't show options conditionally, so `rank` + `division` are both optional
     options; the embed uses whichever matches the mode.
   - *Future:* require a verified (RSO) linked account and auto-derive the Competitive range.
-- Only button is **Join** = a channel deep-link (`discord.com/channels/<guild>/<vc>`),
-  no Create Instant Invite permission needed. (Refresh was removed — members update live;
-  a "Refresh rank" button can return once rank is auto-derived from linked PUUIDs.)
-- **Live updates:** an in-memory registry (`src/modules/lfg-posts.js`, keyed by message ID,
-  30-min TTL) lets `voiceStateUpdate` re-render any LFG post tied to a VC whose membership
-  changed (members-in-voice field). Best-effort; registry clears on restart. Future:
-  `/lft`, `/scrim`.
+- **Not in a Comp/Squad VC →** posts a *minimal* LFG (LF count + rank/division + lobby
+  code only; no Voice channel/Members fields, no Join button, not registered/tracked).
+- **In a Comp/Squad VC →** full post. **Join** button is a real VC invite
+  (`vc.createInvite`, 30-min) so it *connects* on click — needs Create Instant Invite
+  (the bot runs with Administrator). The invite URL is stored in the registry and reused
+  on re-render (not recreated each update). (Refresh button was removed — members update
+  live; a "Refresh rank" button can return once rank is auto-derived from PUUIDs.)
+- **Live updates + auto-expire:** an in-memory registry (`src/modules/lfg-posts.js`, keyed
+  by message ID, 30-min TTL) lets `voiceStateUpdate` re-render any LFG post tied to a VC
+  whose membership changed. When that VC hits **0 members**, the post is edited to an
+  **Expired** state (no buttons) and removed from the registry. Best-effort; registry
+  clears on restart. Future: `/premier`, premier-on-profile, leaderboard rework, `/lft`, `/scrim`.
 
 ---
 

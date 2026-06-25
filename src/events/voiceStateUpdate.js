@@ -1,7 +1,7 @@
 const { Events } = require('discord.js');
 const vcLock = require('../modules/vc-lock');
 const lfgPosts = require('../modules/lfg-posts');
-const { renderLfg } = require('../commands/server/lfg');
+const { renderLfg, renderExpired } = require('../commands/server/lfg');
 
 module.exports = {
   name: Events.VoiceStateUpdate,
@@ -22,6 +22,15 @@ module.exports = {
             || await guild.channels.fetch(post.channelId).catch(() => null);
           const msg = channel ? await channel.messages.fetch(messageId).catch(() => null) : null;
           if (!msg) { lfgPosts.remove(messageId); continue; }
+
+          // VC empty (or gone) → expire the post permanently and stop tracking it.
+          const vc = guild.channels.cache.get(vcId);
+          if (!vc || vc.members.size === 0) {
+            await msg.edit(renderExpired(post));
+            lfgPosts.remove(messageId);
+            continue;
+          }
+
           const rendered = renderLfg(guild, post);
           if (!rendered) { lfgPosts.remove(messageId); continue; }
           await msg.edit(rendered);

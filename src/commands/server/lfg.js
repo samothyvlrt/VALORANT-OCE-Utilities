@@ -1,13 +1,14 @@
 /**
- * /lfg — looking-for-group post for the Comp/Squad VC you're in.
+ * /lfg — looking-for-group post.
  *
- * Run in an LFG channel while connected to a Comp/Squad VC. Posts an embed
- * (mode, LF count, rank range, members in voice, lobby code) with a Join
- * deep-link button and a Refresh button. Members-in-voice updates LIVE via
- * voiceStateUpdate; state is tracked in src/modules/lfg-posts.js.
+ * Run in an LFG channel. If you're in a Comp/Squad VC, the post ties to it
+ * (members-in-voice updates live via voiceStateUpdate, a Join invite button,
+ * auto-expires when the VC empties). If you're not in such a VC, it posts a
+ * minimal version (just LF count + rank/division + lobby code).
  *
- * The rank range is entered manually for now (no linked-account requirement).
- * Future: require a verified (RSO) linked account and auto-derive the range.
+ * Rank/division is entered manually (no linked-account requirement).
+ * Future: require a verified (RSO) linked account and auto-derive Competitive
+ * range / Premier division.
  */
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const config = require('../../../config');
@@ -20,14 +21,16 @@ const MODES = ['Competitive', 'Casual', 'Premier'];
 // Premier divisions, lowest → highest. Invite is the apex.
 const PREMIER_DIVISIONS = ['Open', 'Intermediate', 'Advanced', 'Elite', 'Contender', 'Invite'];
 
+/**
+ * Build the LFG embed. `vc` is optional — when absent, the Voice channel and
+ * Members-in-voice fields are omitted (the "not in a VC" minimal post).
+ */
 function buildLfgEmbed({ vc, mode, players, rank, division, code, footerText }) {
-  const members  = [...vc.members.values()];
-  const mentions = members.length ? members.map((m) => `<@${m.id}>`).join(' ') : '*nobody yet*';
-
   const e = new EmbedBuilder()
     .setColor(config.colors.primary)
-    .setTitle(`${mode} | LF${players}`)
-    .addFields({ name: 'Voice channel', value: vc.name, inline: true });
+    .setTitle(`${mode} | LF${players}`);
+
+  if (vc) e.addFields({ name: 'Voice channel', value: vc.name, inline: true });
 
   // Rank/division field is mode-specific. Casual shows nothing rank-related.
   if (mode === 'Competitive') {
@@ -36,46 +39,62 @@ function buildLfgEmbed({ vc, mode, players, rank, division, code, footerText }) 
     e.addFields({ name: 'Division', value: division || 'Any', inline: true });
   }
 
-  e.addFields({ name: `Members in voice (${members.length})`, value: mentions, inline: false });
+  if (vc) {
+    const members  = [...vc.members.values()];
+    const mentions = members.length ? members.map((m) => `<@${m.id}>`).join(' ') : '*nobody yet*';
+    e.addFields({ name: `Members in voice (${members.length})`, value: mentions, inline: false });
+  }
   if (code) e.addFields({ name: 'Lobby code', value: `\`${code}\``, inline: true });
   if (footerText) e.setFooter({ text: footerText });
   e.setTimestamp();
   return e;
 }
 
-// Single Join deep-link button (no invite permission needed). Refresh was removed
-// now that members update live; a "Refresh rank" button can return once rank is
-// auto-derived from linked PUUIDs.
-function buildLfgRow({ guildId, vcId }) {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Join VC')
-      .setURL(`https://discord.com/channels/${guildId}/${vcId}`).setEmoji('🔊'),
-  );
+/** Join row — a real VC invite (connects on click). Empty row if no invite. */
+function buildLfgRow({ joinUrl }) {
+  const row = new ActionRowBuilder();
+  if (joinUrl) {
+    row.addComponents(
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Join VC').setURL(joinUrl).setEmoji('🔊'),
+    );
+  }
+  return row;
 }
 
 /**
- * Build the full message payload for a stored LFG post by reading the live VC.
- * Returns null if the VC no longer exists.
- * @param {import('discord.js').Guild} guild
- * @param {object} post  registry entry
+ * Build the message payload for a stored (VC-tied) LFG post from the live VC.
+ * Returns null if the VC is gone.
  */
 function renderLfg(guild, post) {
   const vc = guild.channels.cache.get(post.vcId);
   if (!vc) return null;
+  const components = post.joinUrl ? [buildLfgRow({ joinUrl: post.joinUrl })] : [];
   return {
-    embeds:     [buildLfgEmbed({ vc, mode: post.mode, players: post.players, rank: post.rank, division: post.division, code: post.code, footerText: post.footerText })],
-    components: [buildLfgRow({ guildId: guild.id, vcId: post.vcId })],
+    embeds: [buildLfgEmbed({ vc, mode: post.mode, players: post.players, rank: post.rank, division: post.division, code: post.code, footerText: post.footerText })],
+    components,
   };
+}
+
+/** The "expired" payload — shown once the tied VC empties. No buttons. */
+function renderExpired(post) {
+  const e = new EmbedBuilder()
+    .setColor(config.colors.neutral)
+    .setTitle(`${post.mode} | LF${post.players} — Expired`)
+    .setDescription('This LFG has expired — the voice channel is empty.')
+    .setTimestamp();
+  if (post.footerText) e.setFooter({ text: post.footerText });
+  return { embeds: [e], components: [] };
 }
 
 module.exports = {
   buildLfgEmbed,
   buildLfgRow,
   renderLfg,
+  renderExpired,
 
   data: new SlashCommandBuilder()
     .setName('lfg')
-    .setDescription('Post a looking-for-group for the Comp/Squad VC you\'re in.')
+    .setDescription('Post a looking-for-group (ties to your Comp/Squad VC if you\'re in one).')
     .addStringOption((o) =>
       o.setName('mode').setDescription('Game mode').setRequired(true)
         .addChoices(...MODES.map((m) => ({ name: m, value: m }))),
@@ -106,21 +125,6 @@ module.exports = {
       });
     }
 
-    // Poster must be in a Comp/Squad VC (the join target).
-    const vc = interaction.member.voice?.channel;
-    if (!vc) {
-      return interaction.reply({
-        embeds: [embed.warning('Not in a Voice Channel', 'Join a Comp or Squad VC first, then run `/lfg`.')],
-        ephemeral: true,
-      });
-    }
-    if (!COMP_SQUAD_VCS.has(vc.id) && interaction.guildId !== TEST_GUILD_ID) {
-      return interaction.reply({
-        embeds: [embed.warning('Wrong Voice Channel', 'You need to be in a Comp or Squad VC to post an LFG.')],
-        ephemeral: true,
-      });
-    }
-
     const mode     = interaction.options.getString('mode');
     const players  = interaction.options.getInteger('players');
     const rankRaw  = interaction.options.getString('rank');
@@ -128,21 +132,40 @@ module.exports = {
     const codeRaw  = interaction.options.getString('code');
     const rank     = rankRaw ? rankRaw.trim().slice(0, 32) : null;
     const code     = codeRaw ? codeRaw.replace(/`/g, '').trim().slice(0, 16) : null;
+    const footerText = `LFG by ${interaction.user.tag}`;
+
+    // Tie to a Comp/Squad VC if the poster is in one; otherwise post a minimal LFG.
+    const vc = interaction.member.voice?.channel;
+    const useVc = vc && (COMP_SQUAD_VCS.has(vc.id) || interaction.guildId === TEST_GUILD_ID);
+
+    if (!useVc) {
+      return interaction.reply({
+        embeds: [buildLfgEmbed({ vc: null, mode, players, rank, division, code, footerText })],
+      });
+    }
+
+    // Real VC invite so the Join button actually connects (bot has the perm).
+    let joinUrl = null;
+    try {
+      const invite = await vc.createInvite({ maxAge: 1800, maxUses: 0, reason: 'LFG join link' });
+      joinUrl = invite.url;
+    } catch (err) {
+      console.warn('[lfg] could not create invite:', err.message);
+    }
 
     const post = {
       guildId:    interaction.guildId,
       channelId:  interaction.channelId,
       vcId:       vc.id,
-      mode, players, rank, division, code,
-      footerText: `LFG by ${interaction.user.tag}`,
+      mode, players, rank, division, code, joinUrl, footerText,
     };
 
     await interaction.reply({
-      embeds:     [buildLfgEmbed({ vc, mode, players, rank, division, code, footerText: post.footerText })],
-      components: [buildLfgRow({ guildId: interaction.guildId, vcId: vc.id })],
+      embeds:     [buildLfgEmbed({ vc, mode, players, rank, division, code, footerText })],
+      components: joinUrl ? [buildLfgRow({ joinUrl })] : [],
     });
 
-    // Register for live updates.
+    // Register for live updates + auto-expire.
     try {
       const msg = await interaction.fetchReply();
       lfgPosts.register(msg.id, post);
