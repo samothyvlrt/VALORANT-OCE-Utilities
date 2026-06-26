@@ -303,8 +303,11 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 - Reconcile (`reconcileMember`): boosting → exactly the qualifying tier (drop others +
   broken); not boosting → broken-streak if earned, else strip (unless
   `BOOSTER_STRIP_NONBOOSTERS=false`).
-- **Daily sweep** in `ready.js` (startup + every 24h) reconciles all boosters / tenure-role
-  holders, logging the count changed. The bot's role must sit **above** all booster roles.
+- **Manual only** — `/booster` reconciles the runner on demand. (An auto daily sweep
+  existed briefly but was removed; could return as a staff `/boostersync` command.)
+- **Role hierarchy is required:** the bot's role must sit **above** all booster tenure
+  roles + the broken-streak role, or every add/remove fails with `Missing Permissions`.
+  Administrator does NOT bypass role hierarchy for managing roles — only the server owner does.
 
 ---
 

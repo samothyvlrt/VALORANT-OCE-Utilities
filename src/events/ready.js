@@ -8,7 +8,6 @@ const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
 const { logAdminAction } = require('../utils/activity-log');
 const { generateStats }       = require('../utils/generate-stats');
 const { generateLeaderboard } = require('../utils/generate-leaderboard');
-const { reconcileMember } = require('../utils/booster');
 const config = require('../../config');
 
 module.exports = {
@@ -240,42 +239,6 @@ module.exports = {
     generateStats();
     generateLeaderboard();
     setInterval(() => { generateStats(); generateLeaderboard(); }, 6 * 60 * 60 * 1000);
-
-    // ── Booster tenure role sweep (startup + daily) ─────────────────────────
-    async function runBoosterSweep() {
-      const roles = config.discord.boosterRoles;
-      if (!roles.length) return;
-      const brokenId = config.discord.boosterBrokenRoleId;
-      const tierIds  = new Set(roles.map((r) => r.roleId));
-      const guildId  = config.discord.mainGuildId || config.discord.guildId;
-      const guild    = guildId ? client.guilds.cache.get(guildId) : null;
-      if (!guild) return;
-
-      try {
-        await guild.members.fetch();
-      } catch (err) {
-        console.warn('[booster] sweep: members.fetch failed —', err.message);
-        return;
-      }
-
-      let updated = 0;
-      for (const member of guild.members.cache.values()) {
-        const relevant = member.premiumSinceTimestamp
-          || [...member.roles.cache.keys()].some((id) => tierIds.has(id) || id === brokenId);
-        if (!relevant) continue;
-        try {
-          const plan = await reconcileMember(member);
-          if (plan.toAdd.length || plan.toRemove.length) updated++;
-        } catch (err) {
-          console.warn(`[booster] sweep: ${member.id} failed —`, err.message);
-        }
-      }
-      console.log(`[booster] sweep complete — ${updated} member(s) updated`);
-    }
-    if (config.discord.boosterRoles.length) {
-      setTimeout(() => runBoosterSweep(), 90 * 1000);
-      setInterval(() => runBoosterSweep(), 24 * 60 * 60 * 1000);
-    }
 
     // ── Poll Redis every 15s for completed OAuth verifications ──────────────
     setInterval(async () => {
