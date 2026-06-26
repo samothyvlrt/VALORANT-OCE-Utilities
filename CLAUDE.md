@@ -290,6 +290,22 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
   **Expired** state (no buttons) and removed from the registry. Best-effort; registry
   clears on restart. Future: `/premier`, premier-on-profile, leaderboard rework, `/lft`, `/scrim`.
 
+### Booster tenure (`/booster`, in `src/commands/server`)
+- **Continuous tenure only** — Discord exposes no cumulative-boost API, just
+  `member.premiumSince` (current streak start on this guild). Tenure = months since then.
+- Roles configured via `BOOSTER_TENURE_ROLES` (`months:roleId` pairs) → `config.discord.boosterRoles`.
+  Logic in `src/utils/booster.js` (`computePlan` is pure + unit-tested).
+- **Broken-streak role** (`BOOSTER_BROKEN_ROLE`): ex-boosters who reached
+  `BOOSTER_BROKEN_THRESHOLD` (default 6) months then stopped. Detected with **no history
+  storage** — at the moment they stop they still hold their tier role, so a non-booster
+  holding a ≥6mo tier (or already holding the broken role) gets the broken-streak role
+  instead of being stripped. It then persists.
+- Reconcile (`reconcileMember`): boosting → exactly the qualifying tier (drop others +
+  broken); not boosting → broken-streak if earned, else strip (unless
+  `BOOSTER_STRIP_NONBOOSTERS=false`).
+- **Daily sweep** in `ready.js` (startup + every 24h) reconciles all boosters / tenure-role
+  holders, logging the count changed. The bot's role must sit **above** all booster roles.
+
 ---
 
 ## Known Issues / Gotchas
@@ -473,11 +489,18 @@ All role/ID values must belong to the server the bot actually runs against (main
 | `STAFF_ROLE_SNR_MGMT` | `681467969280147474` |
 | `RESTRICTED_ROLE_ID` | `798956686580383794` |
 | `BYPASS_USER_IDS` | `974820968545542194` |
+| `BOOSTER_BROKEN_ROLE` | `1292857036509548667` |
+
+`BOOSTER_TENURE_ROLES` (single var, `months:roleId` pairs):
+```
+1:689286086689685652,2:1056595830838145065,3:1056595827033903164,6:1056595820482396250,9:1056596188046041128,12:1056596225702510692,18:1056596209000775700,24:1056596218773520414,30:1056596221642428437,36:1147812501069770834,42:1147813204567785564,48:1410793949953790012
+```
 
 Plus the non-ID secrets/config: `DISCORD_TOKEN`, `CLIENT_ID`, `DISCORD_CLIENT_SECRET`,
 `GUILD_ID`, `MAIN_GUILD_ID`, `HENRIK_API_KEY`, `UPSTASH_REDIS_REST_URL`,
 `UPSTASH_REDIS_REST_TOKEN`, `OAUTH_REDIRECT_URI`, `DEFAULT_REGION`,
-`DB_ENCRYPTION_KEY` (encryption-at-rest key — see Database section; required in prod).
+`DB_ENCRYPTION_KEY` (encryption-at-rest key — see Database section; required in prod),
+`BOOSTER_BROKEN_THRESHOLD` (default 6), `BOOSTER_STRIP_NONBOOSTERS` (default true).
 
 - Missing `STAFF_ROLE_*` → that tier matches no one (commands unreachable except bypass/Administrator).
 - Missing `RESTRICTED_ROLE_ID` → the restricted gate silently does nothing.

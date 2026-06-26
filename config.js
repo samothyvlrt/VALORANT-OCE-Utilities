@@ -33,6 +33,23 @@ const config = {
     bypassUserIds: process.env.BYPASS_USER_IDS
       ? process.env.BYPASS_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean)
       : [],
+
+    // Booster tenure roles. BOOSTER_TENURE_ROLES = "months:roleId,months:roleId,..."
+    // Parsed into [{ months, roleId }] sorted ascending by months.
+    boosterRoles: (process.env.BOOSTER_TENURE_ROLES || '')
+      .split(',').map((s) => s.trim()).filter(Boolean)
+      .map((pair) => {
+        const [m, id] = pair.split(':');
+        return { months: parseInt(m, 10), roleId: (id || '').trim() };
+      })
+      .filter((r) => Number.isFinite(r.months) && r.roleId)
+      .sort((a, b) => a.months - b.months),
+    // Role given to ex-boosters who reached the broken-streak threshold then stopped.
+    boosterBrokenRoleId: process.env.BOOSTER_BROKEN_ROLE || null,
+    boosterBrokenThreshold: parseInt(process.env.BOOSTER_BROKEN_THRESHOLD || '6', 10),
+    // When a member isn't boosting and never reached the broken-streak threshold,
+    // remove their tenure roles (true) or leave them (false).
+    boosterStripNonBoosters: (process.env.BOOSTER_STRIP_NONBOOSTERS ?? 'true') !== 'false',
   },
 
   riot: {
