@@ -30,7 +30,7 @@ module.exports = {
     const plan = await reconcileMember(member);
 
     const brokenId  = config.discord.boosterBrokenRoleId;
-    const tierId    = config.discord.boosterRoles.map((r) => r.roleId).find((id) => member.roles.cache.has(id)) || null;
+    const tierId    = plan.targetTier; // the role they qualify for at their current tenure
     const hasBroken = brokenId && member.roles.cache.has(brokenId);
 
     if (premium) {

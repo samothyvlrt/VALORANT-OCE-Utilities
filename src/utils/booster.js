@@ -80,10 +80,16 @@ function computePlan(premiumSinceTimestamp, currentRoleIds, cfg, nowMs = Date.no
 /** Apply the plan to a real GuildMember. Returns the plan. */
 async function reconcileMember(member, cfg = getCfg()) {
   const plan = computePlan(member.premiumSinceTimestamp ?? null, [...member.roles.cache.keys()], cfg);
+  const manageable = (id) => {
+    const role = member.guild.roles.cache.get(id);
+    return role && !role.managed; // Discord-managed roles (e.g. native booster) can't be touched
+  };
   for (const id of plan.toRemove) {
+    if (!manageable(id)) continue;
     await member.roles.remove(id, 'Booster tenure reconcile').catch((e) => console.warn(`[booster] remove ${id} from ${member.id}: ${e.message}`));
   }
   for (const id of plan.toAdd) {
+    if (!manageable(id)) continue;
     await member.roles.add(id, 'Booster tenure reconcile').catch((e) => console.warn(`[booster] add ${id} to ${member.id}: ${e.message}`));
   }
   return plan;
