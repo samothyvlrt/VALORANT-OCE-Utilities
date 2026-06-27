@@ -1,18 +1,19 @@
 /**
- * /booster — show your boost tenure and sync your tenure role.
+ * /booster — show your accumulated boost tenure and sync your tenure role.
  *
- * Self-service: reads the runner's `premiumSince` (when they started boosting
- * this server), assigns the correct continuous-tenure role, and reports it.
+ * Total tenure = banked time (past streaks the bot observed + staff credits) +
+ * your current streak. Self-service: reconciles the runner's role on demand.
  */
 const { SlashCommandBuilder } = require('discord.js');
 const config = require('../../../config');
 const embed  = require('../../utils/embed');
-const { reconcileMember, formatDuration } = require('../../utils/booster');
+const db     = require('../../modules/database');
+const { reconcileMember, formatDuration, MONTH_MS } = require('../../utils/booster');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('booster')
-    .setDescription('Check your server-boost tenure and update your tenure role.'),
+    .setDescription('Check your accumulated boost tenure and update your tenure role.'),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
@@ -23,42 +24,42 @@ module.exports = {
       });
     }
 
-    const member  = interaction.member;
-    const premium = member.premiumSinceTimestamp ?? null;
+    const member = interaction.member;
+    const banked = db.getBoosterBanked(member.id);
+    const r = await reconcileMember(member, banked);
 
-    // Assign/correct roles based on current continuous tenure.
-    const plan = await reconcileMember(member);
+    const lines = [`Total tenure: **${formatDuration(r.totalMs)}** (${r.totalMonths} month${r.totalMonths !== 1 ? 's' : ''}).`];
 
-    const brokenId  = config.discord.boosterBrokenRoleId;
-    const tierId    = plan.targetTier; // the role they qualify for at their current tenure
-    const hasBroken = brokenId && member.roles.cache.has(brokenId);
-
-    if (premium) {
-      const lines = [
-        `Boosting since <t:${Math.floor(premium / 1000)}:D> — **${formatDuration(Date.now() - premium)}**.`,
-      ];
-      lines.push(tierId
-        ? `Tenure role: <@&${tierId}>`
-        : 'No tenure role yet — reach your first threshold to earn one.');
-
-      const next = config.discord.boosterRoles.find((r) => r.months > (plan.months ?? 0));
-      if (next) {
-        lines.push(`Next role <@&${next.roleId}> at **${next.months} months** (${next.months - (plan.months ?? 0)} to go).`);
-      }
-
-      return interaction.editReply({ embeds: [embed.success('Thanks for Boosting! 💎', lines.join('\n'))] });
+    if (r.boosting) {
+      lines.push(`Boosting since <t:${Math.floor(member.premiumSinceTimestamp / 1000)}:D> — current streak **${formatDuration(r.streakMs)}**.`);
+    }
+    if (r.bankedMs > 0) {
+      lines.push(`Banked from past boosting / credits: **${formatDuration(r.bankedMs)}**.`);
     }
 
-    if (hasBroken) {
+    if (r.targetTier) {
+      lines.push(`Tenure role: <@&${r.targetTier}>`);
+      const next = config.discord.boosterRoles.find((x) => x.months > r.totalMonths);
+      if (next) lines.push(`Next role <@&${next.roleId}> at **${next.months} months** (${next.months - r.totalMonths} to go).`);
+    } else if (r.boosting) {
+      const next = config.discord.boosterRoles.find((x) => x.months > r.totalMonths);
+      lines.push(next
+        ? `No milestone role yet — next is <@&${next.roleId}> at **${next.months} months**.`
+        : 'No milestone role configured.');
+    }
+
+    if (!r.boosting) {
+      if (config.discord.boosterBrokenRoleId && member.roles.cache.has(config.discord.boosterBrokenRoleId)) {
+        return interaction.editReply({
+          embeds: [embed.info('Not Currently Boosting',
+            `${lines.join('\n')}\n\nYou're not boosting right now, but you reached **${config.discord.boosterBrokenThreshold}+ months** — so you keep your <@&${config.discord.boosterBrokenRoleId}> role.`)],
+        });
+      }
       return interaction.editReply({
-        embeds: [embed.info('Not Currently Boosting',
-          `You're not boosting right now, but you previously reached **${config.discord.boosterBrokenThreshold}+ months** — so you keep your <@&${brokenId}> role.`)],
+        embeds: [embed.info('Not Currently Boosting', `${lines.join('\n')}\n\nBoost the server to start earning tenure roles!`)],
       });
     }
 
-    return interaction.editReply({
-      embeds: [embed.info('Not Currently Boosting',
-        'You\'re not currently boosting this server, so you have no tenure role. Boost to start earning them!')],
-    });
+    return interaction.editReply({ embeds: [embed.success('Thanks for Boosting! 💎', lines.join('\n'))] });
   },
 };

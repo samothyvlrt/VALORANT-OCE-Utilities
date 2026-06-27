@@ -290,24 +290,25 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
   **Expired** state (no buttons) and removed from the registry. Best-effort; registry
   clears on restart. Future: `/premier`, premier-on-profile, leaderboard rework, `/lft`, `/scrim`.
 
-### Booster tenure (`/booster`, in `src/commands/server`)
-- **Continuous tenure only** — Discord exposes no cumulative-boost API, just
-  `member.premiumSince` (current streak start on this guild). Tenure = months since then.
-- Roles configured via `BOOSTER_TENURE_ROLES` (`months:roleId` pairs) → `config.discord.boosterRoles`.
-  Logic in `src/utils/booster.js` (`computePlan` is pure + unit-tested).
-- **Broken-streak role** (`BOOSTER_BROKEN_ROLE`): ex-boosters who reached
-  `BOOSTER_BROKEN_THRESHOLD` (default 6) months then stopped. Detected with **no history
-  storage** — at the moment they stop they still hold their tier role, so a non-booster
-  holding a ≥6mo tier (or already holding the broken role) gets the broken-streak role
-  instead of being stripped. It then persists.
-- Reconcile (`reconcileMember`): boosting → exactly the qualifying tier (drop others +
-  broken); not boosting → broken-streak if earned, else strip (unless
-  `BOOSTER_STRIP_NONBOOSTERS=false`).
-- **Manual only** — `/booster` reconciles the runner on demand. (An auto daily sweep
-  existed briefly but was removed; could return as a staff `/boostersync` command.)
-- **Role hierarchy is required:** the bot's role must sit **above** all booster tenure
-  roles + the broken-streak role, or every add/remove fails with `Missing Permissions`.
-  Administrator does NOT bypass role hierarchy for managing roles — only the server owner does.
+### Booster tenure (`/booster` + `/boostercredit`)
+- **Accumulated tenure.** Total = `banked_ms` (`booster_tenure` table) + the live current
+  streak (`now − premiumSince`). Discord exposes no cumulative-boost API, so the bot
+  accumulates **going forward**: `guildMemberUpdate` banks a streak the moment a member
+  **stops** boosting (`premiumSince` value → null). Best-effort (needs old member cached).
+- **`/boostercredit @user <months>`** (admin group, Snr Admin) grandfathers historical
+  boosting — adds/subtracts banked months, then re-syncs the role.
+- `src/utils/booster.js` is **DB-free** (callers pass `bankedMs`) so `computePlan`/`tenure`
+  stay pure + unit-tested. Months use `MONTH_MS` (30.4375d), not calendar.
+- Roles via `BOOSTER_TENURE_ROLES` (`months:roleId` pairs; **do NOT include the native
+  managed Server Booster role** — it can't be touched and everyone has it). `reconcileMember`
+  **skips any `role.managed`** role defensively.
+- **Broken-streak role** (`BOOSTER_BROKEN_ROLE`): ex-boosters at ≥ `BOOSTER_BROKEN_THRESHOLD`
+  (default 6) months. Eligible if banked total ≥ threshold, OR (cold-start) they still hold
+  a ≥6mo tier role, OR already hold it. Persists once granted.
+- **Manual role updates** — `/booster` (self) and `/boostercredit` (a target) reconcile on
+  demand; banking is automatic but role changes are not (the auto sweep was removed).
+- **Role hierarchy required:** the bot's role must sit **above** all tenure roles + the
+  broken-streak role. Administrator does NOT bypass role hierarchy — only the owner does.
 
 ---
 
@@ -375,6 +376,7 @@ Integrations → (bot) → Command Permissions**.
 | `/bulkreset` (`admin link bulk-reset`) | Snr Admin (4)  | Force re-verify entire role. `reason`, `silent` options. |
 | `/linkpanel` (`admin link panel`)   | Snr Admin (4)     | Post the rank-role panel (Add / Update / Remove buttons → `link_btn`/`update_rank_btn`/`unlink_btn`) in current channel. |
 | `/logsetup` (`admin log setup`)     | Snr Admin (4)     | Set staff activity log channel. |
+| `/boostercredit`                    | Snr Admin (4)     | Credit/deduct booster months for past boosting; re-syncs the role. |
 
 > Splitting was a deliberate choice: separate top-level commands let Discord hide a
 > command from roles that can't use it. Tier enforcement is still done in code

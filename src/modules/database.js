@@ -78,6 +78,13 @@ db.exec(`
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+
+  -- Accumulated booster tenure: completed-streak boost time + manual credits (ms).
+  -- Total tenure = banked_ms + the live current streak (now − premiumSince).
+  CREATE TABLE IF NOT EXISTS booster_tenure (
+    discord_id TEXT PRIMARY KEY,
+    banked_ms  INTEGER NOT NULL DEFAULT 0
+  );
 `);
 
 try { db.exec(`ALTER TABLE pending_verifications ADD COLUMN state TEXT`); } catch { /* already exists */ }
@@ -435,6 +442,22 @@ function setSetting(key, value) {
   `).run(key, value);
 }
 
+// ─────────────────────────────────────────────
+// Booster tenure (accumulated boost time, ms)
+// ─────────────────────────────────────────────
+function getBoosterBanked(discordId) {
+  return db.prepare('SELECT banked_ms FROM booster_tenure WHERE discord_id = ?').get(discordId)?.banked_ms ?? 0;
+}
+
+/** Add (or subtract, if negative) ms to a member's banked tenure. Returns the new total ms (>= 0). */
+function addBoosterBanked(discordId, deltaMs) {
+  db.prepare(`
+    INSERT INTO booster_tenure (discord_id, banked_ms) VALUES (?, MAX(0, ?))
+    ON CONFLICT(discord_id) DO UPDATE SET banked_ms = MAX(0, banked_ms + ?)
+  `).run(discordId, deltaMs, deltaMs);
+  return getBoosterBanked(discordId);
+}
+
 /**
  * Sanity check: return any riot_puuid that appears more than once.
  * Should always return [] given the UNIQUE constraint, but catches DB corruption.
@@ -483,6 +506,8 @@ module.exports = {
   // Settings
   getSetting,
   setSetting,
+  getBoosterBanked,
+  addBoosterBanked,
   getDuplicatePuuids,
   // Raw db handle (for advanced queries in admin commands)
   db,
