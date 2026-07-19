@@ -29,6 +29,11 @@ Vercel: https://valorant-oce-utilities.vercel.app
   required"). Click **Reset Timer** on the app's General page periodically or the bot goes
   offline — it has already been auto-stopped once (Jul 2026). If the bot is mysteriously
   down, check this first.
+- **JRMA MCP server**: configured in Claude Code as `jrma` (user scope, `~/.claude.json`,
+  endpoint `https://justrunmy.app/api/mcp` with an `X-User-Identity` header token).
+  Use its tools for restarts/logs/timer instead of browser automation. **Token expires
+  ~19 Aug 2026** — when auth starts failing, get a fresh config from the JRMA portal and
+  update the header.
 - Git push URL: `https://<jrma-user>:<jrma-token>@justrunmy.app/git/r_Kp9b8`
 - Push target branch: `deploy`
 - **JRMA registry is permanently broken** — git-triggered auto-build produces 0-byte images ("No matching nodes"). Do NOT push to `jdr-o75fr96p.justrunmy.app`.
