@@ -22,6 +22,13 @@ Vercel: https://valorant-oce-utilities.vercel.app
 
 ### JRMA Docker details
 - JRMA dashboard: `justrunmy.app/panel/application/35401`
+- The app is named **"Git r_Kp9b8"** in the panel — that IS the bot container (only app on
+  the account; Deployment tab shows image `5amothy/valorant-bot:latest`). The name is a
+  leftover from the git-deploy era.
+- **FREE APP TIMER**: the free tier auto-stops the app every ~3 days ("Manual reset
+  required"). Click **Reset Timer** on the app's General page periodically or the bot goes
+  offline — it has already been auto-stopped once (Jul 2026). If the bot is mysteriously
+  down, check this first.
 - Git push URL: `https://<jrma-user>:<jrma-token>@justrunmy.app/git/r_Kp9b8`
 - Push target branch: `deploy`
 - **JRMA registry is permanently broken** — git-triggered auto-build produces 0-byte images ("No matching nodes"). Do NOT push to `jdr-o75fr96p.justrunmy.app`.
