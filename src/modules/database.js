@@ -220,6 +220,41 @@ function insertRankHistory(discordId, tier, tierName, rr) {
 }
 
 /**
+ * Backfill rank_history from the Riot MMR history (per-game snapshots with
+ * their real timestamps). Only runs when the player has ≤ 1 recorded
+ * snapshot — i.e. a fresh link — so it never duplicates or interleaves with
+ * live poll-loop data. Returns the number of rows inserted.
+ * @param {string} discordId
+ * @param {Array<{tier:number,tierName:string,rr:number,recordedAt:number}>} entries
+ */
+function backfillRankHistory(discordId, entries) {
+  const { c } = db.prepare(
+    'SELECT COUNT(*) AS c FROM rank_history WHERE discord_id = ?',
+  ).get(discordId);
+  if (c > 1 || !entries.length) return 0;
+
+  const insert = db.prepare(
+    'INSERT INTO rank_history (discord_id, tier, tier_name, rr, recorded_at) VALUES (?, ?, ?, ?, ?)',
+  );
+  // Keep any existing (link-time) snapshot; only add strictly older entries.
+  const existing = db.prepare(
+    'SELECT MIN(recorded_at) AS oldest FROM rank_history WHERE discord_id = ?',
+  ).get(discordId);
+  const cutoff = existing?.oldest ?? Infinity;
+
+  let inserted = 0;
+  const run = db.transaction(() => {
+    for (const e of entries) {
+      if (e.recordedAt >= cutoff) continue;
+      insert.run(discordId, e.tier, e.tierName, e.rr, e.recordedAt);
+      inserted++;
+    }
+  });
+  run();
+  return inserted;
+}
+
+/**
  * Get the most recent rank history for a player, returned oldest first.
  * (Inner query grabs the latest N snapshots; outer re-sorts them chronologically.)
  * @param {string} discordId
@@ -522,6 +557,7 @@ module.exports = {
   updateRankCache,
   insertRankHistory,
   getRankHistory,
+  backfillRankHistory,
   getAllLinks,
   getPublicLinks,
   setHidden,

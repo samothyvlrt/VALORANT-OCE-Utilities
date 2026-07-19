@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
-const { getRank, getPlayerStats } = require('../../modules/riot-api');
+const { getRank, getPlayerStats, getMmrHistory } = require('../../modules/riot-api');
 const config = require('../../../config');
 const { scheduleLeaderboardRegen } = require('../../utils/generate-leaderboard');
 const { generateRrGraph } = require('../../utils/rr-graph');
@@ -98,7 +98,19 @@ module.exports = {
     }
 
     // ── Rank history graph ──────────────────────────────────────────────────
-    const history = db.getRankHistory(link.discord_id, 40);
+    let history = db.getRankHistory(link.discord_id, 40);
+    // Fresh link → backfill per-game snapshots from Riot MMR history so the
+    // graph shows immediately instead of waiting for the poll loop.
+    if (history.length < 2) {
+      try {
+        const mmr = await getMmrHistory(link.riot_puuid, link.region);
+        if (db.backfillRankHistory(link.discord_id, mmr) > 0) {
+          history = db.getRankHistory(link.discord_id, 40);
+        }
+      } catch (err) {
+        console.error('[profile] rank history backfill failed:', err.message);
+      }
+    }
     let graphFile = null;
     if (history.length >= 2) {
       try {

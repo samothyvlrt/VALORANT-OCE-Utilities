@@ -207,6 +207,39 @@ async function getRank(name, tag, region = config.riot.defaultRegion) {
   }
 }
 
+/**
+ * Fetch a player's competitive MMR history (one entry per ranked game).
+ * Used to backfill rank_history for the /profile RR graph so newly linked
+ * players get a graph immediately instead of waiting for the poll loop to
+ * accumulate snapshots.
+ *
+ * Returns [{ tier, tierName, rr, recordedAt }] oldest-first, ranked games
+ * only (tier ≥ 3), consecutive duplicates removed. [] on error/no data.
+ */
+async function getMmrHistory(puuid, region = config.riot.defaultRegion) {
+  try {
+    const res = await henrik.get(`/valorant/v1/by-puuid/mmr-history/${region}/${puuid}`);
+    const raw = res.data?.data ?? [];
+
+    const entries = raw
+      .filter((e) => (e.currenttier ?? 0) >= 3 && e.date_raw)
+      .map((e) => ({
+        tier:       e.currenttier,
+        tierName:   e.currenttierpatched ?? 'Unknown',
+        rr:         e.ranking_in_tier ?? 0,
+        recordedAt: e.date_raw * 1000,
+      }))
+      .sort((a, b) => a.recordedAt - b.recordedAt);
+
+    return entries.filter((e, i) =>
+      i === 0 || e.tier !== entries[i - 1].tier || e.rr !== entries[i - 1].rr,
+    );
+  } catch (err) {
+    console.error('[riot-api] getMmrHistory error:', err.response?.status, err.message);
+    return [];
+  }
+}
+
 // ─────────────────────────────────────────────
 // Player Stats (last 20 matches)
 // ─────────────────────────────────────────────
@@ -430,6 +463,7 @@ module.exports = {
   getAccount,
   getLatestMatchTimestamp,
   getRank,
+  getMmrHistory,
   getPlayerStats,
   getMatchHistory,
   getLastMatch,
