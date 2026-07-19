@@ -8,6 +8,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const db    = require('../../modules/database');
+const { scheduleLeaderboardRegen } = require('../../utils/generate-leaderboard');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -26,6 +27,7 @@ module.exports = {
 
     const nowHidden = !link.hidden;
     db.setHidden(interaction.user.id, nowHidden);
+    scheduleLeaderboardRegen();
 
     if (nowHidden) {
       return interaction.editReply({

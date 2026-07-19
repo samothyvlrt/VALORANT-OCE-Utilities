@@ -56,10 +56,22 @@ module.exports = {
     const channel = oldState.channel;
     if (!channel) return;
 
+    // If the VC is now empty, auto-unlock immediately — no grace period needed.
+    if (channel.members.size === 0) {
+      vcLock.unlock(leftId);
+      try {
+        await channel.permissionOverwrites.delete(channel.guild.roles.everyone, 'Auto-unlock — all members left locked VC');
+        console.log(`[vc-lock] Auto-unlocked ${channel.name} — all members left`);
+      } catch (err) {
+        console.error(`[vc-lock] Auto-unlock failed for ${channel.name}:`, err.message);
+      }
+      return;
+    }
+
+    // Still members in the VC — start grace timer so they can reconnect.
     console.log(`[vc-lock] ${userId} left locked channel ${channel.name} — starting 10-min grace timer`);
 
     vcLock.startTimer(leftId, userId, async () => {
-      // Grace period expired — remove their Connect overwrite
       vcLock.removeOverwrite(leftId, userId);
       try {
         await channel.permissionOverwrites.delete(userId, 'Left locked VC — grace period expired');

@@ -1,7 +1,7 @@
 /**
  * /boostercredit — staff: credit (or deduct) booster months for a member's
  * past boosting the bot never observed. Updates their banked tenure + role.
- * Minimum tier: Senior Admin.
+ * Minimum tier: Admin.
  */
 const { SlashCommandBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
@@ -24,7 +24,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    if (!(await requireTier(interaction, LEVELS.SNR_ADMIN))) return;
+    if (!(await requireTier(interaction, LEVELS.ADMIN))) return;
 
     await interaction.deferReply({ ephemeral: true });
 

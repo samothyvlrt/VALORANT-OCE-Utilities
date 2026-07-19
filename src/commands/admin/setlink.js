@@ -8,6 +8,7 @@ const db = require('../../modules/database');
 const { adminForceLink, VerificationError } = require('../../modules/verification');
 const { getRank, RiotApiError } = require('../../modules/riot-api');
 const { requireTier, LEVELS } = require('../../utils/permissions');
+const { scheduleLeaderboardRegen } = require('../../utils/generate-leaderboard');
 const { logAdminAction } = require('../../utils/activity-log');
 const { assignRankRole } = require('../../utils/roles');
 const config = require('../../../config');
@@ -71,6 +72,7 @@ module.exports = {
         const rank = await getRank(result.riotName, result.riotTag, result.region);
         if (rank) {
           db.updateRankCache(target.id, rank);
+          scheduleLeaderboardRegen();
           rankStr = rank.tier > 0 ? `${rank.tierName} — ${rank.rr} RR` : 'Unranked';
           try {
             const guild  = interaction.guild ?? await interaction.client.guilds.fetch(config.discord.guildId);

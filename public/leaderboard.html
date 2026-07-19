@@ -10,8 +10,8 @@
 
     :root {
       --red:        #FF4655;
-      --red-dim:    rgba(255,70,85,0.10);
-      --red-border: rgba(255,70,85,0.30);
+      --red-dim:    rgba(255,70,85,0.08);
+      --red-border: rgba(255,70,85,0.28);
       --bg:         #0a0a0c;
       --surface:    #111214;
       --surface-2:  #16191e;
@@ -53,11 +53,7 @@
     .nav-cta:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 rgba(255,70,85,0.5); }
 
     /* ── PAGE ── */
-    .page {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 72px 24px 100px;
-    }
+    .page { max-width: 960px; margin: 0 auto; padding: 72px 24px 100px; }
 
     /* ── HEADER ── */
     .eyebrow {
@@ -70,14 +66,29 @@
 
     h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: var(--text-bright); letter-spacing: -0.035em; line-height: 1.04; margin-bottom: 14px; }
     h1 em { font-style: normal; color: var(--red); }
-
     .header-sub { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 40px; }
 
-    /* ── FILTER TABS ── */
-    .filter-bar {
-      display: flex; gap: 6px; flex-wrap: wrap;
-      margin-bottom: 28px;
+    /* ── SEARCH ── */
+    .search-wrap {
+      position: relative; margin-bottom: 16px;
     }
+    .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+      display: flex; align-items: center;
+    }
+    #search {
+      width: 100%; background: var(--surface); border: 1px solid var(--border-mid);
+      border-radius: var(--radius); padding: 12px 14px 12px 40px;
+      font-size: 14px; color: var(--text-bright); outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+    #search::placeholder { color: var(--text-muted); }
+    #search:focus { border-color: var(--red-border); background: var(--surface-2); }
+
+    /* ── FILTER TABS ── */
+    .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
     .filter-btn {
       padding: 7px 14px; border-radius: var(--radius-sm);
       font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
@@ -92,94 +103,123 @@
     /* ── META ── */
     .meta-row {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; color: var(--text-muted); margin-bottom: 16px;
+      font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
       flex-wrap: wrap; gap: 8px;
     }
     .meta-count strong { color: var(--text-mid); }
 
-    /* ── PLAYER ROWS ── */
-    .player-list { display: flex; flex-direction: column; gap: 8px; }
+    /* ── TABLE ── */
+    .lb-table { width: 100%; }
 
-    /* Entry animation — rows start invisible, observer triggers .visible */
+    /* Column header row */
+    .lb-head {
+      display: grid;
+      grid-template-columns: 40px 10px 1fr 1fr 160px;
+      gap: 0 16px;
+      padding: 0 16px 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    /* Player row */
     .player-row {
-      display: flex; align-items: center; gap: 16px;
+      display: grid;
+      grid-template-columns: 40px 10px 1fr 1fr 160px;
+      gap: 0 16px;
+      align-items: center;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px 20px;
+      padding: 14px 16px;
+      margin-bottom: 6px;
       transition: border-color 0.15s, background 0.15s, transform 0.12s,
-                  opacity 0.4s ease, translate 0.4s ease;
-      position: relative;
-      /* start hidden for scroll-in effect */
-      opacity: 0;
-      translate: 0 18px;
+                  opacity 0.35s ease, translate 0.35s ease;
+      opacity: 0; translate: 0 16px;
+      cursor: default;
     }
-    .player-row.visible {
-      opacity: 1;
-      translate: 0 0;
-    }
-    .player-row:hover {
-      border-color: var(--border-mid);
-      background: var(--surface-2);
-      transform: translateX(3px);
-    }
-    .player-row.highlighted {
-      border-color: var(--red-border);
-      background: var(--red-dim);
-    }
+    .player-row.visible { opacity: 1; translate: 0 0; }
+    .player-row:hover { border-color: var(--border-mid); background: var(--surface-2); transform: translateX(2px); }
+    .player-row.highlighted { border-color: var(--red-border); background: var(--red-dim); }
 
-    .pos {
-      font-size: 13px; font-weight: 700; color: var(--text-muted);
-      min-width: 28px; text-align: right; font-variant-numeric: tabular-nums;
-      flex-shrink: 0;
+    /* Col: position */
+    .col-pos {
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      font-variant-numeric: tabular-nums; text-align: right;
+      font-family: 'Courier New', monospace;
     }
-    .pos.top3 { color: var(--text-mid); }
+    .col-pos.top3 { color: var(--text-mid); }
 
+    /* Col: rank dot */
     .rank-dot {
       width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
       transition: transform 0.2s;
     }
     .player-row:hover .rank-dot { transform: scale(1.4); }
 
+    /* Col: player (riot name#tag) */
+    .col-player { min-width: 0; }
     .player-name {
-      flex: 1; font-size: 15px; font-weight: 700; color: var(--text-bright);
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 14px; font-weight: 700; color: var(--text-bright);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .player-tag { font-weight: 500; color: var(--text-mid); }
 
-    .player-right {
-      display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+    /* Top-3 expanded stats rows */
+    .top-stats {
+      display: flex; flex-direction: column; gap: 4px;
+      margin-top: 6px;
     }
-    .tier-label {
-      font-size: 13px; color: var(--text-muted); font-weight: 500; white-space: nowrap;
+    .stats-row {
+      display: flex; align-items: center; gap: 8px;
     }
-    .lb-pos { color: var(--text-muted); margin-left: 2px; }
+    .stat-chip {
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+    }
+    .stat-val { font-weight: 700; }
+    .stat-sep { color: var(--text-muted); font-size: 10px; }
+    .agent-chip {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+      font-family: 'Courier New', monospace; color: var(--text-mid);
+    }
+    .top-row { padding: 18px 16px; }
+    .top-row .player-name { font-size: 15px; }
+    .top-row .col-pos { font-size: 14px; }
+    .pos-1 { color: #FFD63A !important; }
+    .pos-2 { color: #b0c0d8 !important; }
+    .pos-3 { color: #c8864a !important; }
 
-    .rr {
+    /* Col: discord */
+    .col-discord {
+      font-size: 13px; color: var(--text); overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+    }
+    .discord-handle { color: var(--text-mid); }
+
+    /* Col: rank */
+    .col-rank { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 0; }
+    .rank-tier { font-size: 13px; font-weight: 600; color: var(--text-mid); white-space: nowrap; }
+    .rank-rr {
       font-size: 15px; font-weight: 800; color: var(--red);
-      font-variant-numeric: tabular-nums; min-width: 64px; text-align: right;
+      font-variant-numeric: tabular-nums; white-space: nowrap;
+      font-family: 'Courier New', monospace;
     }
-
-    /* Share button */
-    .share-btn {
-      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-      opacity: 0; transition: opacity 0.15s;
-      background: none; border: none; cursor: pointer;
-      color: var(--text-muted); padding: 4px 2px; line-height: 0;
+    .rank-lb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .rr-change {
+      font-size: 11px; font-weight: 700; font-family: 'Courier New', monospace;
+      padding: 1px 5px; border-radius: 3px;
     }
-    .player-row:hover .share-btn { opacity: 1; }
-    .share-btn:hover { color: var(--text-bright); }
-
-    /* hide RR when share button is visible so they don't overlap */
-    .player-row:hover .rr { opacity: 0; }
+    .rr-up   { color: #3DD68C; background: rgba(61,214,140,0.12); }
+    .rr-down { color: #FF4655; background: rgba(255,70,85,0.12); }
 
     /* ── RANK DIVIDER ── */
     .rank-divider {
       display: flex; align-items: center; gap: 12px;
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-muted); margin: 8px 0 4px;
+      color: var(--text-muted); margin: 12px 0 8px;
       opacity: 0; translate: 0 10px;
-      transition: opacity 0.4s ease, translate 0.4s ease;
+      transition: opacity 0.35s ease, translate 0.35s ease;
     }
     .rank-divider.visible { opacity: 1; translate: 0 0; }
     .rank-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -205,10 +245,16 @@
     .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
     .footer-links a:hover { color: var(--red); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 700px) {
       nav { padding: 16px 20px; }
       .page { padding: 48px 16px 80px; }
-      .tier-label { display: none; }
+      /* On mobile: hide discord col, collapse rank to one line */
+      .lb-head  { grid-template-columns: 32px 10px 1fr 100px; }
+      .lb-head .head-discord { display: none; }
+      .player-row { grid-template-columns: 32px 10px 1fr 100px; }
+      .col-discord { display: none; }
+      .col-rank { align-items: flex-end; }
+      .rank-tier { font-size: 11px; }
       footer { padding: 16px 20px; flex-direction: column; }
     }
   </style>
@@ -239,6 +285,13 @@
       Immortal+ show their live leaderboard position.
     </p>
 
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input id="search" type="text" placeholder="Search by Riot name or Discord…" autocomplete="off" spellcheck="false">
+    </div>
+
     <div class="filter-bar" id="filter-bar">
       <button class="filter-btn active" data-group="all">All</button>
       <button class="filter-btn" data-group="immortal"><span class="filter-dot" style="background:#BF3136"></span>Immortal+</button>
@@ -253,7 +306,7 @@
       <span id="meta-updated" style="font-size:12px;color:var(--text-muted);font-style:italic"></span>
     </div>
 
-    <div class="player-list" id="player-list">
+    <div class="lb-table" id="lb-table">
       <div class="loading">
         Loading<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
       </div>
@@ -271,6 +324,24 @@
   </footer>
 
   <script>
+    const POS_CLASS = { 0: 'pos-1', 1: 'pos-2', 2: 'pos-3' };
+
+    function kdColor(kd) {
+      const v = parseFloat(kd);
+      if (v >= 2.0)  return '#FF4655';
+      if (v >= 1.5)  return '#D4AF51';
+      if (v >= 1.25) return '#3AB8B3';
+      if (v >= 1.0)  return 'var(--text-mid)';
+      return 'var(--text-muted)';
+    }
+    function wrColor(wr) {
+      if (wr >= 63) return '#FF4655';
+      if (wr >= 58) return '#D4AF51';
+      if (wr >= 53) return '#3AB8B3';
+      if (wr >= 48) return 'var(--text-mid)';
+      return 'var(--text-muted)';
+    }
+
     const TIER_COLORS = {
       3:'#594134',4:'#594134',5:'#594134',
       6:'#9E6230',7:'#9E6230',8:'#9E6230',
@@ -282,7 +353,6 @@
       24:'#BF3136',25:'#BF3136',26:'#BF3136',
       27:'#FFD63A',
     };
-
     const TIER_GROUP = {
       3:'iron',4:'iron',5:'iron',
       6:'bronze',7:'bronze',8:'bronze',
@@ -294,8 +364,6 @@
       24:'immortal',25:'immortal',26:'immortal',
       27:'radiant',
     };
-
-    // Group labels — show a divider when the rank group changes
     const GROUP_LABEL = {
       radiant:'Radiant', immortal:'Immortal', ascendant:'Ascendant',
       diamond:'Diamond', platinum:'Platinum', gold:'Gold',
@@ -304,22 +372,22 @@
 
     let allPlayers  = [];
     let activeGroup = 'all';
+    let searchQuery = '';
 
     const urlParams   = new URLSearchParams(location.search);
     const highlightId = urlParams.get('player');
 
-    // ── Scroll-in observer ──────────────────────────────────────────────
+    // ── Scroll-in observer ──────────────────────────────────────────────────
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((e, i) => {
         if (e.isIntersecting) {
-          // Stagger rows that enter at the same time
-          setTimeout(() => e.target.classList.add('visible'), i * 40);
+          setTimeout(() => e.target.classList.add('visible'), i * 35);
           observer.unobserve(e.target);
         }
       });
-    }, { threshold: 0.08 });
+    }, { threshold: 0.05 });
 
-    // ── Fetch ───────────────────────────────────────────────────────────
+    // ── Fetch ───────────────────────────────────────────────────────────────
     async function loadLeaderboard() {
       try {
         const res  = await fetch('/api/leaderboard');
@@ -329,7 +397,7 @@
         if (data.updatedAt) {
           const diff = Math.floor((Date.now() - new Date(data.updatedAt)) / 1000);
           const rel  = diff < 60 ? 'just now'
-            : diff < 3600   ? Math.floor(diff / 60) + 'm ago'
+            : diff < 3600 ? Math.floor(diff / 60) + 'm ago'
             : Math.floor(diff / 3600) + 'h ago';
           document.getElementById('meta-updated').textContent = 'Updated ' + rel;
         }
@@ -343,93 +411,147 @@
           });
         }
       } catch {
-        document.getElementById('player-list').innerHTML =
+        document.getElementById('lb-table').innerHTML =
           '<div class="empty-state">Could not load leaderboard.<p>The bot may not have run yet — try again soon.</p></div>';
       }
     }
 
-    // ── Render ───────────────────────────────────────────────────────────
+    // ── Render ──────────────────────────────────────────────────────────────
     function render() {
-      const list = document.getElementById('player-list');
-      const meta = document.getElementById('meta-count');
+      const table = document.getElementById('lb-table');
+      const meta  = document.getElementById('meta-count');
 
-      const players = activeGroup === 'all'
+      let players = activeGroup === 'all'
         ? allPlayers
         : allPlayers.filter(p =>
-            activeGroup === 'immortal'
-              ? p.tier >= 24
-              : TIER_GROUP[p.tier] === activeGroup
+            activeGroup === 'immortal' ? p.tier >= 24 : TIER_GROUP[p.tier] === activeGroup
           );
 
-      meta.innerHTML = players.length === allPlayers.length
-        ? `<strong>${allPlayers.length}</strong> ranked players`
-        : `<strong>${players.length}</strong> of ${allPlayers.length} players`;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        players = players.filter(p =>
+          p.riotName.toLowerCase().includes(q) ||
+          p.riotTag.toLowerCase().includes(q) ||
+          (p.discordName && p.discordName.toLowerCase().includes(q))
+        );
+      }
+
+      const total = allPlayers.filter(p =>
+        activeGroup === 'all' ? true :
+        activeGroup === 'immortal' ? p.tier >= 24 : TIER_GROUP[p.tier] === activeGroup
+      ).length;
+
+      if (searchQuery) {
+        meta.innerHTML = `<strong>${players.length}</strong> result${players.length !== 1 ? 's' : ''} for "${esc(searchQuery)}"`;
+      } else {
+        meta.innerHTML = players.length === allPlayers.length
+          ? `<strong>${allPlayers.length}</strong> ranked players`
+          : `<strong>${players.length}</strong> of ${allPlayers.length} players`;
+      }
 
       if (!allPlayers.length) {
-        list.innerHTML = '<div class="empty-state">No leaderboard data yet.<p>The bot publishes rankings on startup and every 6 hours.</p></div>';
+        table.innerHTML = '<div class="empty-state">No leaderboard data yet.<p>The bot publishes rankings on startup and every 6 hours.</p></div>';
         return;
       }
       if (!players.length) {
-        list.innerHTML = '<div class="empty-state">No players in this tier yet.</div>';
+        table.innerHTML = '<div class="empty-state">No players found.</div>';
         return;
       }
 
+      const html = [
+        `<div class="lb-head">
+          <span></span>
+          <span></span>
+          <span>Player</span>
+          <span class="head-discord">Discord</span>
+          <span style="text-align:right">Rank</span>
+        </div>`,
+      ];
+
       let lastGroup = null;
-      const html    = [];
 
       players.forEach((p, i) => {
-        const group   = TIER_GROUP[p.tier];
-        const color   = TIER_COLORS[p.tier] ?? '#555';
-        const id      = `${p.riotName}#${p.riotTag}`;
-        const isHigh  = highlightId && id === highlightId;
-        const rrLabel = p.tier >= 24 ? `${p.displayRr} RR` : `${p.rr} RR`;
-        const lbBit   = p.leaderboardRank ? `<span class="lb-pos">· #${p.leaderboardRank}</span>` : '';
-        const posStr  = String(i + 1).padStart(2, '0');
+        const group  = TIER_GROUP[p.tier];
+        const color  = TIER_COLORS[p.tier] ?? '#555';
+        const riotId = `${p.riotName}#${p.riotTag}`;
+        const isHigh = highlightId && riotId === highlightId;
+        const posStr = String(i + 1).padStart(2, '0');
+        const rrText = p.tier >= 24 ? `${p.displayRr} RR` : `${p.rr} RR`;
 
-        // Rank group divider
-        if (group !== lastGroup && GROUP_LABEL[group]) {
+        if (group !== lastGroup && GROUP_LABEL[group] && !searchQuery) {
           html.push(`<div class="rank-divider">${GROUP_LABEL[group]}</div>`);
           lastGroup = group;
         }
 
-        html.push(`<div class="player-row${isHigh ? ' highlighted' : ''}" data-id="${esc(id)}">
-          <span class="pos${i < 3 ? ' top3' : ''}">${posStr}</span>
-          <span class="rank-dot" style="background:${color};box-shadow:0 0 7px ${color}66"></span>
-          <span class="player-name">${esc(p.riotName)}<span class="player-tag">#${esc(p.riotTag)}</span></span>
-          <div class="player-right">
-            <span class="tier-label">${esc(p.tierName)}${lbBit}</span>
-            <span class="rr">${rrLabel}</span>
+        const discordCol = p.discordName
+          ? `<span class="discord-handle">@${esc(p.discordName)}</span>`
+          : `<span style="color:var(--text-muted);font-size:12px">—</span>`;
+
+        const lbLine = p.leaderboardRank
+          ? `<span class="rank-lb">Rank #${p.leaderboardRank}</span>`
+          : '';
+        const changeBadge = (p.rrChange != null)
+          ? `<span class="rr-change ${p.rrChange >= 0 ? 'rr-up' : 'rr-down'}">${p.rrChange >= 0 ? '+' : ''}${p.rrChange}</span>`
+          : '';
+
+        const isTop3 = i < 3 && !searchQuery;
+        const posClass = isTop3 ? ` ${POS_CLASS[i]}` : (i < 3 ? ' top3' : '');
+
+        // Build expanded stats row for top 3
+        let statsRow = '';
+        if (isTop3 && p.matchStats) {
+          const { kd, winRate, topAgents } = p.matchStats;
+          const agentChips = (topAgents || []).map((a, ai) => {
+            const opacity = ai === 0 ? 1 : ai === 1 ? 0.65 : 0.4;
+            return `<span class="agent-chip" style="opacity:${opacity}">${esc(a.name)} <span class="stat-val" style="color:var(--text-muted)">${a.playPct}%</span></span>`;
+          }).join('<span class="stat-sep">·</span>');
+          statsRow = `<div class="top-stats">
+            <div class="stats-row">
+              <span class="stat-chip">K/D <span class="stat-val" style="color:${kdColor(kd)}">${esc(kd)}</span></span>
+              <span class="stat-sep">·</span>
+              <span class="stat-chip">WR <span class="stat-val" style="color:${wrColor(winRate)}">${winRate}%</span></span>
+            </div>
+            ${agentChips ? `<div class="stats-row">${agentChips}</div>` : ''}
+          </div>`;
+        }
+
+        html.push(`<div class="player-row${isTop3 ? ' top-row' : ''}${isHigh ? ' highlighted' : ''}" data-id="${esc(riotId)}">
+          <span class="col-pos${posClass}">${posStr}</span>
+          <span class="rank-dot" style="background:${color};box-shadow:0 0 6px ${color}55"></span>
+          <div class="col-player">
+            <div class="player-name">${esc(p.riotName)}<span class="player-tag">#${esc(p.riotTag)}</span></div>
+            ${statsRow}
           </div>
-          <button class="share-btn" onclick="sharePlayer(event,'${esc(id)}')" title="Copy link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-          </button>
+          <div class="col-discord">${discordCol}</div>
+          <div class="col-rank">
+            <span class="rank-tier">${esc(p.tierName)}</span>
+            <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+              <span class="rank-rr">${rrText}</span>${changeBadge}
+            </div>
+            ${lbLine}
+          </div>
         </div>`);
       });
 
-      list.innerHTML = html.join('');
-
-      // Attach scroll observer to every row + divider
-      list.querySelectorAll('.player-row, .rank-divider').forEach(el => observer.observe(el));
-    }
-
-    // ── Share ───────────────────────────────────────────────────────────
-    function sharePlayer(e, id) {
-      e.stopPropagation();
-      const url = `${location.origin}/leaderboard?player=${encodeURIComponent(id)}`;
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = e.currentTarget;
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3DD68C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-        setTimeout(() => {
-          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
-        }, 1500);
-      });
+      table.innerHTML = html.join('');
+      table.querySelectorAll('.player-row, .rank-divider').forEach(el => observer.observe(el));
     }
 
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Filter ──────────────────────────────────────────────────────────
+    // ── Search ──────────────────────────────────────────────────────────────
+    let searchTimer;
+    document.getElementById('search').addEventListener('input', e => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        searchQuery = e.target.value.trim();
+        render();
+      }, 120);
+    });
+
+    // ── Filter ──────────────────────────────────────────────────────────────
     document.getElementById('filter-bar').addEventListener('click', e => {
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;

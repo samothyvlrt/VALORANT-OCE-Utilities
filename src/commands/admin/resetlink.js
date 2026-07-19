@@ -6,6 +6,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
 const { requireTier, LEVELS } = require('../../utils/permissions');
+const { scheduleLeaderboardRegen } = require('../../utils/generate-leaderboard');
 const { logAdminAction } = require('../../utils/activity-log');
 
 module.exports = {
@@ -39,6 +40,7 @@ module.exports = {
     }
 
     db.removeLink(target.id);
+    scheduleLeaderboardRegen();
     db.audit({
       action: 'ADMIN_LINK_RESET',
       targetDiscordId: target.id,

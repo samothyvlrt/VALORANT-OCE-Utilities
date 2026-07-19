@@ -77,6 +77,11 @@ function cancelTimer(channelId, userId) {
   timers.delete(key);
 }
 
+/** Number of members still tracked with an Allow Connect overwrite in the channel. */
+function overwriteCount(channelId) {
+  return lockedChannels.get(channelId)?.size ?? 0;
+}
+
 module.exports = {
   GRACE_MS,
   isLocked,
@@ -87,4 +92,5 @@ module.exports = {
   removeOverwrite,
   startTimer,
   cancelTimer,
+  overwriteCount,
 };

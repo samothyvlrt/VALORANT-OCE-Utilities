@@ -8,6 +8,7 @@ const { getRank, getAccount, RiotApiError } = require('../modules/riot-api');
 const { startChallenge, VerificationError } = require('../modules/verification');
 const { isRestricted, isBypass, ALWAYS_ALLOWED } = require('../utils/permissions');
 const { logAdminAction } = require('../utils/activity-log');
+const { scheduleLeaderboardRegen } = require('../utils/generate-leaderboard');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -195,6 +196,7 @@ module.exports = {
 
         // Update rank cache
         db.updateRankCache(link.discord_id, rank);
+        scheduleLeaderboardRegen();
 
         // Assign rank role
         try {

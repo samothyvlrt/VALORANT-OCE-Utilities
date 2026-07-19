@@ -239,6 +239,99 @@
   <div class="timeline">
     <div class="no-results" id="no-results">No updates match that filter.</div>
 
+    <!-- ── 29 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">29 June 2026</div>
+
+      <div class="entry" data-tags="data ux">
+        <div class="entry-top">
+          <span class="entry-title">Live RR updates on the web leaderboard</span>
+          <div class="entry-tags">
+            <span class="tag tag-data">Data</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">The bot now polls for rank changes in the background, keeping the web leaderboard current without requiring manual refreshes.
+          <ul>
+            <li>Rank changes are detected within approximately one sweep cycle of a game ending and reflected on the leaderboard within seconds.</li>
+            <li>A green <strong>+RR</strong> or red <strong>−RR</strong> badge appears next to a player's RR for 30 minutes after a game is detected, showing the result at a glance.</li>
+            <li>Only recently-active ranked accounts are polled, keeping API usage efficient.</li>
+            <li>Rate-limit responses from the Riot API trigger an automatic 60-second backoff before the poll loop resumes.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="ux">
+        <div class="entry-top">
+          <span class="entry-title">VC lock auto-unlocks when the channel empties</span>
+          <div class="entry-tags">
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <p class="entry-desc">A locked voice channel now automatically unlocks the moment the last member leaves — no need to run <code>/unlock</code> if the session is over and nobody's coming back. The 10-minute reconnect grace period still applies while there are other members in the channel.</p>
+      </div>
+
+    </div>
+
+    <!-- ── 28 June 2026 ── -->
+    <div class="date-group">
+      <div class="date-label">28 June 2026</div>
+
+      <div class="entry" data-tags="ux data">
+        <div class="entry-top">
+          <span class="entry-title">Web leaderboard reworked — search, Discord column, top-3 stats</span>
+          <div class="entry-tags">
+            <span class="tag tag-ux">UX</span>
+            <span class="tag tag-data">Data</span>
+          </div>
+        </div>
+        <div class="entry-desc">The public leaderboard at <a href="/leaderboard" style="color:var(--red)">valorant-oce-utilities.vercel.app/leaderboard</a> has been significantly redesigned.
+          <ul>
+            <li>New column layout: position · Riot name · Discord username · Rank (tier / RR / leaderboard position for Immortal+).</li>
+            <li>Live search bar — filter by Riot name, tag, or Discord username instantly.</li>
+            <li>Top 3 rows display expanded stats from their competitive history: K/D, win rate, and top 3 most-played agents with play percentages. K/D and WR are colour-coded by performance tier.</li>
+            <li>Leaderboard updates within seconds of any rank change, link, unlink, or privacy toggle.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="commands">
+        <div class="entry-top">
+          <span class="entry-title">/booster and /boostercredit — server booster tenure roles</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+          </div>
+        </div>
+        <div class="entry-desc">Members who boost the server now earn milestone roles based on their accumulated boost time rather than just their current streak.
+          <ul>
+            <li><strong>/booster</strong> — shows your total tenure (past streaks + current streak), your active milestone role, and how far you are from the next one.</li>
+            <li><strong>/boostercredit</strong> (Admin+) — credits or deducts months of banked tenure for a member, then immediately re-syncs their role. Used to grandfather in boosting that occurred before the bot was live.</li>
+            <li>When a boost expires, the streak is banked automatically so tenure accumulates correctly over time.</li>
+            <li>Members who reach 6+ months total and then stop boosting retain a permanent loyalty role.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry" data-tags="commands ux">
+        <div class="entry-top">
+          <span class="entry-title">/lfg — Looking for group posts with live VC updates</span>
+          <div class="entry-tags">
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
+          </div>
+        </div>
+        <div class="entry-desc">Run <code>/lfg</code> in a looking-for-group channel while in a Comp or Squad voice channel to post a party listing.
+          <ul>
+            <li>Supports Competitive, Premier, and Casual modes — rank or division fields appear based on mode.</li>
+            <li>Posts include a <strong>Join</strong> button that deep-links directly into your voice channel.</li>
+            <li>Member count updates live as people join or leave your VC. When the channel empties, the post automatically expires.</li>
+            <li>Running <code>/lfg</code> outside a Comp or Squad VC posts a minimal listing (no Join button, not tracked).</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
     <!-- ── 23 June 2026 (2) ── -->
     <div class="date-group">
       <div class="date-label">23 June 2026</div>
@@ -247,8 +340,8 @@
         <div class="entry-top">
           <span class="entry-title">Staff commands reorganised into a role-based hierarchy</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag tag-admin">Admin</span>
+            <span class="tag tag-commands">Commands</span>
           </div>
         </div>
         <p class="entry-desc">The single <code>/admin</code> command has been split into focused, standalone staff commands such as <code>/lookup</code>, <code>/resetlink</code>, and <code>/serverstats</code>. Each one is gated to the appropriate staff role and hidden from members who can't use it, with senior roles inheriting everything available to the roles below them. This makes staff permissions clearer and removes accidental access.</p>
@@ -258,7 +351,7 @@
         <div class="entry-top">
           <span class="entry-title">Restricted members limited to voice-channel commands</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+            <span class="tag tag-admin">Admin</span>
           </div>
         </div>
         <p class="entry-desc">Members with the restricted role can now only use <code>/lock</code> and <code>/unlock</code>. Every other command, including account linking, is blocked for them.</p>
@@ -274,7 +367,7 @@
         <div class="entry-top">
           <span class="entry-title">Bot hosting migrated from JRMA registry to Docker Hub</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-infra)20;color:var(--tag-infra);border-color:var(--tag-infra)40">infra</span>
+            <span class="tag tag-infra">Infra</span>
           </div>
         </div>
         <p class="entry-desc">JRMA's internal container registry is permanently broken — auto-builds produce 0-byte images. The bot now deploys via Docker Hub, built locally with <code>--platform linux/amd64</code> to match JRMA's AMD64 Linux environment. JRMA is configured to pull from Docker Hub on restart.</p>
@@ -284,7 +377,7 @@
         <div class="entry-top">
           <span class="entry-title">Switched to global slash commands — removed guild command duplicates</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-infra)20;color:var(--tag-infra);border-color:var(--tag-infra)40">infra</span>
+            <span class="tag tag-infra">Infra</span>
           </div>
         </div>
         <p class="entry-desc">Guild-scoped commands were creating duplicates alongside global commands. All guild commands have been cleared and the bot now registers globally only — commands are consistent across all servers and there are no duplicate entries in the command list.</p>
@@ -294,8 +387,8 @@
         <div class="entry-top">
           <span class="entry-title">/admin link panel — hardcoded user guide, removed custom title/description options</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-admin">Admin</span>
           </div>
         </div>
         <p class="entry-desc">The panel command no longer accepts <code>title</code> or <code>description</code> options. It now posts a concise, hardcoded embed listing the five user-facing commands — <code>/link</code>, <code>/profile</code>, <code>/leaderboard</code>, <code>/privacy</code>, and <code>/unlink</code> — each with a one-line description.</p>
@@ -311,8 +404,8 @@
         <div class="entry-top">
           <span class="entry-title">/privacy — hide your account from the public leaderboard</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <p class="entry-desc">Users can now run <code>/privacy</code> to toggle their visibility on <code>/leaderboard</code>. Hidden accounts are excluded from the ranked list but still counted in the rank distribution chart. Admins can see all accounts via <code>/admin link list</code> (hidden entries marked 🙈) and <code>/admin stats</code>.</p>
@@ -322,8 +415,8 @@
         <div class="entry-top">
           <span class="entry-title">/profile is now self-only with an optional public toggle</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <p class="entry-desc"><code>/profile</code> no longer accepts a <code>user</code> option — it only shows your own linked account. Add <code>public: True</code> to post it visibly in the channel (handy for showing off your rank). Private by default.</p>
@@ -333,7 +426,7 @@
         <div class="entry-top">
           <span class="entry-title">Region option removed from /link and /admin link set</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
+            <span class="tag tag-commands">Commands</span>
           </div>
         </div>
         <p class="entry-desc">This server is OCE/AP only. The region selector has been removed from <code>/link</code> and <code>/admin link set</code> — all accounts are registered to the AP region automatically.</p>
@@ -343,7 +436,7 @@
         <div class="entry-top">
           <span class="entry-title">Fixed rank role assignments — Radiant was mapping to Unranked</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+            <span class="tag tag-admin">Admin</span>
           </div>
         </div>
         <p class="entry-desc">Rank role assignments and <code>/admin stats</code> were using incorrect tier number ranges (off by 2 from the Valorant API values). Radiant (tier 27) was being mapped to Unranked. All ranges are now correct — re-run <code>/admin link set</code> for any already-linked members to refresh their roles.</p>
@@ -358,8 +451,8 @@
         <div class="entry-top">
           <span class="entry-title">Rank distribution chart in /leaderboard</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <p class="entry-desc">The /leaderboard embed now includes a 1040×160px rank distribution bar chart (rendered at 2× resolution) showing all 25 tiers. When your account is linked, your tier is highlighted with a white ring and dimmed surroundings, plus a "better than X% of the server" stat in your tier colour.</p>
@@ -369,8 +462,8 @@
         <div class="entry-top">
           <span class="entry-title">Accurate cumulative RR display for Immortal+</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <p class="entry-desc">Immortal 1/2/3 and Radiant players now display their total cumulative RR above Immortal 1 (0 RR). Immortal 2 shows 100+RR, Immortal 3 shows 200+RR, and Radiant shows their actual total as returned by the API — confirmed accurate against live accounts.</p>
@@ -380,8 +473,8 @@
         <div class="entry-top">
           <span class="entry-title">Leaderboard sort fixed for Immortal+</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-commands)20;color:var(--tag-commands);border-color:var(--tag-commands)40">commands</span>
-            <span class="tag" style="background:var(--tag-ux)20;color:var(--tag-ux);border-color:var(--tag-ux)40">ux</span>
+            <span class="tag tag-commands">Commands</span>
+            <span class="tag tag-ux">UX</span>
           </div>
         </div>
         <p class="entry-desc">Immortal+ players are now sorted by cumulative RR rather than sub-tier, correctly ordering players across Immortal 1/2/3/Radiant by total rank. Leaderboard rank (#N) is displayed as a stat only.</p>
@@ -391,7 +484,7 @@
         <div class="entry-top">
           <span class="entry-title">/admin link set auto-fetches rank</span>
           <div class="entry-tags">
-            <span class="tag" style="background:var(--tag-admin)20;color:var(--tag-admin);border-color:var(--tag-admin)40">admin</span>
+            <span class="tag tag-admin">Admin</span>
           </div>
         </div>
         <p class="entry-desc">Force-linking an account via /admin link set now immediately fetches and caches the player's rank from the API, assigns their rank role, and displays the result in the confirmation reply — no need to run /profile afterwards.</p>
@@ -540,8 +633,8 @@
         <div class="entry-desc">
           JRMA's git-based build pipeline went down ("No matching nodes") preventing the bot from being updated via the normal deploy flow.
           <ul>
-            <li>Resolved by building the Docker image locally and pushing it directly to JRMA's container registry, bypassing their broken build nodes.</li>
-            <li>Bot is back online running the latest code. Normal <code>npm run ship</code> deploys resume as usual once JRMA's nodes recover.</li>
+            <li>Temporary fix: built the Docker image locally and pushed it directly to bypass the broken build nodes, getting the bot back online.</li>
+            <li>This led to the permanent switch to Docker Hub (see 16 June entry) — the internal JRMA registry is no longer used.</li>
           </ul>
         </div>
       </div>

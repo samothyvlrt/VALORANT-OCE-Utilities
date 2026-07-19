@@ -8,7 +8,36 @@
  * Consumed by the Vercel /api/leaderboard endpoint.
  */
 
-const db = require('../modules/database');
+const db     = require('../modules/database');
+const config  = require('../../config');
+const { getPlayerStats } = require('../modules/riot-api');
+
+let _guild  = null;
+let _timer  = null;
+
+// Recent rank changes for the web leaderboard red/green badge (in-memory, clears on restart).
+const _recentChanges = new Map(); // discordId → { delta, expiresAt }
+const CHANGE_TTL_MS  = 30 * 60 * 1000; // show badge for 30 minutes
+
+/** Record a rank delta so generateLeaderboard can include it in the payload. */
+function setRecentChange(discordId, delta) {
+  _recentChanges.set(discordId, { delta, expiresAt: Date.now() + CHANGE_TTL_MS });
+}
+
+/** Call once from ready.js so the guild is available for member name lookups. */
+function setGuild(guild) { _guild = guild; }
+
+/** Debounced trigger — coalesces rapid bursts (e.g. poll loop) into one Redis write. */
+function scheduleLeaderboardRegen(delayMs = 5000) {
+  clearTimeout(_timer);
+  _timer = setTimeout(() => { _timer = null; generateLeaderboard(_guild); }, delayMs);
+}
+
+// Throttle top-3 stats fetches to avoid burning Henrik calls on every poll-triggered regen.
+// Stats are always re-fetched when the top-3 composition changes (new player enters top 3).
+let _lastStatsFetch = 0;
+let _lastTop3Ids    = '';
+const STATS_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour max between refreshes
 
 /** Cumulative RR for display/sorting (Immortal/Radiant only). */
 function displayRr(tier, rr) {
@@ -41,10 +70,29 @@ function sortPlayers(players) {
   });
 }
 
-async function generateLeaderboard() {
+async function generateLeaderboard(guild = null) {
   try {
     const links   = db.getPublicLinks();
     const players = [];
+
+    // Build a discordId → username map by fetching only the specific members
+    // on the leaderboard. Avoids the OOM of a full guild.members.fetch() while
+    // giving complete coverage (unlike cache-only which misses inactive members).
+    const nameMap = new Map();
+    if (guild) {
+      try {
+        const ids = links
+          .filter(l => { try { return (JSON.parse(l.cached_rank)?.tier ?? 0) >= 3; } catch { return false; } })
+          .map(l => l.discord_id);
+        if (ids.length > 0) {
+          const members = await guild.members.fetch({ user: ids });
+          members.forEach((m) => nameMap.set(m.id, m.user.username));
+        }
+      } catch (e) {
+        console.warn('[leaderboard] Member fetch failed, falling back to cache:', e.message);
+        guild.members.cache.forEach((m) => nameMap.set(m.id, m.user.username));
+      }
+    }
 
     for (const link of links) {
       if (!link.cached_rank) continue;
@@ -54,18 +102,49 @@ async function generateLeaderboard() {
       const tier = rank?.tier;
       if (!tier || tier < 3) continue; // skip unranked / no data
 
+      const change = _recentChanges.get(link.discord_id);
+      const rrChange = (change && change.expiresAt > Date.now()) ? change.delta : null;
+
       players.push({
-        riotName:       link.riot_name,
-        riotTag:        link.riot_tag,
+        discordId:       link.discord_id,
+        discordName:     nameMap.get(link.discord_id) ?? null,
+        riotName:        link.riot_name,
+        riotTag:         link.riot_tag,
+        puuid:           link.riot_puuid,
+        region:          link.region,
         tier,
-        tierName:       rank.tierName ?? '',
-        rr:             rank.rr ?? 0,
-        displayRr:      displayRr(tier, rank.rr ?? 0),
+        tierName:        rank.tierName ?? '',
+        rr:              rank.rr ?? 0,
+        displayRr:       displayRr(tier, rank.rr ?? 0),
         leaderboardRank: rank.leaderboardRank ?? null,
+        rrChange,
       });
     }
 
     const sorted = sortPlayers(players);
+
+    // Fetch top-3 match stats when the composition changes OR once per hour max.
+    // This ensures a new #1 player always gets stats immediately.
+    const now        = Date.now();
+    const top3Ids    = sorted.slice(0, 3).map(p => p.discordId).join(',');
+    const compositionChanged = top3Ids !== _lastTop3Ids;
+    const intervalElapsed    = now - _lastStatsFetch >= STATS_REFRESH_INTERVAL;
+    if (compositionChanged || intervalElapsed) {
+      _lastStatsFetch = now;
+      _lastTop3Ids    = top3Ids;
+      for (let i = 0; i < Math.min(3, sorted.length); i++) {
+        const p = sorted[i];
+        const region = p.region || config.riot.defaultRegion;
+        const stats = await getPlayerStats(p.puuid, region, { type: 'competitive', size: 100 }).catch(() => null);
+        console.log(`[leaderboard] top-${i + 1} ${p.riotName}#${p.riotTag} matchStats: ${stats ? 'ok' : 'null'}`);
+        if (stats) {
+          sorted[i] = {
+            ...p,
+            matchStats: { kd: stats.kd, winRate: stats.winRate, topAgents: stats.topAgents },
+          };
+        }
+      }
+    }
 
     const payload = {
       updatedAt: new Date().toISOString(),
@@ -89,4 +168,4 @@ async function generateLeaderboard() {
   }
 }
 
-module.exports = { generateLeaderboard };
+module.exports = { generateLeaderboard, scheduleLeaderboardRegen, setGuild, setRecentChange };

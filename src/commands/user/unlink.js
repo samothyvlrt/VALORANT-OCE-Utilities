@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const embed = require('../../utils/embed');
 const db = require('../../modules/database');
+const { scheduleLeaderboardRegen } = require('../../utils/generate-leaderboard');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,6 +47,7 @@ module.exports = {
 
       if (btn.customId.startsWith('unlink_confirm')) {
         db.removeLink(interaction.user.id);
+        scheduleLeaderboardRegen();
         db.audit({
           action: 'LINK_REMOVE',
           targetDiscordId: interaction.user.id,

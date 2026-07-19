@@ -395,6 +395,69 @@
   </div>
 </div>
 
+<!-- 06 BOOSTER TENURE -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">06 — Booster Tenure</span>
+    <h2>Accumulated boost rewards</h2>
+    <p>Members who boost the server earn milestone roles based on their <em>total accumulated</em> boost time — including past streaks the bot observed and months credited by admins for boosting before the bot existed. Running <code>/booster</code> shows your tenure and syncs your role on demand.</p>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">01</div><div class="step-content"><h3>Tenure accumulates automatically</h3><p>When a member stops boosting, the bot banks their streak duration. Total tenure = banked past streaks + any admin credits + the current live streak. Discord exposes no cumulative-boost API, so streaks are observed going forward from when the bot was running.</p></div></div>
+    <div class="flow-step"><div class="step-num">02</div><div class="step-content"><h3>Milestone roles unlock at month thresholds</h3><p>Tenure roles are configured in the server at 1, 2, 3, 6, 9, 12, 18, 24, 30, 36, 42, and 48-month intervals. Running <code>/booster</code> reconciles the correct role on demand — no automatic sweep.</p></div></div>
+    <div class="flow-step"><div class="step-num">03</div><div class="step-content"><h3>Historical boosting credited by admins</h3><p>Admins can run <code>/boostercredit @user &lt;months&gt;</code> to grandfather in boosting before the bot was live. Negative values deduct. The member's role is re-synced immediately.</p></div></div>
+    <div class="flow-step"><div class="step-num">04</div><div class="step-content"><h3>Broken-streak role for loyal ex-boosters</h3><p>Members who accumulated 6+ months total but have since stopped keep a special role as recognition for their loyalty — even after their boost expires.</p></div></div>
+  </div>
+
+  <div class="discord-window" style="margin-top:40px">
+    <div class="discord-titlebar">
+      <div class="discord-titlebar-dot" style="background:#ed4245"></div>
+      <div class="discord-titlebar-dot" style="background:#fee75c"></div>
+      <div class="discord-titlebar-dot" style="background:#57f287"></div>
+      <span style="margin-left:8px"># 🤖 bot-commands</span>
+    </div>
+    <div class="discord-body">
+      <div class="discord-msg">
+        <div class="avatar avatar-user">st</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">st</span><span class="msg-time">Today at 11:00</span></div>
+          <div class="msg-text">used <strong>/booster</strong></div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 11:00</span></div>
+          <div class="embed green">
+            <div class="embed-title">💎 Thanks for Boosting!</div>
+            <div class="embed-desc">Total tenure: <strong>14 months, 3 days</strong> (14 months).<br>Boosting since 18 Apr 2025 — current streak <strong>2 months, 12 days</strong>.<br>Banked from past boosting / credits: <strong>11 months, 21 days</strong>.<br>Tenure role: <strong>@Booster 12 Months</strong><br>Next role <strong>@Booster 18 Months</strong> at <strong>18 months</strong> (3 to go).</div>
+          </div>
+          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
+        </div>
+      </div>
+      <div class="discord-msg" style="margin-top:16px">
+        <div class="avatar avatar-user" style="background:#2d7d46">A</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">AdminUser</span><span class="msg-time">Today at 11:05</span></div>
+          <div class="msg-text">used <strong>/boostercredit</strong> user: @FragKing months: 12</div>
+        </div>
+      </div>
+      <div class="discord-msg">
+        <div class="avatar avatar-bot">V</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-author">Valorant OCE Utilities</span><span class="bot-badge">APP</span><span class="msg-time">Today at 11:05</span></div>
+          <div class="embed green">
+            <div class="embed-title">✅ Booster Tenure Updated</div>
+            <div class="embed-desc">Credited <strong>12 month(s)</strong> to <strong>@FragKing</strong>.<br>Total tenure: <strong>26 months, 3 days</strong> (26 months).<br>Tenure role: <strong>@Booster 24 Months</strong></div>
+          </div>
+          <div class="ephemeral-note"><div class="ephemeral-dot"></div> Only you can see this • Dismiss message</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>
   <span>© 2026 Valorant OCE Utilities · Not affiliated with Riot Games</span>
   <div class="footer-links">

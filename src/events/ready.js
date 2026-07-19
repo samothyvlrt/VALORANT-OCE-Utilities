@@ -7,7 +7,8 @@ const { getRank, getAccount } = require('../modules/riot-api');
 const { assignRankRole, removeAllRankRoles } = require('../utils/roles');
 const { logAdminAction } = require('../utils/activity-log');
 const { generateStats }       = require('../utils/generate-stats');
-const { generateLeaderboard } = require('../utils/generate-leaderboard');
+const { generateLeaderboard, scheduleLeaderboardRegen, setGuild } = require('../utils/generate-leaderboard');
+const { startRankPollLoop } = require('../utils/rank-poll');
 const config = require('../../config');
 
 module.exports = {
@@ -236,9 +237,16 @@ module.exports = {
     }, msToMidnight);
 
     // ── Publish stats + leaderboard to Redis (for web pages) ────────────────
+    const mainGuild = client.guilds.cache.get(config.discord.mainGuildId)
+                   || client.guilds.cache.get(config.discord.guildId)
+                   || null;
+    setGuild(mainGuild);
     generateStats();
-    generateLeaderboard();
-    setInterval(() => { generateStats(); generateLeaderboard(); }, 6 * 60 * 60 * 1000);
+    generateLeaderboard(mainGuild);
+    setInterval(() => { generateStats(); generateLeaderboard(mainGuild); }, 6 * 60 * 60 * 1000);
+
+    // ── Background rank poll loop (fire-and-forget, starts after 90s delay) ─
+    startRankPollLoop();
 
     // ── Poll Redis every 15s for completed OAuth verifications ──────────────
     setInterval(async () => {
@@ -281,6 +289,7 @@ module.exports = {
               const rank   = await getRank(result.riotName, result.riotTag, result.region).catch(() => null);
               if (rank) {
                 db.updateRankCache(pending.discord_id, rank);
+                scheduleLeaderboardRegen();
                 await assignRankRole(member, rank.tier);
               }
             }
