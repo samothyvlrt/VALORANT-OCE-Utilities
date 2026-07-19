@@ -161,6 +161,14 @@ of a new act. `getRank()` treats `current_data.games_needed_for_rating > 0` as
 > `games_needed_for_rating > 0` for them. If they still show their old rank after a
 > rollover, HenrikDev isn't exposing that field for the account yet — not a bug.
 
+### Premier endpoints (CRITICAL design constraint)
+- `GET /valorant/v1/premier/search?name=&tag=` — team search (also `division`/`conference` filters)
+- `GET /valorant/v1/premier/{team_id}` — team details: `placement { points, conference, division, place }`, `stats { wins, losses, matches, rounds_won, rounds_lost }`, `customization { image, primary }`
+- `GET /valorant/v1/premier/{team_id}/history` — `league_matches [{ id, points_before, points_after, started_at }]` (win = +100 pts, loss = +25)
+- **`member` on team details is ALWAYS empty** (verified live across regions, Jul 2026) — Riot stopped exposing rosters, so there is NO player→team lookup on the team endpoints.
+- **The only membership proof**: Premier *match* data. `GET /valorant/v4/match/{region}/{matchId}` on a Premier match has `teams[].premier_roster { id, name, tag, members[puuids] }`. Discovery chain (see `discoverPremierTeam()` in riot-api.js): `GET /valorant/v1/by-puuid/lifetime/matches/{region}/{puuid}?mode=premier&size=1` → match id → v4 match → roster whose `members` contains the puuid.
+- Division numbers are 1–21: 1–5 Open, 6–10 Intermediate, 11–15 Advanced, 16–20 Elite, 21 Contender (`premierDivisionName()`). Conferences look like `AP_OCEANIA`, `AP_ASIA`, plus `_SUPER` variants.
+
 ---
 
 ## OAuth / Verification Flow
@@ -174,6 +182,7 @@ Redis key spaces:
 - `oauth:{state}` — pending OAuth data (TTL: 30 min, written by bot, read by Vercel)
 - `verified:{discordId}` — completed OAuth result (TTL: 5 min, written by Vercel, read+deleted by bot)
 - `stats:rank-distribution` — rank distribution payload for web chart (written by bot every 6h)
+- `stats:leaderboard` — sorted public leaderboard payload (written by bot on startup, every 6h, and within 5s of any rank/privacy/link change)
 
 ---
 
@@ -208,7 +217,9 @@ developer policy for stored API data, and declared in the privileged-intent revi
 - OAuth token columns: `discord_access_token`, `discord_refresh_token`, `discord_token_expires_at`
 
 **`rank_history`** — one row per rank change snapshot
-- Used for sparkline in `/profile` and trend tracking
+- Used for the rendered RR graph in `/profile` (`src/utils/rr-graph.js`) and trend tracking
+- `db.getRankHistory(id, n)` returns the **latest** n snapshots, oldest-first (fixed Jul 2026 — previously returned the oldest n forever)
+- Premier columns on `linked_accounts`: `premier_team_id/name/tag`, `premier_verified` (1 = membership proven via match-history discovery, 0 = manually claimed name)
 
 **`audit_log`** — admin action log
 - `action` values: `LINK_CREATE`, `ADMIN_LINK_SET`, `LINK_REMOVE_SELF`, `ADMIN_LINK_RESET`, `LINK_INVALIDATED`, `NAME_UPDATE`
@@ -237,6 +248,22 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 ### `/profile`
 - Self-only — no `user` option. Staff use `/lookup` to look up others.
 - `public: true` option to post visibly in channel (default: ephemeral)
+- **RR graph** (`src/utils/rr-graph.js`): canvas line chart (1040×340 @ 2×) from the latest 40
+  `rank_history` snapshots; replaces the old Unicode sparkline. Tier-coloured segments,
+  sub-tier gridlines, gradient fill, embedded via `attachment://rr-graph.png` as the embed
+  image. Needs ≥2 history points. Immortal+ is plotted as `2400 + cumulative RR` so the
+  y-axis stays monotonic (Radiant `rr` is already cumulative — see Tier System section).
+
+### `/premier` (user group)
+- `link` — **auto-detects** the user's team via `discoverPremierTeam()` (membership proven,
+  `premier_verified=1`). Fallback `team` option ("Name#TAG") for players with no Premier
+  matches yet: validated against the live team list (AP affinity only, prefers `AP_OCEANIA*`
+  on name collisions) but stored **unverified**. Requires `/link` first (needs the PUUID).
+  Re-running re-detects — that's how team changes are handled.
+- `unlink` — clears the stored team.
+- `team` — live team card (division, conference, points, W–L, rounds, last 5 league matches
+  as 🟩/🟥 by points delta, team icon + brand colour). Optional `team` option views any team;
+  `public` option like `/profile`. Default ephemeral.
 
 ### Rank chart (`src/utils/rank-chart.js`)
 - Rendered at **2× resolution** (1040×160px) using `@napi-rs/canvas`
@@ -246,14 +273,18 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 - Groups: Iron, Bronze, Silver, Gold, Plat, Dia, Asc, Imm, Rad (25 bars total, tiers 3–27)
 
 ### Background jobs (ready.js)
-- **Account validation**: runs 60s after startup, then every 6h — checks Discord connections, invalidates swapped accounts, silently renames if same PUUID
+- **Account validation**: runs 60s after startup, then at midnight AEST + every 12h — checks Discord connections, invalidates swapped accounts, silently renames if same PUUID. (Would be largely replaced by RSO — RSO gives direct token-based verification, making Discord-connection polling redundant.)
 - **Stats generation**: runs on startup + every 6h — pushes rank distribution to Redis for web chart
+- **Leaderboard generation**: runs on startup + every 6h via `generateLeaderboard(guild)`. Also triggered within 5s (debounced) after any rank write — see `scheduleLeaderboardRegen()` in `src/utils/generate-leaderboard.js`. Guild is registered at startup via `setGuild(guild)` so the debounce can fire without a guild reference. Triggered by: `/profile`, `/setlink`, `update_rank_btn`, OAuth verification, `/privacy`, `/unlink`, `/resetlink`, and the rank poll loop on any RR change.
+- **Rank poll loop** (`src/utils/rank-poll.js`): starts 90s after startup, runs continuously. Polls `/v2/mmr` for recently-active ranked accounts (ranked in last 7 days, tier ≥ 3) at ~75 req/min (800ms between each account). On RR or tier change: updates `cached_rank`, calls `setRecentChange()` to record the delta for the web badge, and schedules a leaderboard regen. On 429 from Henrik: pauses 60s before resuming. Sweep cycle duration = active account count ÷ 75 (e.g. 600 active accounts → ~8 min cycle).
 - **Verification poll**: every 15s — checks Redis for completed OAuth results
 
 ### VC lock (`/lock`, `/unlock`)
 - In-memory state only (`src/modules/vc-lock.js`) — resets on bot restart
-- 10-minute reconnect grace period for members who were in the channel when it was locked
+- **Auto-unlock when VC empties**: handled in `voiceStateUpdate.js` — if a member leaves and the VC is now empty, the channel unlocks immediately (no grace period wait). Grace period only starts if other members remain.
+- 10-minute reconnect grace period for members who disconnect while others are still in the channel
 - Uses Discord permission overwrites (Allow Connect) per member
+- `overwriteCount(channelId)` helper in `vc-lock.js` returns how many members still have individual overwrites
 
 ### Shared channel constants (`src/modules/channels.js`)
 - `COMP_SQUAD_VCS` — the Comp 1–15 + Squad 0–10 voice channel IDs. Single source of
@@ -276,6 +307,10 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
   - Casual → no rank/division field shown
   - Discord can't show options conditionally, so `rank` + `division` are both optional
     options; the embed uses whichever matches the mode.
+  - **Premier division auto-fill**: when mode=Premier and `division` is omitted, the poster's
+    stored premier team (`/premier link`) is fetched live and its division used. This path
+    defers the reply (API call can exceed the 3s window) — `respond()` helper switches
+    between `reply`/`editReply`. Manual `division` input always wins; no team → "Any".
   - *Future:* require a verified (RSO) linked account and auto-derive the Competitive range.
 - **Not in a Comp/Squad VC →** posts a *minimal* LFG (LF count + rank/division + lobby
   code only; no Voice channel/Members fields, no Join button, not registered/tracked).
@@ -290,12 +325,28 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
   **Expired** state (no buttons) and removed from the registry. Best-effort; registry
   clears on restart. Future: `/premier`, premier-on-profile, leaderboard rework, `/lft`, `/scrim`.
 
+### Vercel leaderboard (`public/leaderboard.html` + `api/leaderboard.js`)
+- Fetches `stats:leaderboard` from Redis via `/api/leaderboard` on page load
+- **Column layout**: # · rank dot · Player (Riot Name#Tag) · Discord (@username) · Rank (tier / RR / leaderboard pos)
+- **Discord column**: populated from `member.user.username` (Discord handle, not server nickname). At generation time, bot calls `guild.members.fetch({ user: [leaderboardDiscordIds] })` — targeted fetch of only the players on the leaderboard, avoiding the OOM of a full guild fetch and the incompleteness of cache-only.
+- **Search**: client-side filter (120ms debounce) on Riot name, tag, or Discord username
+- **Filter tabs**: All / Immortal+ / Ascendant / Diamond / Platinum / Gold
+- **Top 3 rows** are visually expanded (gold/silver/bronze position numbers, slightly larger) and show two stat rows below the name:
+  - Row 1: `K/D` (colour-coded by tier: teal ≥1.25, gold ≥1.50, red ≥2.0) · `WR%` (teal ≥53%, gold ≥58%, red ≥63%)
+  - Row 2: top 3 agents by play % from last 100 competitive games (`type=competitive&size=100`), with opacity fade (100%/65%/40%) to show hierarchy. Agent names are plain text (no role colours).
+  - Match stats fetched via `getPlayerStats(puuid, region, { type: 'competitive', size: 100 })` for top 3 only, on composition change OR hourly max. Stats row hidden when search is active.
+- **RR change badge**: after a game is detected by the poll loop, `setRecentChange(discordId, delta)` records the delta in-memory (30-min TTL). Next leaderboard regen includes `rrChange` in the player object. Web page renders a green `+N` or red `-N` pill next to the RR. Clears on bot restart.
+- **Top-3 stats throttle**: `_lastStatsFetch` + `_lastTop3Ids` — stats are only re-fetched when top-3 composition changes OR 1 hour has elapsed, preventing poll-triggered regens from burning 3 Henrik calls each time.
+- **Payload shape per player**: `discordId, discordName, riotName, riotTag, puuid, region, tier, tierName, rr, displayRr, leaderboardRank, rrChange?, matchStats?`
+- Unranked accounts (tier < 3) are excluded from the payload
+- `generate-leaderboard.js` exports: `generateLeaderboard(guild)`, `scheduleLeaderboardRegen()`, `setGuild(guild)`, `setRecentChange(discordId, delta)`
+
 ### Booster tenure (`/booster` + `/boostercredit`)
 - **Accumulated tenure.** Total = `banked_ms` (`booster_tenure` table) + the live current
   streak (`now − premiumSince`). Discord exposes no cumulative-boost API, so the bot
   accumulates **going forward**: `guildMemberUpdate` banks a streak the moment a member
   **stops** boosting (`premiumSince` value → null). Best-effort (needs old member cached).
-- **`/boostercredit @user <months>`** (admin group, Snr Admin) grandfathers historical
+- **`/boostercredit @user <months>`** (admin group, Admin+) grandfathers historical
   boosting — adds/subtracts banked months, then re-syncs the role.
 - `src/utils/booster.js` is **DB-free** (callers pass `bankedMs`) so `computePlan`/`tenure`
   stay pure + unit-tested. Months use `MONTH_MS` (30.4375d), not calendar.
@@ -313,6 +364,9 @@ New columns are added via `try { db.exec('ALTER TABLE ... ADD COLUMN ...') } cat
 ---
 
 ## Known Issues / Gotchas
+
+### Staff log channel stops logging after fresh DB / volume reset
+`log_channel_id` is stored in `bot_settings` (SQLite). If the volume is wiped or the container gets a fresh DB, the setting is gone and `logAdminAction` silently does nothing. Fix: run `/logsetup` in the staff log channel to re-write the setting. Symptom: bot is online and responding but no log messages are posted.
 
 ### Concurrent bot instances
 Running two instances with the same token causes `DiscordAPIError[40060] Interaction already acknowledged`. Stop JRMA before running local `npm run dev`.
@@ -355,7 +409,8 @@ respond" with nothing logged. Fix: ensure the guild's ID is set in one of those 
 | `/privacy` | Toggle leaderboard visibility (ephemeral toggle). |
 | `/unlink` | Remove own linked account. |
 | `/lock` / `/unlock` | VC lock — Comp/Squad VCs only. |
-| `/lfg` | Looking-for-group post (server group). Run in an LFG channel while in a Comp/Squad VC. `mode` (Competitive/Casual/Premier), `players` (1–4), `rank` (Competitive only), `division` (Premier only), `code` (optional). Members-in-voice updates live; Join button = VC deep-link. |
+| `/lfg` | Looking-for-group post (server group). Run in an LFG channel while in a Comp/Squad VC. `mode` (Competitive/Casual/Premier), `players` (1–4), `rank` (Competitive only), `division` (Premier only — auto-filled from `/premier link` if omitted), `code` (optional). Members-in-voice updates live; Join button = VC deep-link. |
+| `/premier` | `link` (auto-detect team from Premier match history; manual name fallback = unverified), `unlink`, `team` (live team card, any team viewable, `public` option). |
 
 ### Staff commands (standalone — `/admin` no longer exists)
 
@@ -376,7 +431,7 @@ Integrations → (bot) → Command Permissions**.
 | `/bulkreset` (`admin link bulk-reset`) | Snr Admin (4)  | Force re-verify entire role. `reason`, `silent` options. |
 | `/linkpanel` (`admin link panel`)   | Snr Admin (4)     | Post the rank-role panel (Add / Update / Remove buttons → `link_btn`/`update_rank_btn`/`unlink_btn`) in current channel. |
 | `/logsetup` (`admin log setup`)     | Snr Admin (4)     | Set staff activity log channel. |
-| `/boostercredit`                    | Snr Admin (4)     | Credit/deduct booster months for past boosting; re-syncs the role. |
+| `/boostercredit`                    | Admin (3)         | Credit/deduct booster months for past boosting; re-syncs the role. |
 
 > Splitting was a deliberate choice: separate top-level commands let Discord hide a
 > command from roles that can't use it. Tier enforcement is still done in code
@@ -396,7 +451,7 @@ effective level is the **highest** tier role they hold. Defined in
 |-------|------|---------|----------------|
 | 1 | Moderator         | `537917072458383362` | `/lookup`, `/links` |
 | 2 | Senior Moderator  | `952850368432320512` | `/resetlink` |
-| 3 | Admin             | `537911688490385419` | `/serverstats`, `/exportlinks` |
+| 3 | Admin             | `537911688490385419` | `/serverstats`, `/exportlinks`, `/boostercredit` |
 | 4 | Senior Admin      | `883659514233114705` | `/setlink`, `/bulkreset`, `/linkpanel`, `/logsetup` |
 | 5 | Head Admin        | `681608242379489280` | (everything prior) |
 | 6 | Senior Management | `681467969280147474` | (everything prior) |

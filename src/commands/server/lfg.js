@@ -6,13 +6,17 @@
  * auto-expires when the VC empties). If you're not in such a VC, it posts a
  * minimal version (just LF count + rank/division + lobby code).
  *
- * Rank/division is entered manually (no linked-account requirement).
+ * Rank is entered manually (no linked-account requirement). Premier division
+ * is auto-derived from the poster's registered team (/premier link) when the
+ * division option is omitted; manual input still wins.
  * Future: require a verified (RSO) linked account and auto-derive Competitive
- * range / Premier division.
+ * range.
  */
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const config = require('../../../config');
 const embed  = require('../../utils/embed');
+const db     = require('../../modules/database');
+const { getPremierTeam, premierDivisionName } = require('../../modules/riot-api');
 const { COMP_SQUAD_VCS, LFG_CHANNELS } = require('../../modules/channels');
 const lfgPosts = require('../../modules/lfg-posts');
 
@@ -108,7 +112,7 @@ module.exports = {
         .setRequired(false).setMaxLength(32),
     )
     .addStringOption((o) =>
-      o.setName('division').setDescription('Premier only — your team\'s division')
+      o.setName('division').setDescription('Premier only — auto-filled from /premier link if omitted')
         .setRequired(false)
         .addChoices(...PREMIER_DIVISIONS.map((d) => ({ name: d, value: d }))),
     )
@@ -128,18 +132,38 @@ module.exports = {
     const mode     = interaction.options.getString('mode');
     const players  = interaction.options.getInteger('players');
     const rankRaw  = interaction.options.getString('rank');
-    const division = interaction.options.getString('division');
+    let   division = interaction.options.getString('division');
     const codeRaw  = interaction.options.getString('code');
     const rank     = rankRaw ? rankRaw.trim().slice(0, 32) : null;
     const code     = codeRaw ? codeRaw.replace(/`/g, '').trim().slice(0, 16) : null;
     const footerText = `LFG by ${interaction.user.tag}`;
+
+    // Premier with no manual division → derive it live from the poster's
+    // registered team (/premier link). Needs a defer since the API call can
+    // exceed the 3s reply window. Best-effort: falls back to "Any".
+    let deferred = false;
+    if (mode === 'Premier' && !division) {
+      const link = db.getLinkByDiscord(interaction.user.id);
+      if (link?.premier_team_id) {
+        await interaction.deferReply();
+        deferred = true;
+        try {
+          const team = await getPremierTeam(link.premier_team_id);
+          const div  = team?.placement?.division;
+          if (div != null) division = premierDivisionName(div);
+        } catch (err) {
+          console.warn('[lfg] premier division lookup failed:', err.message);
+        }
+      }
+    }
+    const respond = (payload) => deferred ? interaction.editReply(payload) : interaction.reply(payload);
 
     // Tie to a Comp/Squad VC if the poster is in one; otherwise post a minimal LFG.
     const vc = interaction.member.voice?.channel;
     const useVc = vc && (COMP_SQUAD_VCS.has(vc.id) || interaction.guildId === TEST_GUILD_ID);
 
     if (!useVc) {
-      return interaction.reply({
+      return respond({
         embeds: [buildLfgEmbed({ vc: null, mode, players, rank, division, code, footerText })],
       });
     }
@@ -160,7 +184,7 @@ module.exports = {
       mode, players, rank, division, code, joinUrl, footerText,
     };
 
-    await interaction.reply({
+    await respond({
       embeds:     [buildLfgEmbed({ vc, mode, players, rank, division, code, footerText })],
       components: joinUrl ? [buildLfgRow({ joinUrl })] : [],
     });

@@ -217,10 +217,12 @@ async function getRank(name, tag, region = config.riot.defaultRegion) {
  * @param {string} puuid
  * @param {string} region
  */
-async function getPlayerStats(puuid, region) {
+async function getPlayerStats(puuid, region, { type = null, size = 20 } = {}) {
   try {
+    const params = new URLSearchParams({ size });
+    if (type) params.set('type', type);
     const res = await henrik.get(
-      `/valorant/v3/by-puuid/matches/${region}/${puuid}?size=20`,
+      `/valorant/v3/by-puuid/matches/${region}/${puuid}?${params}`,
     );
     const matches = res.data?.data;
     if (!matches || !matches.length) return null;
@@ -254,8 +256,9 @@ async function getPlayerStats(puuid, region) {
       .slice(0, 3)
       .map(([name, s]) => ({
         name,
-        games: s.games,
-        winRate: Math.round((s.wins / s.games) * 100),
+        games:    s.games,
+        playPct:  Math.round((s.games / totalMatches) * 100),
+        winRate:  Math.round((s.wins / s.games) * 100),
       }));
 
     return {
@@ -310,6 +313,115 @@ async function getLastMatch(puuid, region) {
 }
 
 // ─────────────────────────────────────────────
+// Premier
+// ─────────────────────────────────────────────
+
+// Riot numbers Premier divisions 1–21. 21 (Contender) is the apex of the
+// ladder; Invite sits above it outside this numbering.
+const PREMIER_DIVISION_GROUPS = [
+  [1,  5,  'Open'],
+  [6,  10, 'Intermediate'],
+  [11, 15, 'Advanced'],
+  [16, 20, 'Elite'],
+  [21, 21, 'Contender'],
+];
+
+/**
+ * Human-readable Premier division name for a division number (1–21),
+ * e.g. 6 → "Intermediate 1", 21 → "Contender".
+ */
+function premierDivisionName(division) {
+  const group = PREMIER_DIVISION_GROUPS.find(([s, e]) => division >= s && division <= e);
+  if (!group) return `Division ${division}`;
+  const [start, end, label] = group;
+  return start === end ? label : `${label} ${division - start + 1}`;
+}
+
+/**
+ * Search Premier teams by exact team name + tag.
+ * Returns an array of team summaries:
+ * { id, name, tag, conference, division, affinity, region, wins, losses, score, customization }
+ * NOTE: Riot no longer exposes team rosters, so a player's team cannot be
+ * looked up by PUUID — users register their team by name (see /premier link).
+ */
+async function searchPremierTeams(name, tag) {
+  try {
+    const res = await henrik.get('/valorant/v1/premier/search', {
+      params: { name, tag },
+    });
+    return res.data?.data ?? [];
+  } catch (err) {
+    if (err.response?.status === 404) return [];
+    mapHenrikError(err);
+  }
+}
+
+/**
+ * Fetch full Premier team details by team ID.
+ * Returns { id, name, tag, enrolled, ranked, stats: { wins, matches, losses,
+ * rounds_won, rounds_lost }, placement: { points, conference, division, place },
+ * customization: { icon, image, primary, ... }, member } or null on 404.
+ */
+async function getPremierTeam(teamId) {
+  try {
+    const res = await henrik.get(`/valorant/v1/premier/${teamId}`);
+    return res.data?.data ?? null;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    mapHenrikError(err);
+  }
+}
+
+/**
+ * Fetch a Premier team's league match history.
+ * Returns { league_matches: [{ id, points_before, points_after, started_at }] }
+ * or null on 404.
+ */
+async function getPremierHistory(teamId) {
+  try {
+    const res = await henrik.get(`/valorant/v1/premier/${teamId}/history`);
+    return res.data?.data ?? null;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    mapHenrikError(err);
+  }
+}
+
+/**
+ * Auto-discover a player's Premier team from their most recent Premier match.
+ * The v4 match payload carries both teams' premier_roster (id, name, tag,
+ * member puuids), so finding the roster containing the player's PUUID is a
+ * hard proof of membership — the only such proof available now that Riot no
+ * longer exposes rosters on the team endpoints.
+ *
+ * Returns { id, name, tag } or null if the player has no stored Premier
+ * matches (never played one this season / not in HenrikDev's stored data).
+ */
+async function discoverPremierTeam(puuid, region = config.riot.defaultRegion) {
+  try {
+    const lt = await henrik.get(
+      `/valorant/v1/by-puuid/lifetime/matches/${region}/${puuid}`,
+      { params: { mode: 'premier', size: 1 } },
+    );
+    const matchId = lt.data?.data?.[0]?.meta?.id;
+    if (!matchId) return null;
+
+    const res = await henrik.get(`/valorant/v4/match/${region}/${matchId}`);
+    const teams = res.data?.data?.teams ?? [];
+    for (const t of teams) {
+      const roster = t.premier_roster;
+      if (roster?.members?.includes(puuid)) {
+        return { id: roster.id, name: roster.name, tag: roster.tag };
+      }
+    }
+    return null;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    mapHenrikError(err);
+  }
+}
+
+// ─────────────────────────────────────────────
 // Exports
 // ─────────────────────────────────────────────
 
@@ -321,5 +433,10 @@ module.exports = {
   getPlayerStats,
   getMatchHistory,
   getLastMatch,
+  searchPremierTeams,
+  getPremierTeam,
+  getPremierHistory,
+  discoverPremierTeam,
+  premierDivisionName,
   RiotApiError,
 };

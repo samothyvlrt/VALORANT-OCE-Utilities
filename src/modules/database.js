@@ -96,6 +96,10 @@ try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_access_token TEXT`
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_refresh_token TEXT`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN discord_token_expires_at INTEGER`); } catch { /* already exists */ }
 try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN premier_team_id TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN premier_team_name TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN premier_team_tag TEXT`); } catch { /* already exists */ }
+try { db.exec(`ALTER TABLE linked_accounts ADD COLUMN premier_verified INTEGER NOT NULL DEFAULT 0`); } catch { /* already exists */ }
 
 // Rank history table — one row per rank change, written whenever updateRankCache fires
 try {
@@ -216,14 +220,49 @@ function insertRankHistory(discordId, tier, tierName, rr) {
 }
 
 /**
- * Get rank history for a player, oldest first.
+ * Get the most recent rank history for a player, returned oldest first.
+ * (Inner query grabs the latest N snapshots; outer re-sorts them chronologically.)
  * @param {string} discordId
  * @param {number} limit
  */
 function getRankHistory(discordId, limit = 20) {
-  return db.prepare(
-    'SELECT tier, tier_name, rr, recorded_at FROM rank_history WHERE discord_id = ? ORDER BY recorded_at ASC LIMIT ?',
-  ).all(discordId, limit);
+  return db.prepare(`
+    SELECT tier, tier_name, rr, recorded_at FROM (
+      SELECT tier, tier_name, rr, recorded_at FROM rank_history
+      WHERE discord_id = ? ORDER BY recorded_at DESC LIMIT ?
+    ) ORDER BY recorded_at ASC
+  `).all(discordId, limit);
+}
+
+/**
+ * Store the user's registered Premier team on their link row.
+ * `verified` = membership proven from their own Premier match history
+ * (discoverPremierTeam), as opposed to a manually claimed team name.
+ * @param {string} discordId
+ * @param {{ id: string, name: string, tag: string }} team
+ * @param {boolean} verified
+ */
+function setPremierTeam(discordId, team, verified = false) {
+  db.prepare(`
+    UPDATE linked_accounts
+    SET premier_team_id = ?, premier_team_name = ?, premier_team_tag = ?,
+        premier_verified = ?, last_updated = ?
+    WHERE discord_id = ?
+  `).run(team.id, team.name, team.tag, verified ? 1 : 0, Date.now(), discordId);
+}
+
+/**
+ * Clear the user's registered Premier team. Returns true if one was set.
+ * @param {string} discordId
+ */
+function clearPremierTeam(discordId) {
+  const result = db.prepare(`
+    UPDATE linked_accounts
+    SET premier_team_id = NULL, premier_team_name = NULL, premier_team_tag = NULL,
+        premier_verified = 0
+    WHERE discord_id = ? AND premier_team_id IS NOT NULL
+  `).run(discordId);
+  return result.changes > 0;
 }
 
 /**
@@ -487,6 +526,9 @@ module.exports = {
   getPublicLinks,
   setHidden,
   getLinksByDiscordIds,
+  // Premier
+  setPremierTeam,
+  clearPremierTeam,
   // Pending verifications
   createPending,
   getPending,
